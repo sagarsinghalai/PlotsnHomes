@@ -1,0 +1,121 @@
+# ==========================================
+# Dependencies
+# ==========================================
+node_modules/
+**/node_modules/
+
+# Yarn / PNPM
+.pnp
+.pnp.js
+.yarn/
+.yarn/install-state.gz
+
+# ==========================================
+# Build Output
+# ==========================================
+.next/
+out/
+build/
+dist/
+coverage/
+
+# ==========================================
+# Environment Files
+# ==========================================
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# ==========================================
+# Prisma
+# ==========================================
+prisma/dev.db
+prisma/dev.db-journal
+src/generated/prisma/
+# Generated from schema.prisma at build time (npm run build:hostinger)
+prisma/schema.mysql.prisma
+
+# ==========================================
+# Logs
+# ==========================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================
+# Uploads (Keep Folder)
+# ==========================================
+public/uploads/*
+!public/uploads/.gitkeep
+
+server/uploads/*
+!server/uploads/.gitkeep
+
+# ==========================================
+# Vercel
+# ==========================================
+.vercel/
+
+# ==========================================
+# TypeScript
+# ==========================================
+*.tsbuildinfo
+next-env.d.ts
+
+# ==========================================
+# IDE
+# ==========================================
+.vscode/
+.idea/
+
+# ==========================================
+# Operating System
+# ==========================================
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Certificates
+# ==========================================
+*.pem
+
+# ==========================================
+# Local Video Processing
+# ==========================================
+video-analysis/
+.video-analysis/
+
+# ==========================================
+# Temporary Files
+# ==========================================
+*.tmp
+*.temp
+.cache/
+.eslintcache
+
+# ==========================================
+# Local AI / Editor Files
+# ==========================================
+.claude/
+.cursor/
+
+# ==========================================
+# Local Project Dumps
+# ==========================================
+structure.txt
+plotsnhomes-deploy.zip
+
+# ==========================================
+# macOS
+# ==========================================
+__MACOSX/
+
+# npm cache
+.npm/
+
+# Turborepo
+.turbo/

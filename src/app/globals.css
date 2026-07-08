@@ -1,0 +1,343 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --gold: #c9a227;
+  --gold-dark: #a8861f;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display), Georgia, serif;
+  }
+}
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker 45s linear infinite;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
+
+/* ── Hide print brochure in normal view ── */
+#property-print-brochure {
+  display: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  /* ── Invoice print support ── */
+  #invoice-receipt-print,
+  #invoice-receipt-print * {
+    visibility: visible;
+  }
+  #invoice-receipt-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  /* ── Property brochure print support ── */
+  #property-print-brochure,
+  #property-print-brochure * {
+    visibility: visible;
+  }
+  #property-print-brochure {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: #fff;
+    color: #0f172a;
+    font-family: Georgia, serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    padding: 12mm 15mm;
+    box-sizing: border-box;
+    page: A4;
+  }
+
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  /* Header */
+  .print-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 6pt;
+    margin-bottom: 12pt;
+    page-break-inside: avoid;
+  }
+  .print-logo {
+    display: flex;
+    align-items: center;
+    gap: 8pt;
+  }
+  .print-logo-icon {
+    display: inline-flex;
+    width: 28pt;
+    height: 28pt;
+    background: #0f172a;
+    color: #c9a227;
+    font-weight: 900;
+    font-size: 11pt;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6pt;
+  }
+  .print-logo-name {
+    font-size: 16pt;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -0.5pt;
+  }
+  .print-header-right {
+    text-align: right;
+  }
+  .print-header-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .print-header-date {
+    font-size: 8pt;
+    color: #64748b;
+    margin: 2pt 0 0 0;
+  }
+
+  /* Hero */
+  .print-hero {
+    margin-bottom: 14pt;
+    page-break-inside: avoid;
+  }
+  .print-hero-image-wrap {
+    width: 100%;
+    margin-bottom: 10pt;
+    border-radius: 6pt;
+    overflow: visible;
+  }
+  .print-hero-image {
+    width: 100%;
+    max-height: 240pt;
+    height: auto;
+    object-fit: cover;
+    display: block;
+    border-radius: 6pt;
+  }
+  .print-hero-info {
+    page-break-inside: avoid;
+  }
+  .print-badges {
+    display: flex;
+    gap: 6pt;
+    flex-wrap: wrap;
+    margin-bottom: 6pt;
+  }
+  .print-badge {
+    font-size: 8pt;
+    font-weight: 700;
+    padding: 2pt 6pt;
+    border-radius: 4pt;
+    border: 1pt solid #cbd5e1;
+    background: #f1f5f9;
+    color: #334155;
+  }
+  .print-badge-type {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #a7f3d0;
+  }
+  .print-badge-featured {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+  }
+  .print-badge-status {
+    background: #e0f2fe;
+    color: #0c4a6e;
+    border-color: #bae6fd;
+  }
+  .print-property-title {
+    font-size: 20pt;
+    font-weight: 900;
+    color: #0f172a;
+    margin: 0 0 4pt 0;
+    line-height: 1.2;
+  }
+  .print-property-address {
+    font-size: 10pt;
+    color: #475569;
+    margin: 0;
+  }
+
+  /* Sections */
+  .print-section {
+    margin-bottom: 14pt;
+    page-break-inside: avoid;
+  }
+  .print-section-title {
+    font-size: 12pt;
+    font-weight: 800;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+    border-bottom: 1pt solid #e2e8f0;
+    padding-bottom: 4pt;
+    margin: 0 0 8pt 0;
+  }
+
+  /* Price */
+  .print-price-section {
+    background: #f8fafc;
+    border: 1pt solid #e2e8f0;
+    border-radius: 6pt;
+    padding: 10pt 12pt;
+  }
+  .print-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12pt;
+    flex-wrap: wrap;
+  }
+  .print-price-main {
+    font-size: 22pt;
+    font-weight: 900;
+    color: #0f172a;
+  }
+  .print-price-sqft {
+    font-size: 10pt;
+    color: #64748b;
+  }
+
+  /* Key Details Grid */
+  .print-details-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8pt;
+  }
+  .print-detail-item {
+    background: #f8fafc;
+    border: 1pt solid #e2e8f0;
+    border-radius: 4pt;
+    padding: 6pt 8pt;
+  }
+  .print-detail-label {
+    display: block;
+    font-size: 7.5pt;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.3pt;
+    font-weight: 700;
+  }
+  .print-detail-value {
+    display: block;
+    font-size: 11pt;
+    font-weight: 700;
+    color: #0f172a;
+    margin-top: 2pt;
+  }
+
+  /* Description */
+  .print-description {
+    font-size: 10pt;
+    color: #334155;
+    line-height: 1.7;
+    margin: 0;
+    white-space: pre-wrap;
+  }
+
+  /* Features */
+  .print-features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4pt 12pt;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .print-feature-item {
+    font-size: 9.5pt;
+    color: #334155;
+    padding: 2pt 0;
+  }
+
+  /* Agent */
+  .print-agent-section {
+    background: #f0fdf4;
+    border: 1pt solid #bbf7d0;
+    border-radius: 6pt;
+    padding: 10pt 12pt;
+  }
+  .print-agent-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3pt;
+  }
+  .print-agent-name {
+    font-size: 13pt;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+  }
+  .print-agent-contact {
+    font-size: 10pt;
+    color: #334155;
+    margin: 0;
+  }
+
+  /* Footer */
+  .print-footer {
+    margin-top: 18pt;
+    border-top: 1pt solid #e2e8f0;
+    padding-top: 8pt;
+    font-size: 8pt;
+    color: #94a3b8;
+    text-align: center;
+    page-break-inside: avoid;
+  }
+  .print-ref {
+    color: #64748b;
+  }
+  .print-footer-url {
+    margin-top: 3pt;
+    font-family: monospace;
+    font-size: 7.5pt;
+    color: #64748b;
+    word-break: break-all;
+  }
+  .print-footer-tag {
+    margin-top: 3pt;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1pt;
+    font-size: 7pt;
+  }
+}

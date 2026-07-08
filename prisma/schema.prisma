@@ -1,0 +1,648 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPERADMIN
+  EMPLOYEE
+  AGENT
+  DEMO
+  SELLER
+  BUYER
+}
+
+enum PropertyStatus {
+  DRAFT
+  ACTIVE
+  PENDING
+  SOLD
+  RENTED
+}
+
+enum PropertyType {
+  RESIDENTIAL
+  COMMERCIAL
+  LAND
+  RENTAL
+}
+
+enum ListingType {
+  SALE
+  RENT
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LoanStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  FUNDED
+}
+
+enum ShowingStatus {
+  REQUESTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum LeadStage {
+  NEW
+  CONTACTED
+  QUALIFIED
+  SITE_VISIT
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum TransactionType {
+  DEPOSIT
+  INVESTMENT
+  LISTING_FEE
+  RENT_PAYMENT
+  SUBSCRIPTION
+}
+
+enum SubscriptionInterval {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  LIFETIME
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+  PAUSED
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum MessageChannel {
+  WHATSAPP
+  WHATSAPP_WEB
+  EMAIL
+  TELEGRAM
+  SMS
+  PLATFORM
+}
+
+enum MessageStatus {
+  SENT
+  FAILED
+  PENDING
+  OPENED_WEB
+}
+
+enum MeetingStatus {
+  INVITED
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  address       String?
+  city          String?
+  state         String?
+  zip           String?
+  country       String?       @default("IN")
+  role          Role          @default(BUYER)
+  image         String?
+  active        Boolean       @default(true)
+  lastActiveAt  DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  properties    Property[]    @relation("AgentProperties")
+  transactions      Transaction[]
+  inquiries         Inquiry[]
+  favorites         Favorite[]
+  messagesSent      MessageLog[]    @relation("MessageSender")
+  messagesReceived  MessageLog[]    @relation("MessageRecipient")
+  meetingsAsUser    MeetingInvite[] @relation("MeetingAttendee")
+  meetingsAsAgent   MeetingInvite[] @relation("MeetingAgent")
+  meetingsCreated   MeetingInvite[] @relation("MeetingCreator")
+  kycProfile        KycProfile?
+  loanApplications  LoanApplication[]
+  submittedProperties Property[]  @relation("SubmittedProperties")
+  showings          PropertyShowing[]
+  leadsOwned        Lead[]             @relation("LeadOwner")
+  leadActivities    LeadActivity[]
+  leadTasks         LeadTask[]
+  crmGoals          CrmGoal[]
+  bulkJobs          BulkJob[]
+  subscriptions     UserSubscription[]
+}
+
+model Property {
+  id                 String         @id @default(cuid())
+  symbol             String         @unique
+  title              String
+  slug               String         @unique
+  description        String
+  price              Float
+  listedPrice        Float?
+  currentPrice       Float?
+  rentMonthly        Float?
+  bedrooms           Int            @default(0)
+  bathrooms          Float          @default(0)
+  sqft               Int?
+  address            String
+  city               String
+  state              String
+  zip                String
+  country            String         @default("IN")
+  type               PropertyType   @default(RESIDENTIAL)
+  status             PropertyStatus @default(ACTIVE)
+  images             String         @default("[]")
+  featured           Boolean        @default(false)
+  yearBuilt          Int?
+  yieldRate          Float          @default(0)
+  capRate            Float          @default(0)
+  interestRate       Float          @default(6.5)
+  change24h          Float          @default(0)
+  change7d           Float          @default(0)
+  change1m           Float          @default(0)
+  change6m           Float          @default(0)
+  changeYtd          Float          @default(0)
+  pricePerSqft       Float?
+  priceHistory       String         @default("[]")
+  marketRating       String         @default("B")
+  volumeScore        Int            @default(0)
+  listingType        ListingType    @default(SALE)
+  category           String?
+  area               String?
+  rooms              Int?
+  garages            Int            @default(0)
+  lotSize            Int?
+  totalFloors        Int?
+  floorNumber        Int?
+  furnishingStatus   String?
+  hasServantRoom     Boolean        @default(false)
+  hasPujaRoom        Boolean        @default(false)
+  hasStudyRoom       Boolean        @default(false)
+  balconies          Int            @default(0)
+  liftType           String?
+  flatsPerFloor      Int?
+  availabilityStatus String         @default("Available")
+  videos             String         @default("[]")
+  pdfs               String         @default("[]")
+  features           String         @default("[]")
+  videoUrl           String?
+  virtualTourUrl     String?
+  mapLat             Float?
+  mapLng             Float?
+  submittedById      String?
+  submittedBy        User?          @relation("SubmittedProperties", fields: [submittedById], references: [id])
+  agentId            String
+  agent              User           @relation("AgentProperties", fields: [agentId], references: [id])
+  brokerageRate      Float          @default(3.0)
+  bhk                String?
+  customFields       String         @default("[]")
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  transactions       Transaction[]
+  inquiries          Inquiry[]
+  favorites          Favorite[]
+  showings           PropertyShowing[]
+  loanApplications   LoanApplication[]
+  leads              Lead[]
+
+  @@index([listingType])
+  @@index([category])
+  @@index([area])
+  @@index([state])
+  @@index([price])
+  @@index([type])
+  @@index([status])
+  @@index([yieldRate])
+  @@index([changeYtd])
+  @@index([availabilityStatus])
+  @@index([furnishingStatus])
+}
+
+model Lead {
+  id            String      @id @default(cuid())
+  name          String
+  email         String
+  phone         String?
+  source        String      @default("Website")
+  stage         LeadStage   @default(NEW)
+  score         Int         @default(50)
+  budgetMin     Float?
+  budgetMax     Float?
+  notes         String?
+  nextFollowUpAt DateTime?
+  propertyId    String?
+  property      Property?   @relation(fields: [propertyId], references: [id])
+  ownerId       String?
+  owner         User?       @relation("LeadOwner", fields: [ownerId], references: [id])
+  inquiryId     String?     @unique
+  inquiry       Inquiry?    @relation(fields: [inquiryId], references: [id])
+  showingId     String?     @unique
+  showing       PropertyShowing? @relation(fields: [showingId], references: [id])
+  lifecycleStage String      @default("Lead")
+  leadStatus     String      @default("New")
+  requirements   String?
+  suggestedPropertyIds String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  activities    LeadActivity[]
+  tasks         LeadTask[]
+
+  @@index([stage])
+  @@index([source])
+  @@index([ownerId])
+  @@index([createdAt])
+  @@index([lifecycleStage])
+  @@index([leadStatus])
+}
+
+model LeadActivity {
+  id        String   @id @default(cuid())
+  leadId     String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId     String?
+  user      User?    @relation(fields: [userId], references: [id])
+  type      String   @default("NOTE")
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model LeadTask {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  title       String
+  dueAt       DateTime?
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Transaction {
+  id              String            @id @default(cuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id])
+  propertyId      String?
+  property        Property?         @relation(fields: [propertyId], references: [id])
+  amount          Float
+  currency        String            @default("inr")
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  stripeSessionId    String?        @unique
+  razorpayOrderId    String?        @unique
+  razorpayPaymentId  String?        @unique
+  paymentPlan     String?
+  paymentMethod   String?
+  description     String?
+  brokerageRate   Float             @default(0.0)
+  brokerageAmount Float             @default(0.0)
+  sellerAmount    Float             @default(0.0)
+  received        String            @default("no")
+  balance         Float             @default(0.0)
+  referenceNo     String?
+  notes           String?
+  buyerName       String?
+  sellerName      String?
+  completedAt     DateTime?
+  createdAt       DateTime          @default(now())
+}
+
+model Inquiry {
+  id         String    @id @default(cuid())
+  propertyId String
+  property   Property  @relation(fields: [propertyId], references: [id])
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id])
+  name       String
+  email      String
+  phone      String?
+  message    String
+  createdAt  DateTime  @default(now())
+  lead       Lead?
+}
+
+model Favorite {
+  userId     String
+  propertyId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([userId, propertyId])
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  html      String
+  status    String   @default("SENT")
+  provider  String   @default("dev")
+  error     String?
+  createdAt DateTime @default(now())
+}
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model RatingSlab {
+  id        String   @id @default(cuid())
+  label     String
+  minYield  Float
+  maxYield  Float?
+  color     String   @default("#22c55e")
+  sortOrder Int      @default(0)
+  type      String   @default("yieldRate")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MessageLog {
+  id          String         @id @default(cuid())
+  channel     MessageChannel
+  recipientId String?
+  recipient   User?          @relation("MessageRecipient", fields: [recipientId], references: [id])
+  sentById    String
+  sentBy      User           @relation("MessageSender", fields: [sentById], references: [id])
+  toPhone     String?
+  toEmail     String?
+  subject     String?
+  body        String
+  status      MessageStatus  @default(SENT)
+  provider    String         @default("dev")
+  externalId  String?
+  webUrl      String?
+  error       String?
+  meetingId   String?
+  meeting     MeetingInvite? @relation(fields: [meetingId], references: [id])
+  createdAt   DateTime       @default(now())
+}
+
+model MeetingInvite {
+  id          String        @id @default(cuid())
+  token       String        @unique @default(cuid())
+  userId      String
+  user        User          @relation("MeetingAttendee", fields: [userId], references: [id])
+  agentId     String?
+  agent       User?         @relation("MeetingAgent", fields: [agentId], references: [id])
+  createdById String
+  createdBy   User          @relation("MeetingCreator", fields: [createdById], references: [id])
+  title       String
+  message     String?
+  calendlyUrl String?
+  customUrl   String?
+  scheduledAt DateTime?
+  status      MeetingStatus @default(INVITED)
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  messages    MessageLog[]
+}
+
+model KycProfile {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName            String
+  dateOfBirth         String?
+  nationality         String?
+  idType              String?
+  idNumber            String?
+  address             String?
+  city                String?
+  state               String?
+  pinCode             String?
+  country             String?
+  photoUrl            String?
+  aadhaarFrontUrl     String?
+  aadhaarBackUrl      String?
+  panCardUrl          String?
+  drivingLicenseUrl   String?
+  voterIdUrl          String?
+  idDocumentUrl       String?
+  addressProofUrl     String?
+  status              KycStatus @default(PENDING)
+  adminNotes          String?
+  reviewedAt          DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model LoanApplication {
+  id                  String     @id @default(cuid())
+  userId              String
+  user                User       @relation(fields: [userId], references: [id])
+  propertyId          String?
+  property            Property?  @relation(fields: [propertyId], references: [id])
+  loanAmount          Float
+  loanType            String?    @default("Home Loan")
+  termYears           Int        @default(20)
+  annualIncome        Float?
+  employmentStatus    String?
+  downPayment         Float?
+  purpose             String?
+  creditScore         Int?
+  existingEmi         Float?
+  coApplicantName     String?
+  coApplicantIncome   Float?
+  propertyType        String?
+  propertyArea        String?
+  propertyCity        String?
+  incomeProofUrl      String?
+  bankStatementUrl    String?
+  propertyDocUrl      String?
+  status              LoanStatus @default(PENDING)
+  adminNotes          String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+}
+
+model PropertyShowing {
+  id         String        @id @default(cuid())
+  propertyId String
+  property   Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?         @relation(fields: [userId], references: [id])
+  name       String
+  email      String
+  phone      String?
+  tourDate   DateTime
+  tourTime   String
+  tourType   String        @default("IN_PERSON")
+  message    String?
+  status     ShowingStatus @default(REQUESTED)
+  createdAt  DateTime      @default(now())
+  lead       Lead?
+}
+
+model CrmGoal {
+  id        String   @id @default(cuid())
+  title     String
+  target    Int
+  current   Int      @default(0)
+  period    String   @default("monthly")
+  ownerId   String?
+  owner     User?    @relation(fields: [ownerId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BulkJob {
+  id          String   @id @default(cuid())
+  type        String
+  status      String   @default("PENDING")
+  fileName    String?
+  recordCount Int?
+  error       String?
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Developer {
+  id              String          @id @default(cuid())
+  name            String          @unique
+  projectCount    Int             @default(0)
+  email           String?
+  phone           String?
+  address         String?
+  city            String?
+  state           String?
+  zip             String?
+  country         String          @default("IN")
+  experienceYears Int?
+  identityType    String?
+  identityNumber  String?
+  website         String?
+  description     String?
+  tasks           DeveloperTask[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model DeveloperTask {
+  id          String    @id @default(cuid())
+  developerId String
+  developer   Developer @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  priority    String    @default("MEDIUM")
+  status      String    @default("TODO")
+  deadline    DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model BrokerageInvoice {
+  id              String    @id @default(cuid())
+  invoiceNumber   String?   @unique
+  bookingId       String?
+  invoiceTo       String    @default("Developer")
+  bookingName     String
+  brokerageName   String
+  status          String    @default("Generated")
+  totalAmount     Float     @default(0)
+  subtotal        Float     @default(0)
+  taxRate         Float     @default(0)
+  taxAmount       Float     @default(0)
+  commissionPct   Float?
+  dueOn           DateTime?
+  paidAt          DateTime?
+  buyerName       String?
+  buyerEmail      String?
+  buyerPhone      String?
+  buyerAddress    String?
+  agentName       String?
+  agentEmail      String?
+  agentPhone      String?
+  propertySymbol  String?
+  propertyTitle   String?
+  propertyAddress String?
+  lineItemsJson   String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+}
+
+model SubscriptionPlan {
+  id            String               @id @default(cuid())
+  name          String
+  slug          String               @unique
+  description   String?
+  interval      SubscriptionInterval
+  price         Float
+  currency      String               @default("usd")
+  featuresJson  String?
+  targetRole    String?              // BUYER, INVESTOR, AGENT, ALL
+  trialDays     Int                  @default(0)
+  active        Boolean              @default(true)
+  sortOrder     Int                  @default(0)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @default(now()) @updatedAt
+  subscriptions UserSubscription[]
+}
+
+model UserSubscription {
+  id                 String             @id @default(cuid())
+  userId             String
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId             String
+  plan               SubscriptionPlan   @relation(fields: [planId], references: [id])
+  status             SubscriptionStatus @default(ACTIVE)
+  amount             Float
+  currency           String             @default("usd")
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean            @default(false)
+  cancelledAt        DateTime?
+  stripeSubscriptionId String?          @unique
+  notes              String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @default(now()) @updatedAt
+
+  @@index([userId])
+  @@index([planId])
+  @@index([status])
+}
+
+model CustomFieldDef {
+  id        String   @id @default(cuid())
+  category  String
+  label     String
+  fieldType String   @default("text")
+  options   String?
+  required  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

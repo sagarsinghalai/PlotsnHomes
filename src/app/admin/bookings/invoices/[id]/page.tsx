@@ -1,0 +1,46 @@
+import { InvoiceReceipt } from "@/components/admin/invoice-receipt";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { mapInvoiceToReceipt } from "@/lib/invoice-map";
+import { prisma } from "@/lib/prisma";
+import { formatCurrency } from "@/lib/utils";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+export default async function InvoiceDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams: { copy?: string };
+}) {
+  const inv = await prisma.brokerageInvoice.findUnique({ where: { id: params.id } });
+  if (!inv) notFound();
+
+  const receipt = mapInvoiceToReceipt(inv);
+
+  return (
+    <div>
+      <AdminPageHeader
+        title={inv.invoiceNumber ?? `Invoice ${inv.id.slice(0, 8)}`}
+        description={`${inv.bookingName} · ${formatCurrency(inv.totalAmount)} · ${inv.status}`}
+        breadcrumb={[
+          { label: "Admin", href: "/admin" },
+          { label: "Invoices", href: "/admin/bookings/invoices" },
+          { label: inv.invoiceNumber ?? "Detail" },
+        ]}
+        actions={
+          <Link
+            href="/admin/bookings/invoices"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
+          >
+            ← All invoices
+          </Link>
+        }
+      />
+      <InvoiceReceipt
+        invoice={receipt}
+        initialParty={searchParams.copy === "agent" ? "agent" : "buyer"}
+      />
+    </div>
+  );
+}
