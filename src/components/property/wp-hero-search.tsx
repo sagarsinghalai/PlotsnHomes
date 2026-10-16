@@ -2,7 +2,7 @@
 
 import { ChevronDown, Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { searchParamsToQuery } from "@/lib/property-search";
 
 const CATEGORIES = [
@@ -26,7 +26,6 @@ const AMENITIES: [string, string][] = [
   ["fWifi", "WiFi"],
 ];
 
-// ── Per screenshot: Buy min/max based on type ──────────────────────────────
 const BUY_MIN_STANDARD = [
   { value: "0",         label: "Min" },
   { value: "500000",    label: "₹5 Lac" },
@@ -77,7 +76,6 @@ const BUY_MAX_LAND = [
   { value: "999999999", label: "Max" },
 ];
 
-// ── Per screenshot: Rental min/max based on type ────────────────────────────
 const RENT_MIN_STANDARD = [
   { value: "0",      label: "Min" },
   { value: "5000",   label: "₹5,000" },
@@ -117,6 +115,11 @@ const FURNISHING_OPTIONS = [
   { value: "Unfurnished",      label: "Unfurnished" },
 ];
 
+const BEDROOM_OPTIONS = [
+  "1BHK", "2BHK", "3BHK", "4BHK", "5BHK",
+  "Simplex", "Duplex", "Triplex", "Penthouse"
+];
+
 function formatIndianPrice(value: number) {
   if (value === 0) return "Min";
   if (value === 999999999) return "Max";
@@ -140,8 +143,9 @@ type Props = {
   bhkOptions?: string[];
 };
 
+// Premium Glassmorphic / Dark Luxury Field styling
 const fieldClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all duration-200 hover:border-slate-300";
+  "w-full rounded-xl border border-slate-800 bg-slate-950/60 px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30 transition-all duration-200 hover:border-slate-700 hover:bg-slate-950/80";
 
 export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = [], bhkOptions = [] }: Props) {
   const router = useRouter();
@@ -160,6 +164,18 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
   const [category, setCategory] = useState(params.get("category") || "");
   const [customMinPrice, setCustomMinPrice] = useState("");
   const [customMaxPrice, setCustomMaxPrice] = useState("");
+  const [dynamicCategories, setDynamicCategories] = useState<string[]>(CATEGORIES);
+
+  useEffect(() => {
+    fetch("/api/admin/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+          setDynamicCategories(data.categories.map((c: any) => c.name));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const pMin = Math.round(priceMin);
   const pMax = Math.round(priceMax);
@@ -203,7 +219,6 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
     const fd = new FormData(e.currentTarget);
     const next: Record<string, string> = { listingType };
 
-    // Use custom price if entered, else dropdown value
     const minP = customMinPrice.trim() || (priceRange[0] > 0 ? String(priceRange[0]) : "");
     const maxP = customMaxPrice.trim() || (priceRange[1] < 999999999 ? String(priceRange[1]) : "");
     if (minP) next.minPrice = minP;
@@ -240,10 +255,10 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
   }
 
   return (
-    <div className="mx-auto max-w-4xl rounded-xl bg-white shadow-2xl shadow-slate-950/15 border border-slate-200/80 overflow-hidden transition-all duration-300">
+    <div className="mx-auto max-w-4xl rounded-2xl bg-slate-950/85 backdrop-blur-xl border border-white/10 shadow-2xl shadow-slate-950/50 overflow-hidden transition-all duration-300">
       {/* Sale / Rent Tabs Segmented Control */}
-      <div className="flex items-center justify-between border-b border-slate-100/80 bg-slate-50/50 p-4 pb-3">
-        <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200/50">
+      <div className="flex items-center justify-between border-b border-white/5 bg-slate-900/40 p-4 pb-3">
+        <div className="flex bg-slate-950 p-1 rounded-xl border border-white/5 shadow-inner">
           {[
             { id: "SALE", label: "Buy Properties" },
             { id: "RENT", label: "Rent / Lease" },
@@ -252,25 +267,25 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               key={tab.id}
               type="button"
               onClick={() => handleTabChange(tab.id)}
-              className={`px-5 py-1.5 text-xs font-semibold rounded-md transition-all duration-200 ${
+              className={`px-5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
                 listingType === tab.id
-                  ? "bg-white text-slate-900 shadow-sm border border-slate-200/20"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white/40"
+                  ? "bg-gold text-slate-950 shadow-md font-bold"
+                  : "text-slate-400 hover:text-white hover:bg-white/5"
               }`}
             >
               {tab.label}
             </button>
           ))}
         </div>
-        <div className="hidden sm:block text-xs font-semibold text-slate-400 tracking-wide uppercase">
+        <div className="hidden sm:block text-[10px] font-bold text-gold tracking-widest uppercase">
           PlotsnHomes Portal
         </div>
       </div>
 
       {/* Furnishing quick-pick — shown for RENT only */}
       {listingType === "RENT" && (
-        <div className="flex items-center gap-2 px-5 pt-3 pb-0 flex-wrap">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Furnishing:</span>
+        <div className="flex items-center gap-2 px-5 pt-4 pb-0 flex-wrap">
+          <span className="text-[10px] font-bold text-gold/80 uppercase tracking-wider">Furnishing:</span>
           {FURNISHING_OPTIONS.map((opt) => (
             <button
               key={opt.value}
@@ -278,8 +293,8 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               onClick={() => setFurnishing(furnishing === opt.value ? "" : opt.value)}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-semibold transition-all duration-150 ${
                 furnishing === opt.value
-                  ? "border-gold bg-gold text-slate-900 shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-gold/50 hover:bg-gold/10"
+                  ? "border-gold bg-gold text-slate-950 shadow-sm"
+                  : "border-white/10 bg-slate-900/40 text-slate-300 hover:border-gold/50 hover:bg-gold/10 hover:text-gold"
               }`}
             >
               {furnishing === opt.value && <X className="h-3 w-3" />}
@@ -289,45 +304,46 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
         </div>
       )}
 
-      {/* BHK Configuration quick-pick — shown when bhkOptions exist */}
-      {bhkOptions.length > 0 && (
-        <div className="flex items-center gap-2 px-5 pt-3 pb-0 flex-wrap">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">BHK / Config:</span>
-          {bhkOptions.map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => setBhk(bhk === opt ? "" : opt)}
-              className={`flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-semibold transition-all duration-150 ${
-                bhk === opt
-                  ? "border-gold bg-gold text-slate-900 shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-gold/50 hover:bg-gold/10"
-              }`}
-            >
-              {bhk === opt && <X className="h-3 w-3" />}
-              {opt}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <form onSubmit={search} className="p-4 sm:p-5">
+      <form onSubmit={search} className="p-4 sm:p-6">
         {/* Primary filters — Grid Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
+          {/* Bedrooms */}
+          <div className="lg:col-span-3">
+            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
+              Bedrooms
+            </label>
+            <div className="relative">
+              <select
+                name="bhk"
+                className={fieldClass + " appearance-none"}
+                value={bhk}
+                onChange={(e) => setBhk(e.target.value)}
+              >
+                <option value="" className="bg-slate-950 text-slate-100">Any Bedrooms</option>
+                {BEDROOM_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt} className="bg-slate-950 text-slate-100">
+                    {opt}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+            </div>
+          </div>
+
           {/* Search Box */}
           <div className="lg:col-span-6 relative">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
               Search Property
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gold/80" />
               <input
                 name="q"
                 type="text"
                 list="property-suggestions"
                 defaultValue={params.get("q") ?? ""}
                 placeholder="Property name, symbol ID (e.g. BV-TN-0012), or city..."
-                className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-4 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all duration-200 hover:border-slate-300"
+                className="w-full rounded-xl border border-slate-800 bg-slate-950/60 pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30 transition-all duration-200 hover:border-slate-700 hover:bg-slate-950/80"
               />
               {suggestions.length > 0 && (
                 <datalist id="property-suggestions">
@@ -343,7 +359,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
 
           {/* Category */}
           <div className="lg:col-span-3">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
               Category
             </label>
             <div className="relative">
@@ -353,115 +369,127 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
-                <option value="">All Categories</option>
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                <option value="" className="bg-slate-950 text-slate-100">All Categories</option>
+                {dynamicCategories.map((c) => (
+                  <option key={c} value={c} className="bg-slate-950 text-slate-100">{c}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
             </div>
           </div>
 
           {/* City */}
-          <div className="lg:col-span-3">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+          <div className="lg:col-span-2">
+            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
               City
             </label>
-            <select name="city" defaultValue={params.get("city") ?? ""} className={fieldClass}>
-              <option value="">All Cities</option>
-              {cities.map((c) => (
-                <option key={`${c.city}-${c.state}`} value={c.city}>
-                  {c.city}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select name="city" defaultValue={params.get("city") ?? ""} className={fieldClass + " appearance-none"}>
+                <option value="" className="bg-slate-950 text-slate-100">All Cities</option>
+                {cities.map((c) => (
+                  <option key={`${c.city}-${c.state}`} value={c.city} className="bg-slate-950 text-slate-100">
+                    {c.city}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+            </div>
           </div>
 
           {/* Area */}
           <div className="lg:col-span-3">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
               Area / Locality
             </label>
-            <select name="area" defaultValue={params.get("area") ?? ""} className={fieldClass}>
-              <option value="">All Areas</option>
-              {areas.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Min Price */}
-          <div className="lg:col-span-3">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-              Min Price
-            </label>
-            <div className="space-y-1">
-              <select
-                value={priceRange[0]}
-                onChange={(e) =>
-                  setPriceRange([Math.min(+e.target.value || 0, priceRange[1]), priceRange[1]])
-                }
-                className={fieldClass}
-              >
-                {displayMinOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
+            <div className="relative">
+              <select name="area" defaultValue={params.get("area") ?? ""} className={fieldClass + " appearance-none"}>
+                <option value="" className="bg-slate-950 text-slate-100">All Areas</option>
+                {areas.map((a) => (
+                  <option key={a} value={a} className="bg-slate-950 text-slate-100">
+                    {a}
                   </option>
                 ))}
               </select>
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+            </div>
+          </div>
+
+          {/* Min Price */}
+          <div className="lg:col-span-2">
+            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
+              Min Price
+            </label>
+            <div className="space-y-1.5">
+              <div className="relative">
+                <select
+                  value={priceRange[0]}
+                  onChange={(e) =>
+                    setPriceRange([Math.min(+e.target.value || 0, priceRange[1]), priceRange[1]])
+                  }
+                  className={fieldClass + " appearance-none"}
+                >
+                  {displayMinOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value} className="bg-slate-950 text-slate-100">
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+              </div>
               <input
                 type="number"
                 placeholder="Custom amount"
                 value={customMinPrice}
                 onChange={(e) => setCustomMinPrice(e.target.value)}
-                className="w-full rounded-lg border border-dashed border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 placeholder:text-slate-400 focus:border-gold focus:outline-none"
+                className="w-full rounded-xl border border-dashed border-slate-800 bg-slate-950/20 px-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:border-gold focus:outline-none"
               />
             </div>
           </div>
 
           {/* Max Price */}
-          <div className="lg:col-span-3">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+          <div className="lg:col-span-2">
+            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
               Max Price
             </label>
-            <div className="space-y-1">
-              <select
-                value={priceRange[1]}
-                onChange={(e) =>
-                  setPriceRange([priceRange[0], Math.max(+e.target.value || 999999999, priceRange[0])])
-                }
-                className={fieldClass}
-              >
-                {displayMaxOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-1.5">
+              <div className="relative">
+                <select
+                  value={priceRange[1]}
+                  onChange={(e) =>
+                    setPriceRange([priceRange[0], Math.max(+e.target.value || 999999999, priceRange[0])])
+                  }
+                  className={fieldClass + " appearance-none"}
+                >
+                  {displayMaxOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value} className="bg-slate-950 text-slate-100">
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+              </div>
               <input
                 type="number"
                 placeholder="Custom amount"
                 value={customMaxPrice}
                 onChange={(e) => setCustomMaxPrice(e.target.value)}
-                className="w-full rounded-lg border border-dashed border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-700 placeholder:text-slate-400 focus:border-gold focus:outline-none"
+                className="w-full rounded-xl border border-dashed border-slate-800 bg-slate-950/20 px-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:border-gold focus:outline-none"
               />
             </div>
           </div>
 
           {/* Search Button */}
           <div className="lg:col-span-3 flex flex-col justify-end">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 opacity-0 select-none hidden lg:block">
+            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5 opacity-0 select-none hidden lg:block">
               Submit
             </label>
             <div className="flex gap-2">
               <button
                 type="submit"
                 disabled={pending}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-gold to-gold-dark hover:from-gold-dark hover:to-gold px-4 py-2 text-sm font-bold text-white shadow-md shadow-gold/10 hover:shadow-lg hover:shadow-gold/20 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 h-[38px]"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gold via-amber-500 to-gold-dark hover:brightness-110 active:scale-[0.98] px-4 py-2.5 text-sm font-bold text-slate-950 shadow-md shadow-gold/10 hover:shadow-lg hover:shadow-gold/25 transition-all duration-200 disabled:opacity-50 h-[44px]"
               >
-                <Search className="h-4 w-4" />
+                <Search className="h-4 w-4 text-slate-950 stroke-[2.5px]" />
                 {pending ? "Searching…" : "Search"}
               </button>
               <button
@@ -475,7 +503,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                   setPriceRange([0, 999999999]);
                   router.push("/properties");
                 }}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all h-[38px]"
+                className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-slate-900/40 px-3 py-2 text-xs font-bold text-slate-300 hover:bg-slate-900 hover:text-white transition-all h-[44px]"
                 title="Clear Filters"
               >
                 Clear
@@ -485,53 +513,42 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
         </div>
 
         {/* Collapsible Section for Advanced Filters */}
-        <div className="mt-4 border-t border-slate-100 pt-4">
+        <div className="mt-6 border-t border-white/5 pt-4">
           <button
             type="button"
             onClick={() => setShowMore((v) => !v)}
-            className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 uppercase tracking-wider transition-all duration-150"
+            className="flex items-center gap-1.5 text-xs font-bold text-gold/85 hover:text-gold uppercase tracking-wider transition-all duration-150"
           >
             <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showMore ? "rotate-180" : ""}`} />
             {showMore ? "Hide Advanced Filters" : "Show Advanced Filters"}
           </button>
 
           {showMore && (
-            <div className="mt-4 space-y-4">
+            <div className="mt-5 space-y-4">
               {/* Secondary Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50/70 p-4 rounded-xl border border-slate-100">
-                {/* Bedrooms */}
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Bedrooms
-                  </label>
-                  <select name="minBeds" defaultValue={params.get("minBeds") ?? ""} className={fieldClass}>
-                    <option value="">Any Bedrooms</option>
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <option key={n} value={n}>
-                        {n}+ beds
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-900/30 p-4 rounded-xl border border-white/5">
 
                 {/* Bathrooms */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
                     Bathrooms
                   </label>
-                  <select name="minBaths" defaultValue={params.get("minBaths") ?? ""} className={fieldClass}>
-                    <option value="">Any Bathrooms</option>
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <option key={n} value={n}>
-                        {n}+ baths
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select name="minBaths" defaultValue={params.get("minBaths") ?? ""} className={fieldClass + " appearance-none"}>
+                      <option value="" className="bg-slate-950 text-slate-100">Any Bathrooms</option>
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <option key={n} value={n} className="bg-slate-950 text-slate-100">
+                          {n}+ baths
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+                  </div>
                 </div>
 
                 {/* Min sq.ft */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
                     Min sq.ft
                   </label>
                   <input
@@ -545,71 +562,80 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               </div>
 
               {/* Property Extras */}
-              <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+              <div className="bg-slate-900/30 p-4 rounded-xl border border-white/5">
+                <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-3">
                   Property Extras
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Balconies</label>
-                    <select name="minBalconies" defaultValue={params.get("minBalconies") ?? ""} className={fieldClass}>
-                      <option value="">Any</option>
-                      {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}+ balconies</option>)}
-                    </select>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Balconies</label>
+                    <div className="relative">
+                      <select name="minBalconies" defaultValue={params.get("minBalconies") ?? ""} className={fieldClass + " appearance-none"}>
+                        <option value="" className="bg-slate-950 text-slate-100">Any</option>
+                        {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n} className="bg-slate-950 text-slate-100">{n}+ balconies</option>)}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Lift Type</label>
-                    <select name="liftType" defaultValue={params.get("liftType") ?? ""} className={fieldClass}>
-                      <option value="">Any</option>
-                      <option value="Common Lift">Common Lift</option>
-                      <option value="Personal Lift">Personal Lift</option>
-                      <option value="No Lift">No Lift</option>
-                    </select>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Lift Type</label>
+                    <div className="relative">
+                      <select name="liftType" defaultValue={params.get("liftType") ?? ""} className={fieldClass + " appearance-none"}>
+                        <option value="" className="bg-slate-950 text-slate-100">Any</option>
+                        <option value="Common Lift" className="bg-slate-950 text-slate-100">Common Lift</option>
+                        <option value="Personal Lift" className="bg-slate-950 text-slate-100">Personal Lift</option>
+                        <option value="No Lift" className="bg-slate-950 text-slate-100">No Lift</option>
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Flats/Floor</label>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Flats/Floor</label>
                     <input name="flatsPerFloor" type="number" min={1} defaultValue={params.get("flatsPerFloor") ?? ""} placeholder="Any" className={fieldClass} />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1.5">Availability</label>
-                    <select name="availabilityStatus" defaultValue={params.get("availabilityStatus") ?? ""} className={fieldClass}>
-                      <option value="">Any</option>
-                      <option value="Available">Available</option>
-                      <option value="Sold">Sold</option>
-                      <option value="Rented">Rented</option>
-                    </select>
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Availability</label>
+                    <div className="relative">
+                      <select name="availabilityStatus" defaultValue={params.get("availabilityStatus") ?? ""} className={fieldClass + " appearance-none"}>
+                        <option value="" className="bg-slate-950 text-slate-100">Any</option>
+                        <option value="Available" className="bg-slate-950 text-slate-100">Available</option>
+                        <option value="Sold" className="bg-slate-950 text-slate-100">Sold</option>
+                        <option value="Rented" className="bg-slate-950 text-slate-100">Rented</option>
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border-t border-slate-200/60 pt-4">
-                  <label className="inline-flex items-center gap-2 text-xs text-slate-600 hover:text-slate-800 cursor-pointer select-none py-1">
-                    <input type="checkbox" name="servantRoom" value="1" defaultChecked={params.get("servantRoom") === "1"} className="h-4.5 w-4.5 rounded border-slate-300 text-gold focus:ring-gold/30 transition duration-150 cursor-pointer" />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-white/5 pt-4">
+                  <label className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-gold/50 has-[:checked]:bg-gold/10 has-[:checked]:text-gold hover:scale-[1.02] active:scale-[0.98]">
+                    <input type="checkbox" name="servantRoom" value="1" defaultChecked={params.get("servantRoom") === "1"} className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-gold focus:ring-gold/30 transition duration-150 cursor-pointer" />
                     <span>Servant Room</span>
                   </label>
-                  <label className="inline-flex items-center gap-2 text-xs text-slate-600 hover:text-slate-800 cursor-pointer select-none py-1">
-                    <input type="checkbox" name="pujaRoom" value="1" defaultChecked={params.get("pujaRoom") === "1"} className="h-4.5 w-4.5 rounded border-slate-300 text-gold focus:ring-gold/30 transition duration-150 cursor-pointer" />
+                  <label className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-gold/50 has-[:checked]:bg-gold/10 has-[:checked]:text-gold hover:scale-[1.02] active:scale-[0.98]">
+                    <input type="checkbox" name="pujaRoom" value="1" defaultChecked={params.get("pujaRoom") === "1"} className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-gold focus:ring-gold/30 transition duration-150 cursor-pointer" />
                     <span>Puja Ghar</span>
                   </label>
-                  <label className="inline-flex items-center gap-2 text-xs text-slate-600 hover:text-slate-800 cursor-pointer select-none py-1">
-                    <input type="checkbox" name="studyRoom" value="1" defaultChecked={params.get("studyRoom") === "1"} className="h-4.5 w-4.5 rounded border-slate-300 text-gold focus:ring-gold/30 transition duration-150 cursor-pointer" />
+                  <label className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-gold/50 has-[:checked]:bg-gold/10 has-[:checked]:text-gold hover:scale-[1.02] active:scale-[0.98]">
+                    <input type="checkbox" name="studyRoom" value="1" defaultChecked={params.get("studyRoom") === "1"} className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-gold focus:ring-gold/30 transition duration-150 cursor-pointer" />
                     <span>Study Room</span>
                   </label>
                 </div>
               </div>
 
               {/* Amenities */}
-              <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-100">
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+              <div className="bg-slate-900/30 p-4 rounded-xl border border-white/5">
+                <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-3">
                   Amenities
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {AMENITIES.map(([key, label]) => (
-                    <label key={key} className="inline-flex items-center gap-2 text-xs text-slate-600 hover:text-slate-800 cursor-pointer select-none py-1">
+                    <label key={key} className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-gold/50 has-[:checked]:bg-gold/10 has-[:checked]:text-gold hover:scale-[1.02] active:scale-[0.98]">
                       <input
                         type="checkbox"
                         name={key}
                         value="1"
                         defaultChecked={params.get(key) === "1"}
-                        className="h-4.5 w-4.5 rounded border-slate-300 text-gold focus:ring-gold/30 transition duration-150 cursor-pointer"
+                        className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-gold focus:ring-gold/30 transition duration-150 cursor-pointer"
                       />
                       <span>{label}</span>
                     </label>

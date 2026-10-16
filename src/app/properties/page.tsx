@@ -30,7 +30,7 @@ export default async function PropertiesPage({
       orderBy,
       skip: filters.skip,
       take: filters.perPage,
-      include: { agent: { select: { name: true, email: true } } },
+      include: { agent: { select: { name: true, email: true, phone: true } } },
     }),
     prisma.property.aggregate({
       where: { status: "ACTIVE" },
@@ -64,53 +64,59 @@ export default async function PropertiesPage({
 
   return (
     <div className="bg-slate-50 min-h-screen">
-      <section className="relative bg-slate-900 text-white py-12 sm:py-14">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&q=80')] bg-cover bg-center opacity-30" />
-        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <h1 className="font-display text-3xl sm:text-4xl font-bold text-center">Find your property</h1>
-          <p className="mt-1.5 text-center text-sm text-slate-300">{total.toLocaleString()} listings · Buy &amp; rent</p>
-          <div className="mt-6 sm:mt-8">
-            <Suspense fallback={<div className="h-36 bg-white/10 rounded-xl animate-pulse" />}>
-              <WpHeroSearch
-                priceMin={priceRange._min.price ?? 0}
-                priceMax={priceRange._max.price ?? 2000000}
-                cities={citiesRaw}
-                areas={areas}
-                suggestions={suggestionsRaw}
-                bhkOptions={bhkOptions}
-              />
-            </Suspense>
+      {/* Compact page header — no hero image */}
+      <div className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-gold-dark">PlotsnHomes</p>
+            <h1 className="mt-1 font-display text-2xl font-bold text-slate-900">All Properties</h1>
           </div>
+          <p className="text-sm text-slate-500">{total.toLocaleString()} listings · Buy &amp; rent</p>
         </div>
-      </section>
+
+        {/* Search filters directly under the header */}
+        <div className="mx-auto max-w-7xl px-4 pb-4 sm:px-6 lg:px-8">
+          <Suspense fallback={<div className="h-24 bg-slate-100 rounded-xl animate-pulse" />}>
+            <WpHeroSearch
+              priceMin={priceRange._min.price ?? 0}
+              priceMax={priceRange._max.price ?? 2000000}
+              cities={citiesRaw}
+              areas={areas}
+              suggestions={suggestionsRaw}
+              bhkOptions={bhkOptions}
+            />
+          </Suspense>
+        </div>
+      </div>
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div>
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-              <p className="text-sm text-slate-600">
-                {total.toLocaleString()} properties
-                {filters.listingType ? ` · ${filters.listingType === "RENT" ? "Rentals" : "Sales"}` : ""}
-              </p>
-              <Link href="/dashboard/list-property" className="text-sm font-medium text-gold-dark hover:underline">
-                + List your property
-              </Link>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <p className="text-sm text-slate-600">
+              {total.toLocaleString()} properties
+              {filters.listingType ? ` · ${filters.listingType === "RENT" ? "Rentals" : "Sales"}` : ""}
+            </p>
+            <Link href="/dashboard/list-property" className="text-sm font-medium text-gold-dark hover:underline">
+              + List your property
+            </Link>
+          </div>
+
+          {properties.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {properties.map((p) => (
+                <PropertyCard key={p.id} property={p} />
+              ))}
             </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-16 text-center">
+              <p className="text-lg font-medium text-slate-700">No properties match your filters</p>
+            </div>
+          )}
 
-            {properties.length > 0 ? (
-              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                {properties.map((p) => (
-                  <PropertyCard key={p.id} property={p} />
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-16 text-center">
-                <p className="text-lg font-medium text-slate-700">No properties match your filters</p>
-              </div>
-            )}
-
-            <PropertyPagination page={filters.page} totalPages={totalPages} searchParams={searchParams} />
+          <PropertyPagination page={filters.page} totalPages={totalPages} searchParams={searchParams} />
         </div>
       </div>
     </div>
   );
 }
+

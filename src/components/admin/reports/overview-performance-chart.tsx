@@ -335,38 +335,41 @@ export function OverviewPerformanceChart() {
           {hoveredPoint && (() => {
             const metric = METRICS.find((m) => m.key === hoveredPoint.metricKey)!;
             const formatted = metric.format(hoveredPoint.value);
-            const tw = Math.max(formatted.length * 6.5 + 24, 80);
+            const tw = Math.max(formatted.length * 7.5 + 28, 96);
             const tx = Math.min(
               Math.max(hoveredPoint.x - tw / 2, pad.left),
               W - pad.right - tw
             );
-            const ty = hoveredPoint.y - 46;
+            const ty = hoveredPoint.y - 50;
+            const tooltipY = ty < pad.top ? hoveredPoint.y + 12 : ty;
             return (
-              <g>
+              <g className="transition-all duration-200">
                 <rect
                   x={tx}
-                  y={ty < pad.top ? hoveredPoint.y + 10 : ty}
+                  y={tooltipY}
                   width={tw}
-                  height={34}
-                  rx={8}
-                  fill="#1E293B"
-                  opacity={0.92}
+                  height={38}
+                  rx={10}
+                  fill="#0F172A"
+                  stroke="#334155"
+                  strokeWidth={1}
                 />
                 <text
                   x={tx + tw / 2}
-                  y={(ty < pad.top ? hoveredPoint.y + 10 : ty) + 13}
+                  y={tooltipY + 14}
                   textAnchor="middle"
-                  fontSize="9"
+                  fontSize="10"
+                  fontWeight="600"
                   fill="#94A3B8"
                 >
                   {hoveredPoint.label} · {metric.label}
                 </text>
                 <text
                   x={tx + tw / 2}
-                  y={(ty < pad.top ? hoveredPoint.y + 10 : ty) + 26}
+                  y={tooltipY + 29}
                   textAnchor="middle"
-                  fontSize="11"
-                  fontWeight="700"
+                  fontSize="12"
+                  fontWeight="800"
                   fill="#F8FAFC"
                 >
                   {formatted}

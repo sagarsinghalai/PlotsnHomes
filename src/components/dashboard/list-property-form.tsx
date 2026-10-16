@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { MEDIA_LIMITS, mediaLimitLabel } from "@/lib/media-limits";
@@ -26,7 +26,7 @@ export function ListPropertyForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [listingType, setListingType] = useState<"SALE" | "RENT">("SALE");
+  const [listingType, setListingType] = useState<string>("SALE");
   const [rentMonthly, setRentMonthly] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [videos, setVideos] = useState<string[]>([]);
@@ -38,6 +38,20 @@ export function ListPropertyForm() {
   const [liftType, setLiftType] = useState("");
   const [flatsPerFloor, setFlatsPerFloor] = useState("");
   const [availabilityStatus, setAvailabilityStatus] = useState("Available");
+
+  const [categoriesList, setCategoriesList] = useState<string[]>([...PROPERTY_CATEGORIES]);
+
+  useEffect(() => {
+    fetch("/api/admin/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.categories) && data.categories.length > 0) {
+          const names = data.categories.map((c: any) => c.name);
+          setCategoriesList(Array.from(new Set([...PROPERTY_CATEGORIES, ...names])));
+        }
+      })
+      .catch(() => {});
+  }, []);
   async function handleImages(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files) return;
@@ -170,7 +184,7 @@ export function ListPropertyForm() {
         <div>
           <Label>Category</Label>
           <select name="category" className="w-full rounded-xl border px-4 py-2.5 text-sm">
-            {PROPERTY_CATEGORIES.map((c) => (
+            {categoriesList.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>

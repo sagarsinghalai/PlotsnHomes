@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin-api";
+import { hasEditPermissionServer, hasDeletePermissionServer } from "@/lib/permissions";
 import { propertyPatchSchema, serializeMediaArrays } from "@/lib/property-admin-schema";
 import { prisma } from "@/lib/prisma";
 
@@ -27,6 +28,14 @@ export async function PATCH(
 ) {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
+
+  const canEdit = await hasEditPermissionServer(auth.session.user, "/admin/properties");
+  if (!canEdit) {
+    return NextResponse.json(
+      { error: "Forbidden: You do not have permission to edit properties." },
+      { status: 403 }
+    );
+  }
 
   try {
     const body = await req.json();
@@ -84,6 +93,12 @@ export async function PATCH(
         ...(data.mapLat !== undefined && { mapLat: data.mapLat }),
         ...(data.mapLng !== undefined && { mapLng: data.mapLng }),
         ...(data.customFields !== undefined && { customFields: data.customFields }),
+        ...(data.developerId !== undefined && { developerId: data.developerId }),
+        ...(data.projectId !== undefined && { projectId: data.projectId }),
+        ...(data.basePriceRate !== undefined && { basePriceRate: data.basePriceRate }),
+        ...(data.softLaunchRate !== undefined && { softLaunchRate: data.softLaunchRate }),
+        ...(data.preLaunchRate !== undefined && { preLaunchRate: data.preLaunchRate }),
+        ...(data.launchRate !== undefined && { launchRate: data.launchRate }),
         ...serializeMediaArrays({
           videos: data.videos,
           pdfs: data.pdfs,
@@ -92,6 +107,19 @@ export async function PATCH(
         pricePerSqft: sqft && sqft > 0 ? price / sqft : existing.pricePerSqft,
       },
     });
+
+    if (data.price !== undefined && data.price !== existing.price) {
+      const { logPropertyPriceChange } = await import("@/lib/price-history");
+      await logPropertyPriceChange({
+        propertyId: params.id,
+        price: data.price,
+        ratePerSqft: sqft && sqft > 0 ? data.price / sqft : null,
+        stage: "Current Price",
+        changedByUserId: auth.session.user.id,
+        changedByName: auth.session.user.name || "Admin",
+        notes: "Price updated via Admin panel",
+      });
+    }
 
     return NextResponse.json({ ok: true, property });
   } catch (e) {
@@ -109,6 +137,14 @@ export async function DELETE(
 ) {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
+
+  const canDelete = await hasDeletePermissionServer(auth.session.user, "/admin/properties");
+  if (!canDelete) {
+    return NextResponse.json(
+      { error: "Forbidden: You do not have permission to delete properties." },
+      { status: 403 }
+    );
+  }
 
   try {
     await prisma.$transaction(async (tx) => {

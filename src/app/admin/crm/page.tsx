@@ -1,23 +1,20 @@
 export const dynamic = "force-dynamic";
 
 import { CrmManager } from "@/components/admin/crm-manager";
-import { CrmKpiStrip } from "@/components/admin/crm/crm-kpi-strip";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { getCrmSettings } from "@/lib/crm-settings";
 import { getPipelineConfig } from "@/lib/pipeline-settings";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { Suspense } from "react";
 
 export default async function AdminCrmPage() {
-  const now = new Date();
-  const [leads, agents, properties, crmSettings, pipelineConfig, inquiriesPending, showingsPending] =
+  const [leads, agents, properties, crmSettings, pipelineConfig] =
     await Promise.all([
       prisma.lead.findMany({
         orderBy: [{ score: "desc" }, { createdAt: "desc" }],
         include: {
           property: { select: { title: true, symbol: true } },
-          owner: { select: { id: true, name: true } },
+          owner: { select: { id: true, name: true, userId: true } },
           tasks: {
             orderBy: { createdAt: "desc" },
             take: 5,
@@ -34,7 +31,7 @@ export default async function AdminCrmPage() {
       prisma.user.findMany({
         where: { role: { in: ["SUPERADMIN", "EMPLOYEE", "AGENT"] }, active: true },
         orderBy: { name: "asc" },
-        select: { id: true, name: true },
+        select: { id: true, name: true, email: true, userId: true },
       }),
       prisma.property.findMany({
         where: { status: "ACTIVE" },
@@ -44,55 +41,17 @@ export default async function AdminCrmPage() {
       }),
       getCrmSettings(),
       getPipelineConfig(),
-      prisma.inquiry.count({ where: { lead: null } }),
-      prisma.propertyShowing.count({ where: { status: "REQUESTED", lead: null } }),
     ]);
-
-  const won = leads.filter((l) => l.stage === "WON").length;
-  const lost = leads.filter((l) => l.stage === "LOST").length;
-  const overdue = leads.filter(
-    (l) =>
-      l.nextFollowUpAt &&
-      l.nextFollowUpAt < now &&
-      l.stage !== "WON" &&
-      l.stage !== "LOST"
-  ).length;
 
   return (
     <div>
       <AdminPageHeader
-        title="Sales pipeline"
-        description="Drag deals across stages · HubSpot / Sell.Do style kanban board"
+        title="Pipeline"
+        description="Manage opportunities, sales stages, and pipeline progress"
         breadcrumb={[
           { label: "Admin", href: "/admin" },
           { label: "Pipeline" },
         ]}
-        actions={
-          <>
-            <Link
-              href="/admin/leads"
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
-            >
-              All leads table
-            </Link>
-            <Link
-              href="/admin/crm/settings"
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
-            >
-              CRM settings
-            </Link>
-          </>
-        }
-      />
-
-      <CrmKpiStrip
-        isAdmin
-        total={leads.length}
-        active={leads.length - won - lost}
-        won={won}
-        overdue={overdue}
-        newInquiries={inquiriesPending}
-        pendingShowings={showingsPending}
       />
 
       <Suspense fallback={<div className="h-96 rounded-2xl border bg-slate-50 animate-pulse" />}>

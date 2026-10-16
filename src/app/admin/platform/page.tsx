@@ -1,6 +1,8 @@
 import { PlatformSettingsNav } from "@/components/admin/platform-settings-nav";
 import { SettingsCardGrid } from "@/components/admin/settings-card-grid";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
+import { getRolePermissions, getPermissionGroup, PERMISSIONS_SCHEMA } from "@/lib/permissions";
 import {
   Bell,
   Briefcase,
@@ -16,6 +18,11 @@ import {
 } from "lucide-react";
 
 export default async function PlatformSettingsPage() {
+  const session = await getSession();
+  const permissions = await getRolePermissions();
+  const group = session?.user ? getPermissionGroup(session.user) : "BUYER";
+  const userRole = session?.user?.role || "";
+
   const [userCount, leadCount, activeUsers] = await Promise.all([
     prisma.user.count(),
     prisma.lead.count(),
@@ -40,6 +47,25 @@ export default async function PlatformSettingsPage() {
     { href: "/admin/crm/settings", title: "Routing Setup", description: "Lead assignment and round-robin rules.", icon: UserCog },
   ];
 
+  const allowedCards = cards.filter((c) => {
+    if (userRole === "SUPERADMIN") return true;
+
+    // Find matching subhead for route
+    let permissionKey: string | null = null;
+    for (const head of PERMISSIONS_SCHEMA) {
+      for (const subhead of head.subheads) {
+        if (c.href === subhead.route || c.href.startsWith(subhead.route + "/")) {
+          permissionKey = subhead.key;
+          break;
+        }
+      }
+      if (permissionKey) break;
+    }
+
+    if (!permissionKey) return true;
+    return permissions[group]?.[permissionKey] ?? false;
+  });
+
   return (
     <div className="flex gap-8">
       <PlatformSettingsNav />
@@ -63,7 +89,7 @@ export default async function PlatformSettingsPage() {
         </div>
 
         <div className="mt-8">
-          <SettingsCardGrid cards={cards} />
+          <SettingsCardGrid cards={allowedCards} />
         </div>
       </div>
     </div>

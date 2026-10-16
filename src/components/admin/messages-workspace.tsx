@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 
 type UserOption = {
   id: string;
+  userId?: string | null;
   name: string;
   email: string;
   phone: string | null;
@@ -416,7 +417,7 @@ export function MessagesWorkspace({
         recipientUserId: selectedUserId,
         recipientPhone: (channel === "whatsapp" || channel === "sms" || channel === "telegram") ? effectivePhone : undefined,
         body,
-        subject: channel === "email" ? subject || "Message from PlotsnHomes" : undefined,
+        subject: channel === "email" ? subject || "Message from BrickVest" : undefined,
       }),
     });
     const data = await res.json();
@@ -507,7 +508,7 @@ export function MessagesWorkspace({
           senderUserId: selectedUserId,
           channel: simChannel,
           body: simBody,
-          subject: simChannel === "email" ? "Re: Message from PlotsnHomes" : undefined,
+          subject: simChannel === "email" ? "Re: Message from BrickVest" : undefined,
         }),
       });
       const data = await res.json();
@@ -529,6 +530,7 @@ export function MessagesWorkspace({
   const filteredUsers = useMemo(() => {
     return users.filter(
       (u) =>
+        (u.userId ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (u.phone && u.phone.includes(searchTerm))
@@ -536,22 +538,22 @@ export function MessagesWorkspace({
   }, [users, searchTerm]);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-12 border border-slate-200 rounded-3xl bg-slate-50/50 shadow-sm overflow-hidden h-[calc(100vh-18rem)] lg:h-[680px] min-h-[550px]">
+    <div className="grid gap-0 lg:grid-cols-12 border border-slate-200 dark:border-slate-800 rounded-3xl bg-white dark:bg-slate-900 shadow-sm overflow-hidden h-[calc(100vh-18rem)] lg:h-[680px] min-h-[550px]">
       
       {/* Sidebar: User List */}
       <div className={cn(
-        "lg:col-span-4 flex flex-col bg-white border-r border-slate-200 h-full overflow-hidden",
+        "lg:col-span-4 flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-full overflow-hidden",
         selectedUserId ? "hidden lg:flex" : "flex"
       )}>
-        <div className="p-4 border-b border-slate-150 space-y-3">
+        <div className="p-4 border-b border-slate-150 dark:border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-slate-800 text-sm">Conversations</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm">Conversations</span>
             <button
               onClick={() => {
                 if (selectedUserId) fetchMessages(selectedUserId);
                 else fetchGlobalLogs();
               }}
-              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition"
+              className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition"
               title="Refresh lists"
             >
               <RefreshCw className="h-4 w-4" />
@@ -561,10 +563,10 @@ export function MessagesWorkspace({
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search people..."
+              placeholder="Search by User ID (e.g. USR-10001), name, or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full text-xs pl-9 pr-4 py-2 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gold transition"
+              className="w-full text-xs pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-gold transition"
             />
           </div>
         </div>
@@ -890,7 +892,7 @@ export function MessagesWorkspace({
                           {selectedTemplate.mediaName || (selectedTemplate.templateType === "Text + Image" ? "template-image.jpg" : selectedTemplate.templateType === "Text + Document" ? "template-document.pdf" : "template-audio.mp3")}
                         </p>
                         <p className="text-[10px] text-slate-500">
-                          {selectedTemplate.templateType?.replace("Text + ", "")} Attachment — will be sent through WhatsApp Cloud API.
+                          {selectedTemplate.templateType?.replace("Text + ", "") ?? ""} Attachment — will be sent through WhatsApp Cloud API.
                         </p>
                         {selectedTemplate.templateType === "Text + Audio" && (
                           <audio controls src={selectedTemplate.mediaUrl} className="w-full h-8 mt-1.5" />

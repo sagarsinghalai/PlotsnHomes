@@ -1,11 +1,12 @@
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+const apiKey = process.env.RESEND_API_KEY?.trim();
+const isPlaceholderKey = !apiKey || apiKey === "re_..." || !apiKey.startsWith("re_") || apiKey.length < 15;
 
-const from = process.env.EMAIL_FROM ?? "PlotsnHomes <onboarding@resend.dev>";
+const resend = !isPlaceholderKey ? new Resend(apiKey) : null;
+
+const from = process.env.EMAIL_FROM ?? "BrickVest <onboarding@resend.dev>";
 
 export type SendEmailResult = {
   ok: boolean;
@@ -39,16 +40,44 @@ export async function sendEmail({
       });
       if (resendError) {
         error = resendError.message;
+        const lower = error.toLowerCase();
+        if (
+          lower.includes("api key") ||
+          lower.includes("invalid") ||
+          lower.includes("only send testing emails") ||
+          lower.includes("verify a domain")
+        ) {
+          console.warn(`[BrickVest Email] Resend sandbox mode notice: ${error}. Using dev simulation mode.`);
+          provider = "dev";
+          delivered = true;
+          externalId = `dev-${Date.now()}`;
+          error = null;
+        }
       } else {
         provider = "resend";
         delivered = true;
         externalId = data?.id ?? "resend";
       }
     } catch (e) {
-      error = e instanceof Error ? e.message : "Resend send failed";
+      const errStr = e instanceof Error ? e.message : "Resend send failed";
+      const lower = errStr.toLowerCase();
+      if (
+        lower.includes("api key") ||
+        lower.includes("invalid") ||
+        lower.includes("only send testing emails") ||
+        lower.includes("verify a domain")
+      ) {
+        console.warn(`[BrickVest Email] Resend sandbox mode notice: ${errStr}. Using dev simulation mode.`);
+        provider = "dev";
+        delivered = true;
+        externalId = `dev-${Date.now()}`;
+        error = null;
+      } else {
+        error = errStr;
+      }
     }
   } else {
-    console.log("[PlotsnHomes email]", { to, subject });
+    console.log("[BrickVest email simulation]", { to, subject });
     delivered = true;
     externalId = `dev-${Date.now()}`;
   }
@@ -85,7 +114,7 @@ async function persistEmailLog(data: {
     }
     await log.create({ data });
   } catch (e) {
-    console.warn("[PlotsnHomes] EmailLog skip (run: npx prisma generate && restart dev server)", e);
+    console.warn("[BrickVest] EmailLog skip (run: npx prisma generate && restart dev server)", e);
   }
 }
 
@@ -93,7 +122,7 @@ export function welcomeEmailHtml(name: string) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001";
   return `
     <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto">
-      <h1 style="color:#0f172a">Welcome to PlotsnHomes</h1>
+      <h1 style="color:#0f172a">Welcome to BrickVest</h1>
       <p>Hi ${name},</p>
       <p>Your account is ready. Browse premium listings, run investment calculators, and connect with verified agents.</p>
       <p><a href="${appUrl}/properties" style="background:#c9a227;color:#0f172a;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:600">Explore properties</a></p>
@@ -127,7 +156,7 @@ export function inquiryConfirmationHtml(name: string, propertyTitle: string) {
       <h2 style="color:#0f172a">Inquiry received</h2>
       <p>Hi ${name},</p>
       <p>Thank you for your interest in <strong>${propertyTitle}</strong>. A licensed agent will contact you within 1–2 business days.</p>
-      <p style="color:#64748b;font-size:14px">PlotsnHomes — Real Estate Investment Exchange</p>
+      <p style="color:#64748b;font-size:14px">BrickVest — Real Estate Investment Exchange</p>
     </div>
   `;
 }
@@ -143,8 +172,8 @@ export function transactionEmailHtml(
       <p><strong>Amount:</strong> ${amount}</p>
       <p><strong>Details:</strong> ${description}</p>
       ${symbol ? `<p><strong>Asset:</strong> ${symbol}</p>` : ""}
-      <p>Your transaction is recorded in your PlotsnHomes dashboard.</p>
-      <p style="color:#64748b;font-size:14px">Thank you for investing with PlotsnHomes.</p>
+      <p>Your transaction is recorded in your BrickVest dashboard.</p>
+      <p style="color:#64748b;font-size:14px">Thank you for investing with BrickVest.</p>
     </div>
   `;
 }

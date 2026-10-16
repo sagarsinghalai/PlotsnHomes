@@ -50,7 +50,7 @@ export default async function AdminEmailsPage() {
                   {e.status}
                 </span>
                 <p className="mt-1 text-slate-400">{e.provider}</p>
-                <p className="text-slate-400">{new Date(e.createdAt).toLocaleString()}</p>
+                <p className="text-slate-400" suppressHydrationWarning>{new Date(e.createdAt).toLocaleString()}</p>
               </div>
             </div>
             <details className="mt-3">

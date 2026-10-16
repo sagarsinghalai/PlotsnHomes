@@ -56,14 +56,14 @@ export async function getMessagingIntegrations(): Promise<MessagingIntegrations>
     twilioAccountSid: map[INTEGRATION_KEYS.TWILIO_ACCOUNT_SID] ?? "",
     twilioAuthToken: map[INTEGRATION_KEYS.TWILIO_AUTH_TOKEN] ?? "",
     twilioFromPhone: map[INTEGRATION_KEYS.TWILIO_FROM_PHONE] ?? "",
-    calendlyUrl: map[INTEGRATION_KEYS.CALENDLY_URL] || "https://cal.com/plotsnhomes/consultation",
+    calendlyUrl: map[INTEGRATION_KEYS.CALENDLY_URL] || "https://cal.com/brickvest/consultation",
     customMeetingUrl: map[INTEGRATION_KEYS.CUSTOM_MEETING_URL] ?? "",
     notificationEmail: map[INTEGRATION_KEYS.NOTIFICATION_EMAIL] ?? "",
     gmailSmtpHost: map[INTEGRATION_KEYS.GMAIL_SMTP_HOST] ?? "smtp.gmail.com",
     gmailSmtpUser: map[INTEGRATION_KEYS.GMAIL_SMTP_USER] ?? "",
     gmailSmtpPass: map[INTEGRATION_KEYS.GMAIL_SMTP_PASS] ?? "",
     gmailSmtpFrom: map[INTEGRATION_KEYS.GMAIL_SMTP_FROM] ?? "",
-    companyName: map[INTEGRATION_KEYS.COMPANY_NAME] ?? "PlotsnHomes",
+    companyName: map[INTEGRATION_KEYS.COMPANY_NAME] ?? "BrickVest",
   };
 }
 
@@ -119,4 +119,57 @@ export function normalizePhone(phone: string): string {
 export function whatsAppWebUrl(toPhone: string, message: string): string {
   const digits = normalizePhone(toPhone).replace(/^\+/, "");
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+}
+
+export function buildPropertyWhatsAppMessage(property: {
+  title: string;
+  symbol?: string | null;
+  price?: number | null;
+  listingType?: string | null;
+  rentMonthly?: number | null;
+  city?: string | null;
+  state?: string | null;
+  address?: string | null;
+  slug?: string | null;
+  category?: string | null;
+}): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://plotsnhomes.com";
+  const propUrl = property.slug
+    ? `${origin}/properties/${property.slug}`
+    : typeof window !== "undefined"
+    ? window.location.href
+    : "";
+
+  const formattedPrice =
+    property.listingType === "RENT" && property.rentMonthly
+      ? `₹${property.rentMonthly.toLocaleString("en-IN")}/mo`
+      : property.price
+      ? `₹${property.price.toLocaleString("en-IN")}`
+      : "";
+
+  const locationStr = [property.address, property.city, property.state]
+    .filter(Boolean)
+    .join(", ");
+
+  const lines: string[] = [
+    `*Hello! I am interested in this property:*`,
+    `🏠 *${property.title}*${property.symbol ? ` [${property.symbol}]` : ""}`,
+  ];
+
+  if (property.category) {
+    lines.push(`📋 *Type:* ${property.category} (${property.listingType === "RENT" ? "For Rent" : "For Sale"})`);
+  }
+  if (formattedPrice) {
+    lines.push(`💰 *Price:* ${formattedPrice}`);
+  }
+  if (locationStr) {
+    lines.push(`📍 *Location:* ${locationStr}`);
+  }
+  if (propUrl) {
+    lines.push(`🔗 *Property Link:* ${propUrl}`);
+  }
+
+  lines.push(`\nPlease provide more details and schedule a site visit.`);
+
+  return lines.join("\n");
 }

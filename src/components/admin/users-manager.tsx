@@ -135,7 +135,7 @@ export function UsersManager({ users }: { users: UserRow[] }) {
                   <td className="px-4 py-3">{u._count.properties}</td>
                   <td className="px-4 py-3">{u._count.transactions}</td>
                   <td className="px-4 py-3 text-slate-500">
-                    {new Date(u.createdAt).toLocaleDateString()}
+                    {new Date(u.createdAt).toLocaleDateString("en-GB")}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-2">

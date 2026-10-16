@@ -12,6 +12,7 @@ import { roleLabel } from "@/lib/roles";
 
 type ProfileUser = {
   id: string;
+  userId?: string | null;
   name: string;
   email: string;
   phone: string | null;
@@ -87,7 +88,15 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
       )}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Account</h2>
+        <div className="flex items-center justify-between border-b pb-3">
+          <h2 className="text-lg font-semibold text-slate-900">Account Profile</h2>
+          {user.userId && (
+            <div className="flex items-center gap-1.5 bg-gold/10 border border-gold/30 px-3 py-1 rounded-xl">
+              <span className="text-xs text-slate-500 font-bold uppercase">User ID:</span>
+              <span className="font-mono text-xs font-black text-gold-dark">{user.userId}</span>
+            </div>
+          )}
+        </div>
         <p className="text-sm text-slate-500">
           Email and role are managed by your administrator. Account type:{" "}
           <span className="font-medium text-slate-800">{roleLabel(user.role)}</span>

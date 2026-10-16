@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { QrPhoneScanner } from "@/components/ui/qr-phone-scanner";
+import { WhatsAppConnect } from "@/components/admin/whatsapp-connect";
 import { Input, Label } from "@/components/ui/input";
 import { DEFAULT_COUNTRY_CODE } from "@/lib/locale-defaults";
 
@@ -28,15 +28,14 @@ type IntegrationsFormProps = {
     gmailSmtpFrom: string;
     companyName: string;
   };
+  whatsappTemplates?: { id: string; name: string; body: string }[];
 };
 
-export function IntegrationsForm({ initial }: IntegrationsFormProps) {
+export function IntegrationsForm({ initial, whatsappTemplates = [] }: IntegrationsFormProps) {
   const router = useRouter();
   const [form, setForm] = useState(initial);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
-  const [showScanner, setShowScanner] = useState(false);
-  const [scanTarget, setScanTarget] = useState<"web" | "api" | "twilio" | null>(null);
 
   useEffect(() => setForm(initial), [initial]);
 
@@ -48,10 +47,21 @@ export function IntegrationsForm({ initial }: IntegrationsFormProps) {
     e.preventDefault();
     setLoading(true);
     setMsg("");
+    // The WhatsApp fields are owned by the WhatsAppConnect panel (which verifies
+    // and saves them via its own endpoints) — don't let a plain Save overwrite them.
+    const {
+      whatsappMode: _wm,
+      whatsappApiToken: _wt,
+      whatsappPhoneNumberId: _wp,
+      whatsappFromNumber: _wf,
+      whatsappWebNumber: _ww,
+      ...saveable
+    } = form;
+    void _wm; void _wt; void _wp; void _wf; void _ww;
     const res = await fetch("/api/admin/integrations", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(saveable),
     });
     setLoading(false);
     if (res.ok) {
@@ -65,87 +75,11 @@ export function IntegrationsForm({ initial }: IntegrationsFormProps) {
 
   return (
     <form onSubmit={save} className="space-y-8 max-w-3xl">
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
-        <h2 className="font-semibold text-slate-900">WhatsApp</h2>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              checked={form.whatsappMode === "web"}
-              onChange={() => set("whatsappMode", "web")}
-            />
-            Web connect (wa.me — sends from your phone)
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              checked={form.whatsappMode === "api"}
-              onChange={() => set("whatsappMode", "api")}
-            />
-            Business API (Meta Cloud)
-          </label>
-        </div>
-        <Label>Your WhatsApp number (web mode — default India +91)</Label>
-        <PhoneInput
-          value={form.whatsappWebNumber}
-          onChange={(v) => set("whatsappWebNumber", v)}
-          defaultCountry={DEFAULT_COUNTRY_CODE}
-        />
-        <Label>API access token</Label>
-        <Input
-          type="password"
-          value={form.whatsappApiToken}
-          onChange={(e) => set("whatsappApiToken", e.target.value)}
-          placeholder="EAAxxxx..."
-        />
-        <Label>Phone number ID (Meta)</Label>
-        <Input
-          value={form.whatsappPhoneNumberId}
-          onChange={(e) => set("whatsappPhoneNumberId", e.target.value)}
-        />
-        <Label>From number (API)</Label>
-        <PhoneInput
-          value={form.whatsappFromNumber}
-          onChange={(v) => set("whatsappFromNumber", v)}
-          defaultCountry={DEFAULT_COUNTRY_CODE}
-        />
-        <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 space-y-2">
-          <p className="text-sm font-medium text-emerald-900">WhatsApp QR scanner</p>
-          <p className="text-xs text-emerald-800">
-            Scan a contact QR code to auto-fill a phone number field.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {(["web", "api", "twilio"] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => {
-                  setScanTarget(t);
-                  setShowScanner(true);
-                }}
-                className="text-xs rounded-lg border border-emerald-200 bg-white px-3 py-1.5 hover:bg-emerald-50"
-              >
-                Scan for {t === "web" ? "web number" : t === "api" ? "API from" : "Twilio SMS"}
-              </button>
-            ))}
-          </div>
-          {showScanner && scanTarget && (
-            <QrPhoneScanner
-              onScan={(phone) => {
-                if (scanTarget === "web") set("whatsappWebNumber", phone);
-                if (scanTarget === "api") set("whatsappFromNumber", phone);
-                if (scanTarget === "twilio") set("twilioFromPhone", phone);
-                setShowScanner(false);
-                setScanTarget(null);
-              }}
-              onClose={() => {
-                setShowScanner(false);
-                setScanTarget(null);
-              }}
-            />
-          )}
-        </div>
-      </section>
+      <WhatsAppConnect
+        initialPhoneNumberId={initial.whatsappPhoneNumberId}
+        tokenSet={Boolean(initial.whatsappApiToken)}
+        templates={whatsappTemplates}
+      />
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
         <h2 className="font-semibold text-slate-900">Telegram &amp; SMS (Twilio)</h2>
@@ -223,7 +157,7 @@ export function IntegrationsForm({ initial }: IntegrationsFormProps) {
             <li>Then go to <strong>App passwords</strong> and create one for "Mail"</li>
             <li>Copy the 16-character app password</li>
             <li>Fill in your Gmail address and that app password below</li>
-            <li>All emails sent via PlotsnHomes will now deliver to real inboxes!</li>
+            <li>All emails sent via BrickVest will now deliver to real inboxes!</li>
           </ol>
           <p className="text-blue-600">Alternatively, add <code className="bg-blue-100 px-1 rounded">RESEND_API_KEY</code> to your <code>.env</code> file for Resend delivery.</p>
         </div>
@@ -256,7 +190,7 @@ export function IntegrationsForm({ initial }: IntegrationsFormProps) {
         <Input
           value={form.gmailSmtpFrom}
           onChange={(e) => set("gmailSmtpFrom", e.target.value)}
-          placeholder="PlotsnHomes <you@gmail.com>"
+          placeholder="BrickVest <you@gmail.com>"
         />
         <Label>Company name</Label>
         <Input

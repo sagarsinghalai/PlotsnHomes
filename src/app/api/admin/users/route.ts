@@ -4,19 +4,23 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
+import { generateNextUserId } from "@/lib/user-id";
+import { checkUserExists4Params, validateUserDobAge } from "@/lib/user-validation";
 
 const createSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  name: z.string().min(2, "Name must be at least 2 characters").regex(/^[a-zA-Z\s]+$/, "Name can only contain alphabets and spaces"),
   email: z.string().email("Invalid email format"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   phone: z.string().optional().nullable().or(z.literal("")).refine(
     (val) => {
       if (!val) return true;
-      const digits = val.replace(/\D/g, "");
-      return digits.length >= 10 && digits.length <= 15;
+      return /^\+?[1-9]\d{9,14}$/.test(val);
     },
-    { message: "Phone number must be a valid number containing between 10 and 15 digits." }
+    { message: "Invalid phone number format." }
   ),
+  pan: z.string().optional().nullable().or(z.literal("")),
+  aadhar: z.string().optional().nullable().or(z.literal("")),
+  dob: z.string().optional().nullable().or(z.literal("")),
   role: z.nativeEnum(Role).default(Role.BUYER),
 });
 
@@ -29,18 +33,43 @@ export async function POST(req: Request) {
     const data = createSchema.parse(body);
     const email = data.email.toLowerCase();
 
-    const exists = await prisma.user.findUnique({ where: { email } });
-    if (exists) {
-      return NextResponse.json({ error: "Email already in use" }, { status: 400 });
+    // Validate DOB Age >= 18 from account creation date
+    if (data.dob) {
+      const dobCheck = validateUserDobAge(data.dob);
+      if (!dobCheck.valid) {
+        return NextResponse.json({ error: dobCheck.message }, { status: 400 });
+      }
+    }
+
+    // 4-Parameter User Exists Check (Email, Phone, PAN, Aadhaar)
+    const check = await checkUserExists4Params({
+      email,
+      phone: data.phone,
+      pan: data.pan,
+      aadhar: data.aadhar,
+    });
+
+    if (check.exists) {
+      return NextResponse.json({ error: check.message }, { status: 400 });
+    }
+
+    if (data.role === Role.SUPERADMIN && auth.session?.user?.role !== Role.SUPERADMIN) {
+      return NextResponse.json({ error: "Only a Super Admin can assign the Super Admin role." }, { status: 403 });
     }
 
     const passwordHash = await bcrypt.hash(data.password, 12);
+    const nextUserId = await generateNextUserId();
+
     const user = await prisma.user.create({
       data: {
+        userId: nextUserId,
         name: data.name,
         email,
         passwordHash,
         phone: data.phone ?? null,
+        pan: data.pan?.trim().toUpperCase() ?? null,
+        aadhar: data.aadhar?.trim() ?? null,
+        dob: data.dob ? new Date(data.dob) : null,
         role: data.role,
       },
     });
@@ -53,4 +82,50 @@ export async function POST(req: Request) {
     console.error(e);
     return NextResponse.json({ error: "Could not create user" }, { status: 500 });
   }
+}
+
+export async function GET(req: Request) {
+  const auth = await requireAdminApi();
+  if (auth.error) return auth.error;
+
+  const url = new URL(req.url);
+  const q = url.searchParams.get("search") || "";
+  const role = url.searchParams.get("role") || "";
+
+  const where: any = {};
+  if (role && role !== "ALL") {
+    where.role = role;
+  }
+
+  if (q.trim()) {
+    const query = q.trim();
+    where.OR = [
+      { userId: { contains: query } },
+      { name: { contains: query } },
+      { email: { contains: query } },
+      { phone: { contains: query } },
+      { pan: { contains: query } },
+      { aadhar: { contains: query } },
+    ];
+  }
+
+  const users = await prisma.user.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      userId: true,
+      name: true,
+      email: true,
+      phone: true,
+      pan: true,
+      aadhar: true,
+      role: true,
+      active: true,
+      createdAt: true,
+    },
+    take: 200,
+  });
+
+  return NextResponse.json({ users });
 }

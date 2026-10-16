@@ -3,9 +3,10 @@ import { getCrmSettings } from "@/lib/crm-settings";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { getBhkConfigurations } from "@/lib/system-settings";
+import { getPipelines } from "@/lib/pipeline-store";
 
 export default async function AdminLeadDetailPage({ params }: { params: { id: string } }) {
-  const [lead, agents, crmSettings, properties, bhkOptions] = await Promise.all([
+  const [lead, agents, crmSettings, properties, bhkOptions, pipelines] = await Promise.all([
     prisma.lead.findUnique({
       where: { id: params.id },
       include: {
@@ -22,7 +23,7 @@ export default async function AdminLeadDetailPage({ params }: { params: { id: st
     prisma.user.findMany({
       where: { role: { in: ["SUPERADMIN", "EMPLOYEE", "AGENT"] }, active: true },
       orderBy: { name: "asc" },
-      select: { id: true, name: true },
+      select: { id: true, name: true, email: true, userId: true },
     }),
     getCrmSettings(),
     prisma.property.findMany({
@@ -46,6 +47,7 @@ export default async function AdminLeadDetailPage({ params }: { params: { id: st
       },
     }),
     getBhkConfigurations(),
+    getPipelines(),
   ]);
 
   if (!lead) notFound();
@@ -90,6 +92,7 @@ export default async function AdminLeadDetailPage({ params }: { params: { id: st
       templates={crmSettings.messageTemplates}
       properties={properties as any}
       bhkOptions={bhkOptions}
+      pipelines={pipelines}
     />
   );
 }

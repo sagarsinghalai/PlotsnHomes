@@ -7,9 +7,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { ROLE_LABELS } from "@/lib/roles";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
+
+import { validateUserDobAge } from "@/lib/user-validation";
 
 export function CreateUserForm() {
   const router = useRouter();
+  const { hasAddPermission, userRole } = useAdminPermissions();
+  const canAdd = hasAddPermission("/admin/users");
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -18,6 +24,9 @@ export function CreateUserForm() {
     email: "",
     password: "",
     phone: "",
+    pan: "",
+    aadhar: "",
+    dob: "",
     role: "BUYER" as Role,
   });
 
@@ -25,6 +34,15 @@ export function CreateUserForm() {
     e.preventDefault();
     setBusy(true);
     setError("");
+
+    if (form.dob) {
+      const dobCheck = validateUserDobAge(form.dob);
+      if (!dobCheck.valid) {
+        setError(dobCheck.message!);
+        setBusy(false);
+        return;
+      }
+    }
 
     if (form.phone.trim()) {
       const digits = form.phone.replace(/\D/g, "");
@@ -35,12 +53,27 @@ export function CreateUserForm() {
       }
     }
 
+    if (form.pan.trim() && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(form.pan.trim())) {
+      setError("PAN Card Number must be 10 characters (e.g. ABCDE1234F).");
+      setBusy(false);
+      return;
+    }
+
+    if (form.aadhar.trim() && !/^\d{12}$/.test(form.aadhar.trim().replace(/\s+/g, ""))) {
+      setError("Aadhaar Card Number must be exactly 12 digits.");
+      setBusy(false);
+      return;
+    }
+
     const res = await fetch("/api/admin/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
         phone: form.phone.trim() || undefined,
+        pan: form.pan.trim() || undefined,
+        aadhar: form.aadhar.trim() || undefined,
+        dob: form.dob || undefined,
       }),
     });
     const data = await res.json();
@@ -54,6 +87,8 @@ export function CreateUserForm() {
     router.refresh();
   }
 
+  if (!canAdd) return null;
+
   if (!open) {
     return (
       <Button type="button" variant="gold" onClick={() => setOpen(true)} className="gap-2">
@@ -65,14 +100,14 @@ export function CreateUserForm() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Add new user</h2>
-          <button type="button" onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-700">
+      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-2 border-b">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Add new user</h2>
+          <button type="button" onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
             <X className="h-5 w-5" />
           </button>
         </div>
-        {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="rounded-xl bg-red-50 dark:bg-red-950/50 p-3 text-xs font-semibold text-red-600 dark:text-red-400 border border-red-200">{error}</p>}
         <form onSubmit={submit} className="space-y-4">
           <div>
             <Label>Full name</Label>
@@ -83,6 +118,14 @@ export function CreateUserForm() {
             <Input type="email" required value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
           </div>
           <div>
+            <Label>Date of Birth (DOB - Must be 18+ years)</Label>
+            <Input 
+              type="date" 
+              value={form.dob} 
+              onChange={(e) => setForm((f) => ({ ...f, dob: e.target.value }))} 
+            />
+          </div>
+          <div>
             <Label>Phone (optional)</Label>
             <Input 
               type="tel" 
@@ -91,27 +134,48 @@ export function CreateUserForm() {
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} 
             />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>PAN Card (optional)</Label>
+              <Input
+                placeholder="ABCDE1234F"
+                maxLength={10}
+                value={form.pan}
+                onChange={(e) => setForm((f) => ({ ...f, pan: e.target.value.toUpperCase() }))}
+              />
+            </div>
+            <div>
+              <Label>Aadhaar No (optional)</Label>
+              <Input
+                placeholder="12-digit Aadhaar"
+                maxLength={12}
+                value={form.aadhar}
+                onChange={(e) => setForm((f) => ({ ...f, aadhar: e.target.value }))}
+              />
+            </div>
+          </div>
           <div>
             <Label>Temporary password</Label>
             <Input type="password" required minLength={8} value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
           </div>
           <div>
             <Label>Account type</Label>
-            <select
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5"
+            <SearchableSelect
+              options={(Object.keys(ROLE_LABELS) as Role[])
+                .filter((r) => r !== "SUPERADMIN" || userRole === "SUPERADMIN")
+                .map((r) => ({
+                  value: r,
+                  label: ROLE_LABELS[r],
+                }))}
               value={form.role}
-              onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as Role }))}
-            >
-              {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
-                <option key={r} value={r}>
-                  {ROLE_LABELS[r]}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setForm((f) => ({ ...f, role: val as Role }))}
+              placeholder="Select account role..."
+              searchPlaceholder="Search role..."
+            />
           </div>
           <div className="flex gap-2 pt-2">
-            <Button type="submit" disabled={busy}>
-              Create & edit profile
+            <Button type="submit" disabled={busy} variant="gold">
+              Create &amp; edit profile
             </Button>
             <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
               Cancel

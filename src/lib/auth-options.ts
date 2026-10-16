@@ -37,7 +37,7 @@ export const authOptions: NextAuthOptions = {
             data: { lastActiveAt: new Date(), active: true },
           });
         } catch (e) {
-          console.warn("[PlotsnHomes] activity update skipped:", e);
+          console.warn("[BrickVest] activity update skipped:", e);
         }
 
         return {
@@ -92,6 +92,13 @@ export const authOptions: NextAuthOptions = {
         session.user.role = (token.role as import("@prisma/client").Role) ?? "BUYER";
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return url;
+      try {
+        if (new URL(url).origin === new URL(baseUrl).origin) return url;
+      } catch {}
+      return "/login";
     },
   },
 };

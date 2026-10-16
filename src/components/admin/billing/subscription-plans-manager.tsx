@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { INTERVAL_LABELS, intervalShort, parseFeatures } from "@/lib/subscription";
 import { formatCurrency } from "@/lib/utils";
+import { TableToolbarManager } from "@/components/ui/table-toolbar-manager";
+import { useTableColumns } from "@/hooks/use-table-columns";
 
 type Plan = {
   id: string;
@@ -119,19 +121,37 @@ export function SubscriptionPlansManager({ plans: initial }: { plans: Plan[] }) 
     if (res.ok) {
       setPlans((p) => p.filter((x) => x.id !== id));
       router.refresh();
-    } else {
-      alert((await res.json()).error ?? "Delete failed");
     }
   }
 
+  const {
+    columns,
+    visibleColumnIds,
+    toggleColumn,
+    addCustomColumn,
+    removeCustomColumn,
+    resetColumns,
+  } = useTableColumns("subscription_plans_table", [
+    { id: "planName", label: "Plan Name & Slug", defaultVisible: true },
+    { id: "pricing", label: "Price & Billing Interval", defaultVisible: true },
+    { id: "features", label: "Included Features", defaultVisible: true },
+    { id: "role", label: "Target User Role", defaultVisible: true },
+    { id: "actions", label: "Actions", defaultVisible: true },
+  ]);
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button variant="gold" onClick={openCreate}>
-          <Plus className="h-4 w-4" />
-          Add plan
-        </Button>
-      </div>
+      <TableToolbarManager
+        tableTitle="Subscription Plans Settings"
+        addRowLabel="Add Plan"
+        onAddRow={openCreate}
+        columns={columns}
+        visibleColumnIds={visibleColumnIds}
+        onToggleColumn={toggleColumn}
+        onAddCustomColumn={addCustomColumn}
+        onRemoveCustomColumn={removeCustomColumn}
+        onResetColumns={resetColumns}
+      />
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {plans.map((p) => (

@@ -34,6 +34,8 @@ export async function GET() {
   return NextResponse.json(kyc);
 }
 
+import { validateUserDobAge } from "@/lib/user-validation";
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -42,6 +44,16 @@ export async function POST(req: Request) {
 
   try {
     const data = schema.parse(await req.json());
+
+    // Validate DOB Age >= 18 from account creation date
+    if (data.dateOfBirth) {
+      const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+      const dobCheck = validateUserDobAge(data.dateOfBirth, user?.createdAt);
+      if (!dobCheck.valid) {
+        return NextResponse.json({ error: dobCheck.message }, { status: 400 });
+      }
+    }
+
     const kyc = await prisma.kycProfile.upsert({
       where:  { userId: session.user.id },
       create: { userId: session.user.id, ...data },

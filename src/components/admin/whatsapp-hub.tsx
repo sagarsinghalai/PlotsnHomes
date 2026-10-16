@@ -854,7 +854,7 @@ export function WhatsAppHub({
   const [parsedRecipients, setParsedRecipients] = useState<{ name: string; phone: string; email: string }[]>([]);
 
   const [campaignChannels, setCampaignChannels] = useState<string[]>(["whatsapp"]);
-  const [campaignSubject, setCampaignSubject] = useState("Update from PlotsnHomes");
+  const [campaignSubject, setCampaignSubject] = useState("Update from BrickVest");
   const [campaignError, setCampaignError] = useState("");
 
   // QR Simulator state
@@ -1745,7 +1745,7 @@ export function WhatsAppHub({
                       className="w-full rounded-xl border px-3 py-2 text-xs mt-1 bg-slate-50 focus:bg-white focus:ring-1 focus:ring-slate-500 focus:outline-none"
                       value={campaignSubject}
                       onChange={(e) => setCampaignSubject(e.target.value)}
-                      placeholder="Special offer from PlotsnHomes"
+                      placeholder="Special offer from BrickVest"
                     />
                   </div>
                 )}
@@ -2023,12 +2023,21 @@ export function WhatsAppHub({
                   {campaignRunning ? (
                     <span className="flex items-center gap-2">
                       <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                      {`Sending to ${activeRecipients.length} recipient${activeRecipients.length !== 1 ? "s" : ""}…`}
+                      {campaignChannels.includes("whatsapp") && qrState === "connected"
+                        ? `Opening WhatsApp for ${activeRecipients.length} contact${activeRecipients.length !== 1 ? "s" : ""}…`
+                        : `Sending to ${activeRecipients.length} recipient${activeRecipients.length !== 1 ? "s" : ""}…`
+                      }
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
-                      <Send className="h-4 w-4" />
-                      {`Launch Campaign → ${activeRecipients.length} recipient${activeRecipients.length !== 1 ? "s" : ""}`}
+                      {campaignChannels.includes("whatsapp") && qrState === "connected"
+                        ? <ExternalLink className="h-4 w-4" />
+                        : <Send className="h-4 w-4" />
+                      }
+                      {campaignChannels.includes("whatsapp") && qrState === "connected"
+                        ? `Open WhatsApp for ${activeRecipients.length} contact${activeRecipients.length !== 1 ? "s" : ""}`
+                        : `Launch Campaign → ${activeRecipients.length} recipient${activeRecipients.length !== 1 ? "s" : ""}`
+                      }
                     </span>
                   )}
                 </Button>
@@ -2130,7 +2139,7 @@ export function WhatsAppHub({
                 BV
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-xs truncate">PlotsnHomes Agent Desk</p>
+                <p className="font-semibold text-xs truncate">BrickVest Agent Desk</p>
                 <p className="text-[9px] text-emerald-200">Online</p>
               </div>
               <Smartphone className="h-4 w-4 shrink-0 text-emerald-200" />
@@ -2289,7 +2298,7 @@ export function WhatsAppHub({
                           <div className="w-1 bg-teal-500 shrink-0" />
                           <div className="px-2 py-1.5 min-w-0">
                             <p className="text-[10px] font-bold text-slate-800 leading-snug truncate">
-                              {matchedProperty ? matchedProperty.title : "PlotsnHomes Property"}
+                              {matchedProperty ? matchedProperty.title : "BrickVest Property"}
                             </p>
                             <p className="text-[9px] text-slate-500 mt-0.5 truncate">
                               {matchedProperty 

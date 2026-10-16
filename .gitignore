@@ -32,6 +32,9 @@ coverage/
 # ==========================================
 prisma/dev.db
 prisma/dev.db-journal
+/dev.db
+*.db
+*.db-journal
 src/generated/prisma/
 # Generated from schema.prisma at build time (npm run build:hostinger)
 prisma/schema.mysql.prisma
@@ -108,6 +111,14 @@ video-analysis/
 # ==========================================
 structure.txt
 plotsnhomes-deploy.zip
+
+# ==========================================
+# Sensitive credential exports (never commit)
+# ==========================================
+docs/user_credentials.md
+docs/user_password_logs.csv
+**/user_credentials.md
+**/user_password_logs.csv
 
 # ==========================================
 # macOS

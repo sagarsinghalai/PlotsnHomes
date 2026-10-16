@@ -28,19 +28,5 @@ export default async function DevelopersPage() {
     createdAt: d.createdAt.toISOString(),
   }));
 
-  return (
-    <div>
-      <AdminPageHeader
-        title="Developers"
-        description="Manage project developers, verification info, and corporate addresses."
-        breadcrumb={[
-          { label: "Admin", href: "/admin" },
-          { label: "Developers" },
-        ]}
-      />
-      <div className="mt-6">
-        <DevelopersList initialDevelopers={serializedDevelopers} />
-      </div>
-    </div>
-  );
+  return <DevelopersList initialDevelopers={serializedDevelopers} />;
 }

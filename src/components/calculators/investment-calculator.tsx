@@ -39,13 +39,13 @@ export function InvestmentCalculator({ defaultPrice = 450000 }: { defaultPrice?:
 
   return (
     <div className="grid gap-8 lg:grid-cols-2">
-      <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-900">Investment inputs</h3>
+      <div className="space-y-6 rounded-2xl border border-slate-700 bg-slate-800/60 p-6 shadow-sm">
+        <h3 className="text-lg font-semibold text-white">Investment inputs</h3>
         {fields.map((f) => (
           <div key={f.label}>
             <div className="mb-2 flex justify-between text-sm">
-              <span className="text-slate-600">{f.label}</span>
-              <span className="font-medium text-slate-900">
+              <span className="text-slate-400">{f.label}</span>
+              <span className="font-medium text-white">
                 {f.label.includes("%")
                   ? `${f.value}%`
                   : f.label.includes("price") || f.label.includes("rent") || f.label.includes("costs")
@@ -67,7 +67,7 @@ export function InvestmentCalculator({ defaultPrice = 450000 }: { defaultPrice?:
       </div>
 
       <div className="space-y-4">
-        <div className="rounded-2xl bg-slate-900 p-6 text-white">
+        <div className="rounded-2xl bg-slate-900 border border-slate-700 p-6 text-white">
           <p className="text-sm text-slate-400">Monthly cash flow</p>
           <p className={`text-4xl font-bold ${summary.monthlyCashFlow >= 0 ? "text-emerald-400" : "text-red-400"}`}>
             {formatCurrency(summary.monthlyCashFlow)}
@@ -82,9 +82,9 @@ export function InvestmentCalculator({ defaultPrice = 450000 }: { defaultPrice?:
             ["Annual cash flow", formatCurrency(summary.annualCashFlow)],
             ["Cash invested", formatCurrency(summary.totalCashInvested)],
           ].map(([label, val]) => (
-            <div key={label} className="rounded-xl border border-slate-200 bg-white p-4">
-              <p className="text-xs text-slate-500">{label}</p>
-              <p className="mt-1 text-lg font-semibold text-slate-900">{val}</p>
+            <div key={label} className="rounded-xl border border-slate-700 bg-slate-800/60 p-4">
+              <p className="text-xs text-slate-400">{label}</p>
+              <p className="mt-1 text-lg font-semibold text-white">{val}</p>
             </div>
           ))}
         </div>

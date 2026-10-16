@@ -1,0 +1,23 @@
+import { NextResponse } from "next/server";
+import { getNavSettings, saveNavSettings } from "@/lib/webpage-editor-store";
+import { getSession } from "@/lib/auth";
+
+export async function GET() {
+  const nav = await getNavSettings();
+  return NextResponse.json({ nav });
+}
+
+export async function POST(req: Request) {
+  const session = await getSession();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json();
+    const savedNav = await saveNavSettings(body);
+    return NextResponse.json({ ok: true, nav: savedNav });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message || "Failed to save navigation" }, { status: 500 });
+  }
+}

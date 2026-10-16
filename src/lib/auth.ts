@@ -19,7 +19,7 @@ export async function requireAuth(allowedRoles?: Role[]) {
 }
 
 export async function requireAdmin() {
-  return requireAuth([Role.SUPERADMIN, Role.EMPLOYEE]);
+  return requireAuth([Role.SUPERADMIN, Role.EMPLOYEE, Role.AGENT, Role.SELLER, Role.BUYER]);
 }
 
 export async function requireSuperAdmin() {

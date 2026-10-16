@@ -25,6 +25,11 @@ const AVAIL_OPTIONS      = [
   { value: "Rented",    label: "Rented" },
 ];
 
+const BEDROOM_OPTIONS = [
+  "1BHK", "2BHK", "3BHK", "4BHK", "5BHK",
+  "Simplex", "Duplex", "Triplex", "Penthouse"
+];
+
 type Props = {
   priceMin: number;
   priceMax: number;
@@ -119,32 +124,34 @@ export function PropertyFilters({ priceMin, priceMax, cities, areas = [], total 
         <span>✕</span> Clear All Filters
       </button>
 
-      {/* Furnishing quick-picks (always visible when RENT or no type set) */}
+      {/* Furnishing dropdown (visible for RENT or all) */}
       {(currentListingType === "" || currentListingType === "RENT") && (
         <div className="pb-4 border-b border-slate-100">
-          <Label className="mb-2 block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-            Furnishing
-          </Label>
-          <div className="flex flex-wrap gap-2">
+          <Label className="mb-2 block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Furnishing</Label>
+          <select name="furnishing" defaultValue={currentFurnishing} className={selectClass}>
+            <option value="">Any</option>
             {FURNISHING_OPTIONS.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => togglePill("furnishing", opt)}
-                className={`${pillBase} ${currentFurnishing === opt ? pillActive : pillInactive}`}
-              >
-                {opt}
-              </button>
+              <option key={opt} value={opt}>{opt}</option>
             ))}
-          </div>
+          </select>
         </div>
       )}
 
       <form onSubmit={onSubmit} className="mt-5 space-y-5">
-        <input type="hidden" name="furnishing" value={currentFurnishing} />
         <input type="hidden" name="liftType" value={currentLift} />
         <input type="hidden" name="availabilityStatus" value={currentAvail} />
-        <input type="hidden" name="bhk" value={get("bhk")} />
+
+        <div>
+          <Label>Bedrooms</Label>
+          <select name="bhk" defaultValue={get("bhk")} className={selectClass}>
+            <option value="">Any Bedrooms</option>
+            {BEDROOM_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div>
           <Label>Search</Label>
@@ -241,24 +248,16 @@ export function PropertyFilters({ priceMin, priceMax, cities, areas = [], total 
           </select>
         </div>
 
-        {/* Rooms / Beds / Baths */}
-        <div>
-          <Label>Min rooms</Label>
-          <Input name="minRooms" type="number" min={0} defaultValue={get("minRooms")} />
-        </div>
+        {/* Rooms / Baths */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label>Min beds</Label>
-            <Input name="minBeds" type="number" min={0} defaultValue={get("minBeds")} />
+            <Label>Min rooms</Label>
+            <Input name="minRooms" type="number" min={0} defaultValue={get("minRooms")} />
           </div>
           <div>
-            <Label>Max beds</Label>
-            <Input name="maxBeds" type="number" min={0} defaultValue={get("maxBeds")} />
+            <Label>Min baths</Label>
+            <Input name="minBaths" type="number" step="0.5" min={0} defaultValue={get("minBaths")} />
           </div>
-        </div>
-        <div>
-          <Label>Min baths</Label>
-          <Input name="minBaths" type="number" step="0.5" min={0} defaultValue={get("minBaths")} />
         </div>
 
         {/* Yield */}

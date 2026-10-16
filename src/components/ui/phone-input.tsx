@@ -12,6 +12,7 @@ import {
   phonePlaceholder,
 } from "@/lib/phone-utils";
 import { cn } from "@/lib/utils";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 type PhoneInputProps = {
   value: string;
@@ -50,26 +51,29 @@ export function PhoneInput({
   }
 
   function updateNational(next: string) {
-    const cleaned = next.replace(/[^\d\s-]/g, "");
+    const cleaned = next.replace(/\D/g, "").slice(0, 10);
     setNational(cleaned);
     onChange(formatPhoneE164(country.dial, cleaned));
   }
 
+  const countryOptions = COUNTRIES.map((c) => ({
+    value: c.code,
+    label: `${c.flag} ${c.dial}`,
+    sublabel: `${c.name} (${c.code})`,
+  }));
+
   return (
-    <div className={cn("flex gap-2", className)}>
-      <select
-        aria-label="Country code"
-        value={countryCode}
-        disabled={disabled}
-        onChange={(e) => updateCountry(e.target.value)}
-        className="w-[130px] shrink-0 rounded-xl border border-slate-200 bg-white px-2 py-2.5 text-sm font-medium"
-      >
-        {COUNTRIES.map((c) => (
-          <option key={c.code} value={c.code}>
-            {c.flag} {c.dial}
-          </option>
-        ))}
-      </select>
+    <div className={cn("flex gap-2 items-center", className)}>
+      <div className="w-[110px] shrink-0">
+        <SearchableSelect
+          options={countryOptions}
+          value={countryCode}
+          onChange={updateCountry}
+          disabled={disabled}
+          placeholder="Code"
+          searchPlaceholder="Search country..."
+        />
+      </div>
       <input
         id={id}
         type="tel"
@@ -78,7 +82,7 @@ export function PhoneInput({
         value={national}
         onChange={(e) => updateNational(e.target.value)}
         placeholder={phonePlaceholder(countryCode)}
-        className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
+        className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm"
       />
     </div>
   );

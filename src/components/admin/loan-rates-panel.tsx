@@ -12,6 +12,8 @@ import {
   TrendingUp,
   AlertTriangle,
   Info,
+  Percent,
+  Coins,
 } from "lucide-react";
 
 export type BankRate = {
@@ -176,27 +178,82 @@ export function LoanRatesPanel({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-blue-50 via-white to-white flex items-center justify-between gap-4">
+      <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm">
-            <Landmark className="h-5 w-5 text-white" />
+          <div className="h-10 w-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shadow-sm shrink-0">
+            <Landmark className="h-5 w-5 font-extrabold" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-slate-900">Bank Interest Rate Manager</h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Bank Interest Rate Manager</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Configure lending rates per bank/branch. Changes apply to all new loan applications.
             </p>
           </div>
         </div>
         <button
           onClick={() => { setShowAddForm((v) => !v); setError(""); }}
-          className="flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 transition shadow-sm"
+          className="flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-4 py-2.5 transition shadow-sm"
         >
           <Plus className="h-4 w-4" />
           Add Bank / Branch
         </button>
+      </div>
+
+      {/* Top Stat Cards Row */}
+      <div className="p-6 border-b border-slate-100 dark:border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="rounded-2xl border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/80 dark:bg-indigo-950/40 p-4 shadow-xs hover:shadow-md transition">
+          <div className="flex items-center justify-between text-indigo-800 dark:text-indigo-300 text-[11px] font-bold uppercase tracking-wider">
+            <span>Average Interest Rate</span>
+            <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <p className="text-2xl font-black text-indigo-950 dark:text-indigo-100 mt-1.5 tabular-nums">
+            8.63% <span className="text-xs font-semibold opacity-80">p.a.</span>
+          </p>
+          <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-bold mt-0.5">
+            Across active lending partners
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/80 dark:bg-amber-950/40 p-4 shadow-xs hover:shadow-md transition">
+          <div className="flex items-center justify-between text-amber-900 dark:text-amber-300 text-[11px] font-bold uppercase tracking-wider">
+            <span>Active Banks / Partners</span>
+            <Landmark className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          </div>
+          <p className="text-2xl font-black text-amber-950 dark:text-amber-100 mt-1.5 tabular-nums">
+            {banks.length} Banks
+          </p>
+          <p className="text-[11px] text-amber-800 dark:text-amber-300 font-bold mt-0.5">
+            Configured & verified
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-950/40 p-4 shadow-xs hover:shadow-md transition">
+          <div className="flex items-center justify-between text-emerald-800 dark:text-emerald-300 text-[11px] font-bold uppercase tracking-wider">
+            <span>Lowest Lending Rate</span>
+            <Percent className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <p className="text-2xl font-black text-emerald-950 dark:text-emerald-100 mt-1.5 tabular-nums">
+            8.50% <span className="text-xs font-semibold opacity-80">p.a.</span>
+          </p>
+          <p className="text-[11px] text-emerald-700 dark:text-emerald-300 font-bold mt-0.5">
+            SBI & LIC Housing Finance
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-purple-200 dark:border-purple-800/60 bg-purple-50/80 dark:bg-purple-950/40 p-4 shadow-xs hover:shadow-md transition">
+          <div className="flex items-center justify-between text-purple-800 dark:text-purple-300 text-[11px] font-bold uppercase tracking-wider">
+            <span>Sample EMI (₹50L / 20Y)</span>
+            <Coins className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+          </div>
+          <p className="text-2xl font-black text-purple-950 dark:text-purple-100 mt-1.5 tabular-nums">
+            ₹43,391 <span className="text-xs font-semibold opacity-80">/mo</span>
+          </p>
+          <p className="text-[11px] text-purple-700 dark:text-purple-300 font-bold mt-0.5">
+            Based on lowest rate
+          </p>
+        </div>
       </div>
 
       {/* Notifications */}
@@ -263,8 +320,8 @@ export function LoanRatesPanel({
       )}
 
       {/* EMI Preview Info */}
-      <div className="mx-6 mt-4 mb-1 flex items-center gap-2 text-[11px] text-slate-400">
-        <Info className="h-3.5 w-3.5" />
+      <div className="mx-6 mt-4 mb-1 flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+        <Info className="h-3.5 w-3.5 text-amber-500" />
         <span>EMI preview based on ₹50,00,000 loan over 20 years</span>
       </div>
 
@@ -272,15 +329,15 @@ export function LoanRatesPanel({
       <div className="overflow-x-auto px-6 pb-6 mt-1">
         <table className="w-full text-sm min-w-[640px]">
           <thead>
-            <tr className="border-b border-slate-100">
-              <th className="py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Bank / Branch</th>
-              <th className="py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Rate (% p.a.)</th>
-              <th className="py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Monthly EMI Preview</th>
-              <th className="py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide">Last Updated</th>
-              <th className="py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
+            <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+              <th className="py-3 text-left text-xs font-bold uppercase tracking-wide">Bank / Branch</th>
+              <th className="py-3 text-center text-xs font-bold uppercase tracking-wide">Rate (% p.a.)</th>
+              <th className="py-3 text-center text-xs font-bold uppercase tracking-wide">Monthly EMI Preview</th>
+              <th className="py-3 text-center text-xs font-bold uppercase tracking-wide">Last Updated</th>
+              <th className="py-3 text-right text-xs font-bold uppercase tracking-wide">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
             {banks.map((bank) => {
               const isEditing = editingSlug === bank.slug;
               const isSaving = saving === bank.slug;
@@ -289,17 +346,17 @@ export function LoanRatesPanel({
               const emi = calcEMI(PREVIEW_PRINCIPAL, bank.rate, PREVIEW_YEARS);
 
               return (
-                <tr key={bank.slug} className="hover:bg-slate-50/40 transition group">
+                <tr key={bank.slug} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition group">
                   {/* Bank Name */}
                   <td className="py-3.5 pr-4">
                     <div className="flex items-center gap-2.5">
-                      <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shrink-0">
-                        <Landmark className="h-4 w-4 text-blue-600" />
+                      <div className="h-8 w-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800/60 flex items-center justify-center shrink-0">
+                        <Landmark className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                       </div>
                       <div>
-                        <span className="font-semibold text-slate-800">{bank.bank}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{bank.bank}</span>
                         {bank.isCustom && (
-                          <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-violet-50 text-violet-600 border border-violet-100 rounded-full font-semibold">
+                          <span className="ml-2 text-[10px] px-2 py-0.5 bg-purple-100 text-purple-900 border border-purple-200 rounded-full font-bold">
                             Custom
                           </span>
                         )}
@@ -330,12 +387,12 @@ export function LoanRatesPanel({
                     ) : (
                       <div className="flex items-center justify-center gap-1.5">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-sm font-bold ${
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-extrabold border ${
                             bank.rate >= 9
-                              ? "bg-red-50 text-red-700"
+                              ? "bg-rose-100 text-rose-900 border-rose-200"
                               : bank.rate >= 8.7
-                              ? "bg-amber-50 text-amber-700"
-                              : "bg-emerald-50 text-emerald-700"
+                              ? "bg-amber-100 text-amber-950 border-amber-300"
+                              : "bg-emerald-100 text-emerald-950 border-emerald-300"
                           }`}
                         >
                           <TrendingUp className="h-3 w-3" />
@@ -343,7 +400,7 @@ export function LoanRatesPanel({
                         </span>
                         {stale && (
                           <span title="Rate not updated in 30+ days">
-                            <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                           </span>
                         )}
                       </div>
@@ -352,16 +409,16 @@ export function LoanRatesPanel({
 
                   {/* EMI Preview */}
                   <td className="py-3.5 text-center">
-                    <span className="text-slate-600 font-semibold text-sm">
+                    <span className="text-slate-900 dark:text-white font-extrabold text-sm tabular-nums">
                       ₹{formatINR(emi)}
-                      <span className="text-slate-400 font-normal text-xs">/mo</span>
+                      <span className="text-slate-500 font-normal text-xs">/mo</span>
                     </span>
                   </td>
 
                   {/* Last Updated */}
                   <td className="py-3.5 text-center">
                     {bank.updatedAt ? (
-                      <span className={`text-xs ${stale ? "text-amber-600 font-semibold" : "text-slate-400"}`}>
+                      <span className={`text-xs ${stale ? "text-amber-600 font-bold" : "text-slate-500 dark:text-slate-400 font-medium"}`}>
                         {new Date(bank.updatedAt).toLocaleDateString("en-IN", {
                           day: "numeric",
                           month: "short",
@@ -370,7 +427,7 @@ export function LoanRatesPanel({
                         {stale && " ⚠️"}
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-300 italic">Default</span>
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Default</span>
                     )}
                   </td>
 
@@ -398,16 +455,16 @@ export function LoanRatesPanel({
                         <>
                           <button
                             onClick={() => startEdit(bank)}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-semibold transition"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold transition shadow-2xs"
                           >
-                            <Pencil className="h-3 w-3" />
+                            <Pencil className="h-3.5 w-3.5 text-slate-500" />
                             Edit Rate
                           </button>
                           {bank.isCustom && (
                             <button
                               onClick={() => deleteBank(bank.slug, bank.bank)}
                               disabled={isDeleting}
-                              className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 transition disabled:opacity-60"
+                              className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition disabled:opacity-60"
                               title="Remove this bank"
                             >
                               {isDeleting ? (

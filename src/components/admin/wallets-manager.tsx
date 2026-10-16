@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import { Landmark, CircleDollarSign, Check, X, ShieldAlert, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
+import { TableScrollButtons } from "@/components/ui/table-scroll-buttons";
 
 type WalletUser = {
   id: string;
@@ -102,6 +104,8 @@ export function WalletsManager({ users }: { users: WalletUser[] }) {
     );
   };
 
+  const { ref: tableScrollRef, canScrollLeft, canScrollRight, scroll } = useHorizontalScroll([withdrawals]);
+
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* 1. Statistics Cards */}
@@ -199,11 +203,14 @@ export function WalletsManager({ users }: { users: WalletUser[] }) {
 
       {/* 3. Pending Withdrawals */}
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div className="border-b border-slate-100 bg-slate-50/50 px-5 py-4 flex items-center gap-2">
-          <Landmark className="h-5 w-5 text-slate-700" />
-          <h2 className="font-display text-lg font-bold text-slate-900">Pending Wallet Withdrawals</h2>
+        <div className="border-b border-slate-100 bg-slate-50/50 px-5 py-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Landmark className="h-5 w-5 text-slate-700" />
+            <h2 className="font-display text-lg font-bold text-slate-900">Pending Wallet Withdrawals</h2>
+          </div>
+          <TableScrollButtons canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} onScroll={scroll} />
         </div>
-        <div className="overflow-x-auto">
+        <div ref={tableScrollRef} className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-slate-500">
               <tr>

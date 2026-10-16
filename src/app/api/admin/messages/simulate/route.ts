@@ -76,7 +76,7 @@ export async function POST(req: Request) {
     // Notify the admin via email about this incoming message
     const integrations = await getMessagingIntegrations();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001";
-    const emailSubject = `[PlotsnHomes Alert] New ${channel.toUpperCase()} message from ${sender.name}`;
+    const emailSubject = `[BrickVest Alert] New ${channel.toUpperCase()} message from ${sender.name}`;
     const emailHtml = `
       <div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;border:1px solid #e2e8f0;border-radius:12px;padding:24px;background:#ffffff">
         <h2 style="color:#0f172a;margin-top:0;font-size:20px;border-b:1px solid #f1f5f9;padding-bottom:12px">New Message Received</h2>

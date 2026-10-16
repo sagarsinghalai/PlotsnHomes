@@ -23,7 +23,7 @@ export async function GET(req: Request) {
         // Try resolving as a Developer ID
         const developer = await prisma.developer.findUnique({ where: { id: targetUserId } });
         if (developer) {
-          const email = developer.email ?? `dev-${developer.id}@internal.plotsnhomes`;
+          const email = developer.email ?? `dev-${developer.id}@internal.brickvest`;
           const user = await prisma.user.findUnique({ where: { email } });
           if (user) {
             queryUserId = user.id;

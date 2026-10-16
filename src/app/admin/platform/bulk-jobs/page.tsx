@@ -34,7 +34,7 @@ export default async function BulkJobsPage() {
                   <td className="px-4 py-3">{j.fileName ?? "—"}</td>
                   <td className="px-4 py-3">{j.recordCount ?? "—"}</td>
                   <td className="px-4 py-3">{j.createdBy.name}</td>
-                  <td className="px-4 py-3">{new Date(j.createdAt).toLocaleString()}</td>
+                  <td className="px-4 py-3" suppressHydrationWarning>{new Date(j.createdAt).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>

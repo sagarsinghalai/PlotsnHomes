@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin-api";
 import { assignLeadOwner } from "@/lib/lead-routing";
 import { prisma } from "@/lib/prisma";
+import { notifyAgentNewLead } from "@/lib/whatsapp-central";
 
 const patchSchema = z.object({
   status: z.nativeEnum(ShowingStatus).optional(),
@@ -67,6 +68,8 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
         message: `Converted from site visit request (${showing.property.symbol}).`,
       },
     });
+
+    if (lead.ownerId) void notifyAgentNewLead(lead.id);
 
     return NextResponse.json({ ok: true, lead });
   } catch {

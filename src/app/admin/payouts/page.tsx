@@ -1,8 +1,10 @@
 import { PayoutsManager } from "@/components/admin/payouts-manager";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPayoutsPage() {
-  // Query active properties to schedule dividends
+  // 1. Query active properties to schedule dividends
   const properties = await prisma.property.findMany({
     where: { status: "ACTIVE" },
     orderBy: { createdAt: "desc" },
@@ -17,7 +19,6 @@ export default async function AdminPayoutsPage() {
   });
 
   const parsedProperties = properties.map((p) => {
-    // Generate static/deterministic investor counts for UI fidelity
     const charCodeSum = p.title.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
     const mockInvestors = 24 + (charCodeSum % 120);
 
@@ -32,13 +33,57 @@ export default async function AdminPayoutsPage() {
     };
   });
 
+  // 2. Query eligible agent commissions from DB
+  const dbCommissions = await prisma.agentCommission.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    include: {
+      agent: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          commissionRate: true,
+        },
+      },
+      property: {
+        select: {
+          title: true,
+          symbol: true,
+        },
+      },
+    },
+  });
+
+  const parsedCommissions = dbCommissions.map((c) => ({
+    id: c.id,
+    agentId: c.agentId,
+    agentName: c.agent?.name || "Agent Partner",
+    agentEmail: c.agent?.email || "agent@plotsnhomes.com",
+    agentRole: c.agent?.role || "AGENT",
+    propertyTitle: c.propertyTitle || c.property?.title || "Property Asset",
+    propertySymbol: c.property?.symbol || "PROP",
+    propertyValue: c.propertyValue || 0,
+    commissionPct: c.commissionPct || c.agent?.commissionRate || 3.0,
+    totalCommission: c.commissionAmount || 0,
+    paidAmount: c.status === "PAID" ? c.commissionAmount : 0,
+    remainingBalance: c.status === "PAID" ? 0 : c.commissionAmount,
+    status: (c.status as "PENDING" | "PAID") || "PENDING",
+    notes: c.notes || "",
+    paymentRef: c.paymentRef || "",
+    updatedAt: c.updatedAt.toISOString(),
+  }));
+
   return (
     <div>
-      <h1 className="font-display text-3xl font-bold text-slate-900">Dividend Payouts</h1>
-      <p className="mt-1 text-slate-600 mb-8">
-        Manage dividend schedules, calculate yields, and execute monthly pool payouts
+      <h1 className="font-display text-3xl font-bold text-slate-900 dark:text-white">
+        Payouts & Commission Distribution Hub
+      </h1>
+      <p className="mt-1 text-slate-600 dark:text-slate-400 mb-8">
+        Manage dividend schedules, calculate yields, transfer eligible agent commissions, and record bank settlements
       </p>
-      <PayoutsManager properties={parsedProperties} />
+      <PayoutsManager properties={parsedProperties} initialCommissions={parsedCommissions} />
     </div>
   );
 }

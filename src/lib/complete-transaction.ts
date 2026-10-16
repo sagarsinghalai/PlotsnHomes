@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { verifyRazorpaySignature } from "@/lib/razorpay-checkout";
 import { formatCurrency } from "@/lib/utils";
+import { calculateAndRecordCommission } from "@/lib/commission";
 
 /** Mark transaction COMPLETED after Stripe/Razorpay payment and send confirmation email. */
 export async function completeTransaction(transactionId: string) {
@@ -30,7 +31,7 @@ export async function completeTransaction(transactionId: string) {
 
       await sendEmail({
         to: tx.user.email,
-        subject: "Payment confirmed — PlotsnHomes",
+        subject: "Payment confirmed — BrickVest",
         html: transactionEmailHtml(
           formatCurrency(tx.amount),
           `${tx.description ?? "Your payment was successful."}\n${breakdown}`,
@@ -38,11 +39,12 @@ export async function completeTransaction(transactionId: string) {
         ),
       });
     } catch (e) {
-      console.error("[PlotsnHomes] confirmation email:", e);
+      console.error("[BrickVest] confirmation email:", e);
     }
   }
 
-  return tx;
+  await calculateAndRecordCommission(transactionId);
+return tx;
 }
 
 

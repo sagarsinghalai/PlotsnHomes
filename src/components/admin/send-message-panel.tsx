@@ -173,7 +173,7 @@ export function SendMessagePanel({
         recipientUserId: userId,
         recipientPhone: (needsPhone || needsTelegramId) ? effectivePhone : undefined,
         body,
-        subject: channel === "email" ? subject || "Message from PlotsnHomes" : undefined,
+        subject: channel === "email" ? subject || "Message from BrickVest" : undefined,
       }),
     });
     const data = await res.json();

@@ -13,7 +13,8 @@ export function AgentCard({
   propertyTitle: string;
   propertyId: string;
 }) {
-  const waMsg = `Hello, I'm interested in [ ${propertyTitle} ] (ID: ${propertyId})`;
+  const currentUrl = typeof window !== "undefined" ? window.location.href : "";
+  const waMsg = `Hello! I am interested in *${propertyTitle}* (ID: ${propertyId})\n🔗 *Property Link:* ${currentUrl}\n\nPlease share more details and schedule a site visit.`;
   const waUrl = agent.phone ? whatsAppWebUrl(agent.phone, waMsg) : null;
 
   return (

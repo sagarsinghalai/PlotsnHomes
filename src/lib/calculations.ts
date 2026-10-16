@@ -42,16 +42,33 @@ export function roi(
 }
 
 /**
- * Annual yield based on listed price vs current price.
- * Formula: ((currentPrice - listedPrice) / listedPrice * 100) / 12
- * This gives the monthly appreciation as a percentage, annualised.
+ * Annual yield / appreciation based on Pre-Launch vs Current price or rate.
+ * Excel Formula: =((Current - Prelaunch) / Prelaunch) * 100  (e.g., =(D17-D14)/D14)
+ * Gives the total capital appreciation / yield percentage.
  */
 export function computeAnnualYield(
-  listedPrice: number,
+  basePrice: number,
   currentPrice: number
 ): number {
-  if (listedPrice <= 0) return 0;
-  return ((currentPrice - listedPrice) / listedPrice * 100) / 12;
+  if (basePrice <= 0) return 0;
+  return ((currentPrice - basePrice) / basePrice) * 100;
+}
+
+/**
+ * Calculate appreciation amount and percentage based on Current Price vs Pre-Launch Price.
+ * Appreciation (amount) = Current Price - Prelaunch Price (e.g., D17 - D14)
+ * Appreciation (%) = ((Current Price - Prelaunch Price) / Prelaunch Price) * 100 (e.g., =(D17-D14)/D14)
+ */
+export function calculatePrelaunchAppreciation(
+  preLaunchPrice: number,
+  currentPrice: number
+): { appreciationAmount: number; appreciationPercent: number } {
+  if (preLaunchPrice <= 0) {
+    return { appreciationAmount: 0, appreciationPercent: 0 };
+  }
+  const appreciationAmount = currentPrice - preLaunchPrice;
+  const appreciationPercent = (appreciationAmount / preLaunchPrice) * 100;
+  return { appreciationAmount, appreciationPercent };
 }
 
 export type RatingSlabInput = {

@@ -3,8 +3,82 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatCurrency } from "@/lib/utils";
-import { X, Loader2, Edit, Check, AlertCircle } from "lucide-react";
+import { X, Loader2, Edit, Check, AlertCircle, Clock, Plus, History, MessageSquare, Save, SquarePen } from "lucide-react";
 import type { BankRate } from "@/components/admin/loan-rates-panel";
+import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
+import { TableScrollButtons } from "@/components/ui/table-scroll-buttons";
+
+type NoteEntry = {
+  id: string;
+  timestamp: string;
+  text: string;
+};
+
+function formatTimestamp(ts: string) {
+  if (!ts || ts === "Historical Note") {
+    return new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  }
+
+  const d = new Date(ts);
+  if (!isNaN(d.getTime())) {
+    return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  }
+
+  const dateMatch = ts.match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
+  if (dateMatch) {
+    const monthNames: Record<string, string> = {
+      jan: "January", feb: "February", mar: "March", apr: "April", may: "May", jun: "June",
+      jul: "July", aug: "August", sep: "September", oct: "October", nov: "November", dec: "December"
+    };
+    const m = monthNames[dateMatch[2].substring(0, 3).toLowerCase()] || dateMatch[2];
+    const day = parseInt(dateMatch[1], 10);
+    return `${m} ${day}, ${dateMatch[3]}`;
+  }
+
+  return ts;
+}
+
+function parseNotes(raw: string | null): NoteEntry[] {
+  if (!raw || !raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.every((n) => typeof n === "object" && n.text)) {
+      return parsed.map((n, i) => ({
+        id: n.id || `note-${i}-${Date.now()}`,
+        timestamp: n.timestamp || "Historical Note",
+        text: n.text,
+      }));
+    }
+  } catch (e) {}
+
+  const blocks = raw.split(/\n\n+/).map((b) => b.trim()).filter(Boolean);
+  const entries: NoteEntry[] = [];
+
+  blocks.forEach((block, idx) => {
+    const match = block.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
+    if (match) {
+      entries.push({
+        id: `note-${idx}-${Date.now()}`,
+        timestamp: match[1].trim(),
+        text: match[2].trim(),
+      });
+    } else {
+      entries.push({
+        id: `note-${idx}-${Date.now()}`,
+        timestamp: "Historical Note",
+        text: block,
+      });
+    }
+  });
+
+  return entries;
+}
+
+function serializeNotes(entries: NoteEntry[]): string {
+  return entries
+    .map((e) => `[${e.timestamp}] ${e.text}`)
+    .join("\n\n");
+}
 
 type Loan = {
   id: string;
@@ -51,6 +125,8 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
   const [propertyCity, setPropertyCity] = useState("");
   const [propertyArea, setPropertyArea] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
+  const [notesList, setNotesList] = useState<NoteEntry[]>([]);
+  const [newNoteText, setNewNoteText] = useState("");
 
   function openEditModal(loan: Loan) {
     setEditingLoan(loan);
@@ -69,8 +145,37 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
     setPropertyCity(loan.propertyCity || "");
     setPropertyArea(loan.propertyArea || "");
     setAdminNotes(loan.adminNotes || "");
+    setNotesList(parseNotes(loan.adminNotes));
+    setNewNoteText("");
     setError("");
     setSuccess("");
+  }
+
+  function handleAddNote() {
+    if (!newNoteText.trim()) return;
+    const now = new Date();
+    const formattedTs = now.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    const newEntry: NoteEntry = {
+      id: `note-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      timestamp: formattedTs,
+      text: newNoteText.trim(),
+    };
+
+    const updated = [newEntry, ...notesList];
+    setNotesList(updated);
+    setAdminNotes(serializeNotes(updated));
+    setNewNoteText("");
+  }
+
+  function handleDeleteNote(id: string) {
+    const updated = notesList.filter((n) => n.id !== id);
+    setNotesList(updated);
+    setAdminNotes(serializeNotes(updated));
   }
 
   async function handleSave() {
@@ -104,6 +209,11 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
         body: JSON.stringify(payload),
       });
 
+      if (res.status === 401) {
+        window.location.href = "/login?error=SessionExpired";
+        return;
+      }
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update loan application");
 
@@ -125,6 +235,10 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
+      if (res.status === 401) {
+        window.location.href = "/login?error=SessionExpired";
+        return;
+      }
       if (!res.ok) throw new Error("Failed to update status");
       router.refresh();
     } catch (err: any) {
@@ -133,6 +247,8 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
       setBusy(null);
     }
   }
+
+  const { ref: tableScrollRef, canScrollLeft, canScrollRight, scroll } = useHorizontalScroll([loans]);
 
   return (
     <div className="space-y-6">
@@ -143,7 +259,11 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-2xl border bg-white shadow-sm">
+      <div className="flex justify-end">
+        <TableScrollButtons canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} onScroll={scroll} />
+      </div>
+
+      <div ref={tableScrollRef} className="overflow-x-auto rounded-2xl border bg-white shadow-sm">
         <table className="w-full text-sm min-w-[900px]">
           <thead className="bg-slate-50 text-left text-slate-500 font-medium border-b border-slate-100">
             <tr>
@@ -419,16 +539,84 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                   </label>
                 </div>
 
-                <label className="block text-sm">
-                  <span className="text-slate-700 font-semibold">Internal Review / Admin Notes</span>
-                  <textarea
-                    rows={3}
-                    value={adminNotes}
-                    onChange={(e) => setAdminNotes(e.target.value)}
-                    placeholder="Enter approval details, reference check result, etc."
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold resize-none"
-                  />
-                </label>
+                <div className="space-y-4 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-900 font-bold text-sm flex items-center gap-1.5">
+                      <MessageSquare className="h-4 w-4 text-amber-500" />
+                      Internal Review & Admin Notes Log
+                    </span>
+                    <span className="text-xs text-slate-400 font-medium font-mono">
+                      {notesList.length} {notesList.length === 1 ? "entry" : "entries"}
+                    </span>
+                  </div>
+
+                  {/* Add New Note Box */}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 space-y-2.5">
+                    <textarea
+                      rows={2}
+                      value={newNoteText}
+                      onChange={(e) => setNewNoteText(e.target.value)}
+                      placeholder="Type a new review note, reference check status, or approval details..."
+                      className="w-full rounded-lg border border-slate-200 bg-white p-3 text-sm outline-none focus:border-gold resize-none"
+                    />
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        Click "Save Note" to record this entry with a live timestamp.
+                      </p>
+                      <button
+                        type="button"
+                        disabled={!newNoteText.trim()}
+                        onClick={handleAddNote}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-950 bg-gold hover:bg-gold-dark disabled:opacity-50 px-4 py-2 rounded-lg transition shadow-xs cursor-pointer"
+                      >
+                        <Save className="h-3.5 w-3.5" />
+                        Save Note
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Historical Log / Timeline */}
+                  <div className="space-y-2 pt-1">
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                      <History className="h-3.5 w-3.5 text-slate-400" />
+                      Historical Record of Saved Notes
+                    </h5>
+
+                    {notesList.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-slate-200 p-5 text-center text-xs text-slate-400 italic bg-white">
+                        No historical notes recorded yet. Type a note above and click "Save Note".
+                      </div>
+                    ) : (
+                      <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                        {notesList.map((note) => (
+                          <div
+                            key={note.id}
+                            className="rounded-2xl border border-slate-200/90 bg-white p-4 space-y-3 shadow-2xs transition hover:border-slate-300"
+                          >
+                            {/* Note Text */}
+                            <p className="text-sm font-bold text-slate-900 leading-snug whitespace-pre-wrap">
+                              {note.text}
+                            </p>
+
+                            {/* Note Meta Footer */}
+                            <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+                              <div className="flex items-center gap-1.5 text-slate-700 font-medium">
+                                <SquarePen className="h-4 w-4 text-teal-700 shrink-0" />
+                                <span className="font-semibold text-teal-700 underline decoration-teal-700 underline-offset-2">
+                                  Note
+                                </span>
+                                <span>by Super Admin</span>
+                              </div>
+                              <span className="text-slate-500 font-medium text-xs">
+                                {formatTimestamp(note.timestamp)}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
             </div>

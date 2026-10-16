@@ -4,15 +4,21 @@ import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
 
 const createSchema = z.object({
-  name: z.string().min(2),
+  name: z.string().min(2).regex(/^[a-zA-Z\s]+$/, "Name can only contain alphabets and spaces"),
   projectCount: z.number().int().min(0).optional(),
   email: z.string().email().optional().nullable().or(z.literal("")),
-  phone: z.string().optional().nullable(),
+  phone: z.string().optional().nullable().or(z.literal("")).refine(
+    (val) => {
+      if (!val) return true;
+      return /^\+?[1-9]\d{9,14}$/.test(val);
+    },
+    { message: "Invalid phone number format." }
+  ),
   address: z.string().optional().nullable(),
-  city: z.string().optional().nullable(),
-  state: z.string().optional().nullable(),
-  zip: z.string().optional().nullable(),
-  country: z.string().optional(),
+  city: z.string().regex(/^[a-zA-Z\s]*$/, "City can only contain alphabets").optional().nullable(),
+  state: z.string().regex(/^[a-zA-Z\s]*$/, "State can only contain alphabets").optional().nullable(),
+  zip: z.string().regex(/^\d{6}$/, "Zip Code must be exactly 6 digits").optional().nullable(),
+  country: z.string().regex(/^[a-zA-Z\s]*$/, "Country can only contain alphabets").optional(),
   experienceYears: z.number().int().min(0).optional().nullable(),
   identityType: z.string().optional().nullable(),
   identityNumber: z.string().optional().nullable(),

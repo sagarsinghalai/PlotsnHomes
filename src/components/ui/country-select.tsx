@@ -1,7 +1,7 @@
 "use client";
 
 import { COUNTRIES, DEFAULT_COUNTRY_CODE } from "@/lib/locale-defaults";
-import { cn } from "@/lib/utils";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 type CountrySelectProps = {
   value: string;
@@ -16,21 +16,21 @@ export function CountrySelect({
   className,
   disabled,
 }: CountrySelectProps) {
+  const options = COUNTRIES.map((c) => ({
+    value: c.code,
+    label: `${c.flag} ${c.name}`,
+    sublabel: c.code,
+  }));
+
   return (
-    <select
+    <SearchableSelect
+      options={options}
       value={value || DEFAULT_COUNTRY_CODE}
+      onChange={onChange}
       disabled={disabled}
-      onChange={(e) => onChange(e.target.value)}
-      className={cn(
-        "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm",
-        className
-      )}
-    >
-      {COUNTRIES.map((c) => (
-        <option key={c.code} value={c.code}>
-          {c.flag} {c.name}
-        </option>
-      ))}
-    </select>
+      className={className}
+      placeholder="Select country..."
+      searchPlaceholder="Search country name or code..."
+    />
   );
 }

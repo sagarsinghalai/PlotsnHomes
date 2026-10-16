@@ -258,7 +258,7 @@ export async function sendAdminMessage(input: SendMessageInput): Promise<SendMes
       }
     } else if (developer && !developer.email) {
       // Developer with no email — create a placeholder
-      const placeholderEmail = `dev-${developer.id}@internal.plotsnhomes`;
+      const placeholderEmail = `dev-${developer.id}@internal.brickvest`;
       recipient = await prisma.user.findUnique({ where: { email: placeholderEmail } });
       if (!recipient) {
         recipient = await prisma.user.create({
@@ -514,7 +514,7 @@ export async function receiveIncomingMessage({
 
   // If neither exists, auto-create a Lead and User
   if (!user && !lead) {
-    const uniqueEmail = `inbound-${cleaned}@plotsnhomes.com`;
+    const uniqueEmail = `inbound-${cleaned}@brickvest.com`;
     lead = await prisma.lead.create({
       data: {
         name: `Inbound Lead ${fromPhone}`,

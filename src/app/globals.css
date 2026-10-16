@@ -9,14 +9,22 @@
   --gold-dark: #a8861f;
 }
 
+html {
+  max-width: 100vw;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 @layer utilities {
   .font-display {
-    font-family: var(--font-display), Georgia, serif;
+    font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   }
 }
 
@@ -341,3 +349,162 @@ body {
     font-size: 7pt;
   }
 }
+
+/* ── Backend Admin Right Content Panel Light Mode Styles ── */
+.admin-main-container.light {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.admin-main-container.light h1,
+.admin-main-container.light h2,
+.admin-main-container.light h3,
+.admin-main-container.light h4,
+.admin-main-container.light .font-bold,
+.admin-main-container.light .font-black {
+  color: #0f172a !important;
+}
+
+.admin-main-container.light .text-white,
+.admin-main-container.dark .text-white,
+.force-white-text {
+  color: #ffffff !important;
+}
+
+.admin-main-container.light p,
+.admin-main-container.light span.text-slate-600,
+.admin-main-container.light span.text-slate-500,
+.admin-main-container.light .text-slate-500,
+.admin-main-container.light .text-slate-400 {
+  color: #475569 !important;
+}
+
+.admin-main-container.light .bg-white,
+.admin-main-container.light .dark\:bg-slate-900 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.admin-main-container.light table th {
+  color: #475569 !important;
+  background-color: #f1f5f9 !important;
+}
+
+.admin-main-container.light table td {
+  color: #0f172a !important;
+  border-color: #f1f5f9 !important;
+}
+
+.admin-main-container.light input,
+.admin-main-container.light select {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* ── Backend Admin Right Content Panel Dark Mode Styles ── */
+.admin-main-container.dark {
+  background-color: #030712 !important;
+  color: #f8fafc !important;
+}
+
+.admin-main-container.dark .bg-white,
+.admin-main-container.dark .bg-slate-50,
+.admin-main-container.dark .bg-slate-100,
+.admin-main-container.dark .bg-sky-50,
+.admin-main-container.dark .bg-indigo-50,
+.admin-main-container.dark .bg-violet-50,
+.admin-main-container.dark .bg-amber-50,
+.admin-main-container.dark .bg-orange-50,
+.admin-main-container.dark .bg-emerald-50,
+.admin-main-container.dark .bg-pink-50,
+.admin-main-container.dark .bg-red-50,
+.admin-main-container.dark .bg-red-100,
+.admin-main-container.dark .bg-violet-100,
+.admin-main-container.dark .bg-sky-100,
+.admin-main-container.dark .bg-emerald-100,
+.admin-main-container.dark .bg-amber-100 {
+  background-color: #0f172a !important;
+  border-color: #1e2435 !important;
+  color: #f8fafc !important;
+}
+
+.admin-main-container.dark .border-slate-200,
+.admin-main-container.dark .border-slate-100,
+.admin-main-container.dark .border-slate-50,
+.admin-main-container.dark .border-amber-200,
+.admin-main-container.dark .border-indigo-200,
+.admin-main-container.dark .border-emerald-200,
+.admin-main-container.dark .border-pink-200,
+.admin-main-container.dark .border-red-200 {
+  border-color: #1e2435 !important;
+}
+
+.admin-main-container.dark h1,
+.admin-main-container.dark h2,
+.admin-main-container.dark h3,
+.admin-main-container.dark h4,
+.admin-main-container.dark h5,
+.admin-main-container.dark h6,
+.admin-main-container.dark .font-bold,
+.admin-main-container.dark .font-black,
+.admin-main-container.dark .font-semibold {
+  color: #ffffff !important;
+}
+
+.admin-main-container.dark p,
+.admin-main-container.dark span,
+.admin-main-container.dark label,
+.admin-main-container.dark .text-slate-900,
+.admin-main-container.dark .text-slate-800,
+.admin-main-container.dark .text-slate-700,
+.admin-main-container.dark .text-slate-600,
+.admin-main-container.dark .text-slate-500,
+.admin-main-container.dark .text-indigo-700,
+.admin-main-container.dark .text-amber-700,
+.admin-main-container.dark .text-emerald-700,
+.admin-main-container.dark .text-pink-700,
+.admin-main-container.dark .text-red-700,
+.admin-main-container.dark .text-red-800,
+.admin-main-container.dark .text-amber-900,
+.admin-main-container.dark .text-emerald-800,
+.admin-main-container.dark .text-sky-800,
+.admin-main-container.dark .text-violet-800 {
+  color: #e2e8f0 !important;
+}
+
+.admin-main-container.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.admin-main-container.dark table th {
+  color: #94a3b8 !important;
+  background-color: #13161f !important;
+  border-color: #1e2435 !important;
+}
+
+.admin-main-container.dark table td {
+  color: #f8fafc !important;
+  border-color: #1e2435 !important;
+}
+
+.admin-main-container.dark tr:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.admin-main-container.dark input,
+.admin-main-container.dark select,
+.admin-main-container.dark textarea {
+  background-color: #0f172a !important;
+  border-color: #1e2435 !important;
+  color: #ffffff !important;
+}
+
+.admin-main-container.dark input::placeholder {
+  color: #64748b !important;
+}
+
+
+
+

@@ -31,6 +31,13 @@ export const propertyMediaSchema = z.object({
   flatsPerFloor: z.number().int().min(1).optional().nullable(),
   availabilityStatus: z.string().optional(),
   customFields: z.string().optional(),
+  developerId: z.string().optional().nullable(),
+  projectId: z.string().optional().nullable(),
+  // Launch Stage Rates (PriceFilters)
+  basePriceRate: z.number().optional().nullable(),
+  softLaunchRate: z.number().optional().nullable(),
+  preLaunchRate: z.number().optional().nullable(),
+  launchRate: z.number().optional().nullable(),
 });
 
 export const propertyCreateSchema = z

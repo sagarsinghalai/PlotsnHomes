@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { TableToolbarManager } from "@/components/ui/table-toolbar-manager";
+import { useTableColumns } from "@/hooks/use-table-columns";
 
 type Slab = {
   id?: string;
@@ -151,6 +153,21 @@ export function RatingSlabsManager({
     setEditForm({ ...slab });
   }
 
+  const {
+    columns,
+    visibleColumnIds,
+    toggleColumn,
+    addCustomColumn,
+    removeCustomColumn,
+    resetColumns,
+  } = useTableColumns("rating_slabs_table", [
+    { id: "badge", label: "Badge / Label", defaultVisible: true },
+    { id: "min", label: "Min Value", defaultVisible: true },
+    { id: "max", label: "Max Value", defaultVisible: true },
+    { id: "color", label: "Color Badge", defaultVisible: true },
+    { id: "actions", label: "Actions", defaultVisible: true },
+  ]);
+
   function cancelEdit() {
     setEditId(null);
     setEditForm(EMPTY_SLAB);
@@ -296,6 +313,19 @@ export function RatingSlabsManager({
           {activeTab.startsWith("change") && `These slabs define the badge color and label for the ${SLAB_TYPES.find(t => t.key === activeTab)?.label} values.`}
         </p>
       </div>
+
+      {/* Table Toolbar Manager */}
+      <TableToolbarManager
+        tableTitle={`${SLAB_TYPES.find(t => t.key === activeTab)?.label} Slabs Table`}
+        addRowLabel="Add Slab"
+        onAddRow={() => { setAddMode(true); setAddForm({ ...EMPTY_SLAB, sortOrder: slabs.length }); }}
+        columns={columns}
+        visibleColumnIds={visibleColumnIds}
+        onToggleColumn={toggleColumn}
+        onAddCustomColumn={addCustomColumn}
+        onRemoveCustomColumn={removeCustomColumn}
+        onResetColumns={resetColumns}
+      />
 
       {loading ? (
         <div className="text-center py-12 text-slate-400">Loading slabs…</div>

@@ -143,9 +143,9 @@ async function main() {
   const passwordHash = await bcrypt.hash("demo1234", 12);
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@plotsnhomes.com" },
+    where: { email: "admin@brickvest.com" },
     create: {
-      email: "admin@plotsnhomes.com",
+      email: "admin@brickvest.com",
       name: "Admin User",
       phone: "+91 98765 40100",
       passwordHash,
@@ -177,9 +177,9 @@ async function main() {
   const agents = await Promise.all(
     agentNames.map((name, i) =>
       prisma.user.upsert({
-        where: { email: `agent${i + 1}@plotsnhomes.com` },
+        where: { email: `agent${i + 1}@brickvest.com` },
         create: {
-          email: `agent${i + 1}@plotsnhomes.com`,
+          email: `agent${i + 1}@brickvest.com`,
           name,
           phone: agentPhones[i],
           passwordHash,
@@ -198,9 +198,9 @@ async function main() {
   );
 
   const investor = await prisma.user.upsert({
-    where: { email: "investor@plotsnhomes.com" },
+    where: { email: "investor@brickvest.com" },
     create: {
-      email: "investor@plotsnhomes.com",
+      email: "investor@brickvest.com",
       name: "James Kapoor",
       phone: "+91 98200 34567",
       passwordHash,
@@ -217,9 +217,9 @@ async function main() {
   });
 
   await prisma.user.upsert({
-    where: { email: "buyer@plotsnhomes.com" },
+    where: { email: "buyer@brickvest.com" },
     create: {
-      email: "buyer@plotsnhomes.com",
+      email: "buyer@brickvest.com",
       name: "Emily Sharma",
       phone: "+91 97654 32100",
       passwordHash,
@@ -289,17 +289,17 @@ async function main() {
 
     // Rich, varied property descriptions by category
     const descriptionMap: Record<string, string> = {
-      Apartment: `Elegantly designed ${beds}-bedroom apartment in the heart of ${area}, ${loc.city}. Features floor-to-ceiling windows, modern open-plan kitchen, and premium finishes throughout. Managed by PlotsnHomes, symbol ${symbol} delivers consistent rental yield tracked live on the platform.`,
+      Apartment: `Elegantly designed ${beds}-bedroom apartment in the heart of ${area}, ${loc.city}. Features floor-to-ceiling windows, modern open-plan kitchen, and premium finishes throughout. Managed by BrickVest, symbol ${symbol} delivers consistent rental yield tracked live on the platform.`,
       Villa: `Stunning ${beds}-bedroom private villa in ${area}, ${loc.city} — offering expansive living spaces, a landscaped garden, and a private swimming pool. This investment-grade asset has a strong rental history and premium cap rate. Symbol: ${symbol}.`,
-      Penthouse: `Exclusive ${beds}-bedroom penthouse crowning ${area}'s skyline in ${loc.city}. Panoramic city views, private terrace, chef's kitchen, and ultra-luxury interiors. A trophy asset for discerning investors — PlotsnHomes symbol ${symbol}.`,
-      Townhouse: `Contemporary ${beds}-bedroom townhouse in the sought-after ${area} neighbourhood, ${loc.city}. Spanning multiple levels with private parking, landscaped patio, and smart home integration. Symbol ${symbol} on PlotsnHomes exchange.`,
-      Duplex: `Architecturally designed ${beds}-bedroom duplex in ${area}, ${loc.city} — ideal for end-users and investors alike. Features double-height ceilings, modern fixtures, and strong rental demand. Listed as ${symbol} on PlotsnHomes.`,
-      "Full Floor": `Premium full-floor ${beds}-bedroom residence on a high floor in ${area}, ${loc.city}. Unobstructed panoramic views, dedicated lift lobby, concierge service, and high-end amenities. PlotsnHomes listing: ${symbol}.`,
+      Penthouse: `Exclusive ${beds}-bedroom penthouse crowning ${area}'s skyline in ${loc.city}. Panoramic city views, private terrace, chef's kitchen, and ultra-luxury interiors. A trophy asset for discerning investors — BrickVest symbol ${symbol}.`,
+      Townhouse: `Contemporary ${beds}-bedroom townhouse in the sought-after ${area} neighbourhood, ${loc.city}. Spanning multiple levels with private parking, landscaped patio, and smart home integration. Symbol ${symbol} on BrickVest exchange.`,
+      Duplex: `Architecturally designed ${beds}-bedroom duplex in ${area}, ${loc.city} — ideal for end-users and investors alike. Features double-height ceilings, modern fixtures, and strong rental demand. Listed as ${symbol} on BrickVest.`,
+      "Full Floor": `Premium full-floor ${beds}-bedroom residence on a high floor in ${area}, ${loc.city}. Unobstructed panoramic views, dedicated lift lobby, concierge service, and high-end amenities. BrickVest listing: ${symbol}.`,
       Commercial: `Prime commercial space in ${area}'s business district, ${loc.city}. ${sqft.toLocaleString()} sq ft of Grade-A office space with 24/7 security, fibre connectivity, and central HVAC. High-yield asset — symbol ${symbol}.`,
       Land: `Strategically located ${(sqft / 43560).toFixed(2)}-acre land parcel in ${area}, ${loc.city}. Zoned for ${loc.state === "AE" ? "mixed-use development" : "residential or commercial construction"} with utility connections in place. Development potential — ${symbol}.`,
-      Plot: `Ready-to-build residential plot in ${area}, ${loc.city}. Clean title, all approvals in place, and excellent connectivity to major arterials. A rare land investment opportunity — PlotsnHomes symbol ${symbol}.`,
+      Plot: `Ready-to-build residential plot in ${area}, ${loc.city}. Clean title, all approvals in place, and excellent connectivity to major arterials. A rare land investment opportunity — BrickVest symbol ${symbol}.`,
     };
-    const description = descriptionMap[category] ?? `Investment-grade ${category.toLowerCase()} in ${area}, ${loc.city}. Symbol ${symbol} tracks live yield, cap rate, and market performance on the PlotsnHomes exchange.`;
+    const description = descriptionMap[category] ?? `Investment-grade ${category.toLowerCase()} in ${area}, ${loc.city}. Symbol ${symbol} tracks live yield, cap rate, and market performance on the BrickVest exchange.`;
 
       batch.push({
       symbol,
@@ -680,7 +680,7 @@ async function main() {
     await createRichInvoice(1, {
       bookingId: "BV-BK-2024",
       bookingName: "James Investor",
-      brokerageName: "PlotsnHomes Realty",
+      brokerageName: "BrickVest Realty",
       invoiceTo: "Buyer",
       subtotal: 118750,
       taxRate: 5,
@@ -694,7 +694,7 @@ async function main() {
       buyerPhone: "+1 555 0101",
       buyerAddress: "1200 Market St, San Francisco, CA 94103",
       agentName: "Alex Morgan",
-      agentEmail: "agent1@plotsnhomes.com",
+      agentEmail: "agent1@brickvest.com",
       agentPhone: "+1 555 0201",
       propertySymbol: "BV-CA-0022",
       propertyTitle: "Marina Bay Residences — Tower A",
@@ -722,7 +722,7 @@ async function main() {
       buyerPhone: "+91 98 7654 3210",
       buyerAddress: "Bandra West, Mumbai, MH 400050",
       agentName: "Priya Kapoor",
-      agentEmail: "agent2@plotsnhomes.com",
+      agentEmail: "agent2@brickvest.com",
       agentPhone: "+91 98 1111 2222",
       propertySymbol: "BV-AE-0001",
       propertyTitle: "Palm Jumeirah Villa — Sea View",
@@ -749,7 +749,7 @@ async function main() {
       buyerPhone: "+1 555 0303",
       buyerAddress: "500 Boylston St, Boston, MA 02116",
       agentName: "Jordan Lee",
-      agentEmail: "agent3@plotsnhomes.com",
+      agentEmail: "agent3@brickvest.com",
       agentPhone: "+1 555 0404",
       propertySymbol: "BV-NY-0132",
       propertyTitle: "Hudson Yards Penthouse",
@@ -783,10 +783,10 @@ async function main() {
           buyerPhone: "+1 555 0199",
           buyerAddress: "Address on file",
           agentName: inv.agentName ?? "Alex Morgan",
-          agentEmail: "agent1@plotsnhomes.com",
+          agentEmail: "agent1@brickvest.com",
           agentPhone: "+1 555 0201",
           propertySymbol: inv.propertySymbol ?? "BV-CA-0022",
-          propertyTitle: inv.propertyTitle ?? "PlotsnHomes listing",
+          propertyTitle: inv.propertyTitle ?? "BrickVest listing",
           propertyAddress: inv.propertyAddress ?? "See property listing",
           lineItemsJson:
             inv.lineItemsJson ??
@@ -899,7 +899,7 @@ async function main() {
 
   const subCount = await prisma.userSubscription.count();
   if (RESET_DB || subCount === 0) {
-    const buyer = await prisma.user.findUnique({ where: { email: "buyer@plotsnhomes.com" } });
+    const buyer = await prisma.user.findUnique({ where: { email: "buyer@brickvest.com" } });
     const plansBySlug = Object.fromEntries(
       (await prisma.subscriptionPlan.findMany()).map((pl) => [pl.slug, pl])
     );
@@ -980,10 +980,41 @@ async function main() {
   const { seedDefaultSettings } = await import("../src/lib/system-settings");
   await seedDefaultSettings();
 
+  // Link properties to developers + projects (for audience segmentation).
+  {
+    const developers = await prisma.developer.findMany({ select: { id: true, name: true } });
+    if (developers.length > 0) {
+      const suffixes = ["Heights", "Greens", "Residency", "Enclave"];
+      const projectsByDev: Record<string, { id: string }[]> = {};
+      for (let di = 0; di < developers.length; di++) {
+        const dev = developers[di];
+        const projects = await prisma.project.findMany({ where: { developerId: dev.id }, select: { id: true } });
+        if (projects.length === 0) {
+          for (let i = 0; i < 2; i++) {
+            const p = await prisma.project.create({
+              data: { name: `${dev.name} ${suffixes[(di + i) % suffixes.length]}`, developerId: dev.id },
+              select: { id: true },
+            });
+            projects.push(p);
+          }
+        }
+        projectsByDev[dev.id] = projects;
+        await prisma.developer.update({ where: { id: dev.id }, data: { projectCount: projects.length } });
+      }
+      const unlinked = await prisma.property.findMany({ where: { developerId: null }, select: { id: true } });
+      for (let i = 0; i < unlinked.length; i++) {
+        const dev = developers[i % developers.length];
+        const proj = projectsByDev[dev.id][i % projectsByDev[dev.id].length];
+        await prisma.property.update({ where: { id: unlinked[i].id }, data: { developerId: dev.id, projectId: proj.id } });
+      }
+      console.log(`Linked ${unlinked.length} properties to developers/projects.`);
+    }
+  }
+
   const finalPropertyCount = await prisma.property.count();
   console.log("\nSeed complete —", finalPropertyCount, "properties in database");
   console.log("Admin:", admin.email, "/ demo1234");
-  console.log("Agents: agent1@plotsnhomes.com … agent10@plotsnhomes.com / demo1234");
+  console.log("Agents: agent1@brickvest.com … agent10@brickvest.com / demo1234");
 }
 
 main()

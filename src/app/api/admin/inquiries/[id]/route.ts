@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin-api";
 import { assignLeadOwner } from "@/lib/lead-routing";
 import { prisma } from "@/lib/prisma";
+import { notifyAgentNewLead } from "@/lib/whatsapp-central";
 
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
   const auth = await requireAdminApi();
@@ -54,6 +55,8 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
         message: `Converted from property inquiry (${inquiry.property.symbol}).`,
       },
     });
+
+    if (lead.ownerId) void notifyAgentNewLead(lead.id);
 
     return NextResponse.json({ ok: true, lead });
   } catch {

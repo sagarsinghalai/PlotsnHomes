@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { validateUserDobAge } from "@/lib/user-validation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type KycStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -228,6 +229,16 @@ export function KycForm() {
   async function handleSubmit() {
     setLoading(true);
     setMsg("");
+
+    if (dob) {
+      const dobCheck = validateUserDobAge(dob);
+      if (!dobCheck.valid) {
+        setMsg(dobCheck.message!);
+        setLoading(false);
+        return;
+      }
+    }
+
     const payload: Record<string, string | undefined> = {
       fullName, dateOfBirth: dob, nationality, idType, idNumber,
       address, city, state: state_, pinCode, country,
@@ -245,7 +256,8 @@ export function KycForm() {
       setSubmitted(true);
       setMsg("KYC submitted successfully! Our team will review within 24–48 hours.");
     } else {
-      setMsg("Submission failed. Please try again.");
+      const data = await res.json().catch(() => ({}));
+      setMsg(data.error || "Submission failed. Please try again.");
     }
   }
 
@@ -289,9 +301,9 @@ export function KycForm() {
 
       <div className="rounded-3xl border bg-white shadow-xl overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 to-slate-700 px-8 py-6">
-          <h2 className="text-xl font-bold text-white">KYC Verification</h2>
-          <p className="text-slate-300 text-sm mt-1">
+        <div className="bg-white border-b border-slate-200 px-8 py-6">
+          <h2 className="text-xl font-bold text-slate-900">KYC Verification</h2>
+          <p className="text-slate-500 text-sm mt-1 font-medium">
             Step {step + 1} of {STEP_LABELS.length} — {STEP_LABELS[step]}
           </p>
         </div>
@@ -493,7 +505,16 @@ export function KycForm() {
               <Button
                 variant="primary"
                 onClick={() => {
-                  if (step === 0 && !fullName) { setMsg("Full name is required."); return; }
+                  if (step === 0) {
+                    if (!fullName) { setMsg("Full name is required."); return; }
+                    if (dob) {
+                      const dobCheck = validateUserDobAge(dob);
+                      if (!dobCheck.valid) {
+                        setMsg(dobCheck.message!);
+                        return;
+                      }
+                    }
+                  }
                   setMsg("");
                   setStep((s) => s + 1);
                 }}

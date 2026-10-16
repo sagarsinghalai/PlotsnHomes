@@ -4,6 +4,10 @@ import { useState, useMemo } from "react";
 import { LineChart, ArrowUpRight, ArrowDownRight, Search, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
+import { TableScrollButtons } from "@/components/ui/table-scroll-buttons";
+import { X } from "lucide-react";
 
 type Trade = {
   id: string;
@@ -99,6 +103,15 @@ export function TradesManager({ trades }: { trades: Trade[] }) {
     document.body.removeChild(link);
   };
 
+  const { ref: tableScrollRef, canScrollLeft, canScrollRight, scroll } = useHorizontalScroll([filteredTrades]);
+
+  const hasActiveFilters = search !== "" || typeFilter !== "" || propertyFilter !== "";
+  const clearAllFilters = () => {
+    setSearch("");
+    setTypeFilter("");
+    setPropertyFilter("");
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* 1. Statistics Cards */}
@@ -141,31 +154,51 @@ export function TradesManager({ trades }: { trades: Trade[] }) {
             />
           </div>
 
-          <select
-            value={typeFilter}
-            onChange={e => setTypeFilter(e.target.value as "" | "BUY" | "SELL")}
-            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium focus:border-gold focus:outline-none bg-white transition cursor-pointer min-w-[120px]"
-          >
-            <option value="">All Types</option>
-            <option value="BUY">BUY</option>
-            <option value="SELL">SELL</option>
-          </select>
+          <div className="w-[140px]">
+            <SearchableSelect
+              options={[
+                { value: "", label: "All Types" },
+                { value: "BUY", label: "BUY" },
+                { value: "SELL", label: "SELL" },
+              ]}
+              value={typeFilter}
+              onChange={(val) => setTypeFilter(val as "" | "BUY" | "SELL")}
+              placeholder="All Types"
+              searchPlaceholder="Search type..."
+            />
+          </div>
 
-          <select
-            value={propertyFilter}
-            onChange={e => setPropertyFilter(e.target.value)}
-            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium focus:border-gold focus:outline-none bg-white transition cursor-pointer min-w-[180px]"
-          >
-            <option value="">All Properties</option>
-            {properties.map(p => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
+          <div className="w-[200px]">
+            <SearchableSelect
+              options={[
+                { value: "", label: "All Properties" },
+                ...properties.map((p) => ({ value: p, label: p })),
+              ]}
+              value={propertyFilter}
+              onChange={(val) => setPropertyFilter(val)}
+              placeholder="All Properties"
+              searchPlaceholder="Search property..."
+            />
+          </div>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2 flex-wrap">
             <span className="text-xs text-slate-400 font-mono">
               {filteredTrades.length} records
             </span>
+            <TableScrollButtons canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} onScroll={scroll} />
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              disabled={!hasActiveFilters}
+              title={hasActiveFilters ? "Clear all filters" : "No filters applied"}
+              className={`inline-flex items-center gap-1 px-3 py-2 rounded-xl border text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed ${
+                hasActiveFilters
+                  ? "border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-500/50 dark:bg-amber-500/10 dark:text-amber-300"
+                  : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+              }`}
+            >
+              <X className="h-4 w-4 stroke-[2.5]" /> Clear All
+            </button>
             <Button
               variant="secondary"
               className="!py-1.5 !px-3 text-xs h-8 gap-1.5"
@@ -177,7 +210,7 @@ export function TradesManager({ trades }: { trades: Trade[] }) {
         </div>
 
         {/* Trade History Table */}
-        <div className="overflow-x-auto">
+        <div ref={tableScrollRef} className="overflow-x-auto">
           <table className="w-full text-sm min-w-[900px]">
             <thead className="bg-slate-50 text-left text-slate-500 font-medium">
               <tr>
@@ -250,9 +283,9 @@ export function TradesManager({ trades }: { trades: Trade[] }) {
                       }`}>
                         {t.pnl === 0 ? "—" : (t.pnl > 0 ? "+" : "") + formatCurrency(t.pnl)}
                       </td>
-                      <td className="px-5 py-3.5 text-slate-500 text-xs">
-                        {new Date(t.createdAt).toLocaleDateString()}
-                        <span className="text-[10px] text-slate-400 block">{new Date(t.createdAt).toLocaleTimeString()}</span>
+                      <td className="px-5 py-3.5 text-slate-500 text-xs" suppressHydrationWarning>
+                        {new Date(t.createdAt).toLocaleDateString("en-US")}
+                        <span className="text-[10px] text-slate-400 block" suppressHydrationWarning>{new Date(t.createdAt).toLocaleTimeString("en-US")}</span>
                       </td>
                     </tr>
                   );

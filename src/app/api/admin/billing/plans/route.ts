@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { SubscriptionInterval } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";

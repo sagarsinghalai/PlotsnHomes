@@ -5,13 +5,14 @@ import { leadScopeForUser, requireCrmApi } from "@/lib/crm-access";
 import { assignLeadOwner } from "@/lib/lead-routing";
 import { prisma } from "@/lib/prisma";
 import { calculateLeadScore } from "@/lib/lead-scoring";
+import { notifyAgentNewLead } from "@/lib/whatsapp-central";
 
 const createSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   phone: z.string().nullable().optional(),
   source: z.string().optional(),
-  stage: z.nativeEnum(LeadStage).optional(),
+  stage: z.string().optional(),
   score: z.number().int().min(0).max(100).optional(),
   budgetMin: z.number().nullable().optional(),
   budgetMax: z.number().nullable().optional(),
@@ -21,6 +22,7 @@ const createSchema = z.object({
   nextFollowUpAt: z.string().nullable().optional(),
   lifecycleStage: z.string().optional(),
   leadStatus: z.string().optional(),
+  requirements: z.string().nullable().optional(),
 });
 
 export async function GET(req: Request) {
@@ -36,7 +38,7 @@ export async function GET(req: Request) {
   const leads = await prisma.lead.findMany({
     where: {
       ...scope,
-      ...(stage && { stage: stage as LeadStage }),
+      ...(stage && { stage: stage as any }),
       ...(ownerId && auth.isAdmin && { ownerId }),
       ...(source && { source }),
     },
@@ -73,7 +75,15 @@ export async function POST(req: Request) {
     const lifecycleStage = data.lifecycleStage ?? "Lead";
     const leadStatus = data.leadStatus ?? "New";
     
-    // Automatically calculate score if not explicitly provided
+    // Map stage string to Prisma enum if valid, or default to NEW
+    let stageEnum: LeadStage = LeadStage.NEW;
+    if (data.stage) {
+      const upper = data.stage.toUpperCase().replace(/\s+/g, "_");
+      if (Object.values(LeadStage).includes(upper as LeadStage)) {
+        stageEnum = upper as LeadStage;
+      }
+    }
+
     const computedScore = data.score ?? calculateLeadScore({
       lifecycleStage,
       leadStatus,
@@ -88,7 +98,7 @@ export async function POST(req: Request) {
         email: data.email,
         phone: data.phone ?? null,
         source: data.source ?? "Website",
-        stage: data.stage ?? LeadStage.NEW,
+        stage: stageEnum,
         score: computedScore,
         budgetMin: data.budgetMin ?? null,
         budgetMax: data.budgetMax ?? null,
@@ -98,6 +108,7 @@ export async function POST(req: Request) {
         nextFollowUpAt: data.nextFollowUpAt ? new Date(data.nextFollowUpAt) : null,
         lifecycleStage,
         leadStatus,
+        requirements: data.requirements ?? null,
       },
     });
 
@@ -106,9 +117,11 @@ export async function POST(req: Request) {
         leadId: lead.id,
         userId: auth.session.user.id,
         type: "CREATED",
-        message: "Lead created manually from CRM.",
+        message: "Opportunity created in CRM.",
       },
     });
+
+    if (lead.ownerId) void notifyAgentNewLead(lead.id);
 
     return NextResponse.json({ ok: true, lead });
   } catch (e) {

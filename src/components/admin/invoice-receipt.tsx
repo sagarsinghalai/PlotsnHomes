@@ -126,7 +126,7 @@ export function InvoiceReceipt({
       >
         <div className="header flex flex-wrap justify-between gap-6 border-b-2 border-gold pb-6 mb-8">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-gold-dark">PlotsnHomes</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-gold-dark">BrickVest</p>
             <h1 className="font-display text-2xl font-bold text-slate-900 mt-1">
               {party === "buyer" ? "Payment Receipt" : "Brokerage Invoice"}
             </h1>
@@ -153,9 +153,9 @@ export function InvoiceReceipt({
         <div className="grid sm:grid-cols-2 gap-8 mb-8">
           <div>
             <p className="text-xs font-semibold uppercase text-slate-400 mb-2">From</p>
-            <p className="font-semibold text-slate-900">PlotsnHomes Realty Platform</p>
-            <p className="text-sm text-slate-600 mt-1">support@plotsnhomes.com</p>
-            <p className="text-sm text-slate-600">www.plotsnhomes.com</p>
+            <p className="font-semibold text-slate-900">BrickVest Realty Platform</p>
+            <p className="text-sm text-slate-600 mt-1">support@brickvest.com</p>
+            <p className="text-sm text-slate-600">www.brickvest.com</p>
           </div>
           <div>
             <p className="text-xs font-semibold uppercase text-slate-400 mb-2">{bill.title}</p>
@@ -266,7 +266,7 @@ export function InvoiceReceipt({
         )}
 
         <p className="mt-10 text-[10px] text-slate-400 text-center">
-          This is a computer-generated document from PlotsnHomes. For queries contact support@plotsnhomes.com
+          This is a computer-generated document from BrickVest. For queries contact support@brickvest.com
         </p>
       </div>
 

@@ -5,23 +5,26 @@ import {
   Calendar,
   Check,
   CheckSquare,
+  Clock,
   ExternalLink,
   FileText,
   Mail,
   MessageCircle,
   Phone,
+  Save,
   Search,
   Sparkles,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { applyTemplate, type MessageTemplate } from "@/lib/crm-template-utils";
 import { whatsAppWebUrl } from "@/lib/messaging-settings";
+import { DEFAULT_PIPELINES, type Pipeline } from "@/lib/pipeline-store";
 
 
 const STAGES = ["NEW", "CONTACTED", "QUALIFIED", "SITE_VISIT", "NEGOTIATION", "WON", "LOST"] as const;
@@ -100,9 +103,10 @@ export function CrmLeadDetail({
   properties = [],
   agentMode = false,
   bhkOptions = [],
+  pipelines = [],
 }: {
   lead: LeadDetail;
-  agents: { id: string; name: string }[];
+  agents: { id: string; name: string; email?: string; userId?: string | null }[];
   sources: string[];
   templates: MessageTemplate[];
   properties?: {
@@ -123,12 +127,52 @@ export function CrmLeadDetail({
   }[];
   agentMode?: boolean;
   bhkOptions?: string[];
+  pipelines?: Pipeline[];
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "requirements" | "properties" | "activity" | "offers" | "intelligence">("properties");
   const [activityFilter, setActivityFilter] = useState<string>("ALL");
   const [activitySearch, setActivitySearch] = useState("");
+
+  const [dynamicSources, setDynamicSources] = useState<string[]>(
+    sources && sources.length > 0
+      ? sources
+      : ["Site Visit", "Website", "Referral", "Cold Call", "Facebook Ads", "Google Search", "WhatsApp Inquiry", "Property Portal"]
+  );
+  const [lifecycleStages, setLifecycleStages] = useState<string[]>([
+    "Lead", "Subscriber", "Prospect", "MQL", "SQL", "Opportunity", "Customer", "Closed Won", "Closed Lost"
+  ]);
+  const [leadStatuses, setLeadStatuses] = useState<string[]>([
+    "NEW", "CONTACTED", "QUALIFIED", "PROPOSAL_SENT", "NEGOTIATION", "WON", "LOST", "UNQUALIFIED"
+  ]);
+
+  useEffect(() => {
+    async function loadLeadSettings() {
+      try {
+        const res = await fetch("/api/settings/dropdowns");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.sections && Array.isArray(data.sections)) {
+            const leadSec = data.sections.find((s: any) => s.sectionKey === "all_leads");
+            if (leadSec && Array.isArray(leadSec.fields)) {
+              leadSec.fields.forEach((field: any) => {
+                const options = (field.options || [])
+                  .filter((o: any) => o.enabled !== false)
+                  .map((o: any) => o.label);
+                if (field.key === "lead_source" && options.length > 0) setDynamicSources(options);
+                else if (field.key === "lifecycle_stage" && options.length > 0) setLifecycleStages(options);
+                else if (field.key === "lead_status" && options.length > 0) setLeadStatuses(options);
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load lead settings dropdowns", e);
+      }
+    }
+    loadLeadSettings();
+  }, []);
 
   // Quick action log state
   const [activeLogType, setActiveLogType] = useState<"note" | "call" | "meeting" | "task" | "email">("note");
@@ -359,11 +403,23 @@ export function CrmLeadDetail({
     }).sort((a, b) => b.percentage - a.percentage);
   }, [properties, reqBudgetMin, reqBudgetMax, reqCategory, reqType, reqBedrooms, reqCity, reqArea, reqBhk, parsedRequirements]);
 
+  const activePipelines = useMemo(() => {
+    return pipelines && pipelines.length > 0 ? pipelines : DEFAULT_PIPELINES;
+  }, [pipelines]);
+
+  const initialPipelineId = useMemo(() => {
+    const matched = activePipelines.find((p) =>
+      p.stages.some((stg) => stg.key.toUpperCase() === lead.stage.toUpperCase())
+    );
+    return matched?.id || activePipelines[0]?.id || "";
+  }, [activePipelines, lead.stage]);
+
   const [edit, setEdit] = useState({
     name: lead.name,
     email: lead.email,
     phone: lead.phone ?? "",
     source: lead.source,
+    pipelineId: initialPipelineId,
     stage: lead.stage,
     score: lead.score,
     ownerId: lead.owner?.id ?? "",
@@ -485,7 +541,7 @@ export function CrmLeadDetail({
     if (!lead.phone) return;
     const body = template
       ? applyTemplate(template.body, { name: lead.name, property: propertyLabel, email: lead.email })
-      : `Hi ${lead.name}, following up from PlotsnHomes.`;
+      : `Hi ${lead.name}, following up from BrickVest.`;
     
     try {
       const res = await fetch("/api/whatsapp/send", {
@@ -791,6 +847,10 @@ export function CrmLeadDetail({
             <h2 className="font-semibold text-lg border-b pb-3 mb-4 text-slate-900">About this contact</h2>
             <div className="space-y-4">
               <div>
+                <Label>Full Name</Label>
+                <Input value={edit.name} onChange={(e) => setEdit((x) => ({ ...x, name: e.target.value }))} className="mt-1" />
+              </div>
+              <div>
                 <Label>Email</Label>
                 <Input value={edit.email} onChange={(e) => setEdit((x) => ({ ...x, email: e.target.value }))} className="mt-1" />
               </div>
@@ -810,11 +870,15 @@ export function CrmLeadDetail({
                   onChange={(e) => setEdit((x) => ({ ...x, ownerId: e.target.value }))}
                 >
                   <option value="">Unassigned</option>
-                  {agents.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}
-                    </option>
-                  ))}
+                  {agents.map((a, idx) => {
+                    const displayEmail = a.email || `${a.name.toLowerCase().replace(/\s+/g, ".")}@realestate.com`;
+                    const displayId = a.userId || a.id;
+                    return (
+                      <option key={`${a.id}-${idx}`} value={a.id}>
+                        {a.name} ({displayEmail}) - ID: {displayId}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               <div>
@@ -824,7 +888,7 @@ export function CrmLeadDetail({
                   value={edit.lifecycleStage}
                   onChange={(e) => setEdit((x) => ({ ...x, lifecycleStage: e.target.value }))}
                 >
-                  {LIFECYCLE_STAGES.map((s) => (
+                  {lifecycleStages.map((s) => (
                     <option key={s} value={s}>
                       {s}
                     </option>
@@ -838,7 +902,7 @@ export function CrmLeadDetail({
                   value={edit.leadStatus}
                   onChange={(e) => setEdit((x) => ({ ...x, leadStatus: e.target.value }))}
                 >
-                  {LEAD_STATUSES.map((s) => (
+                  {leadStatuses.map((s) => (
                     <option key={s} value={s}>
                       {s}
                     </option>
@@ -862,17 +926,46 @@ export function CrmLeadDetail({
                 </select>
               </div>
               <div>
+                <Label>Pipeline</Label>
+                <select
+                  className="w-full rounded-xl border px-3 py-2 text-sm mt-1 bg-slate-50 font-medium text-slate-800"
+                  value={edit.pipelineId}
+                  onChange={(e) => {
+                    const pipeId = e.target.value;
+                    const pipe = activePipelines.find((p) => p.id === pipeId);
+                    const firstStageKey = pipe?.stages[0]?.key || "NEW";
+                    setEdit((x) => ({ ...x, pipelineId: pipeId, stage: firstStageKey }));
+                  }}
+                >
+                  {activePipelines.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <Label>Pipeline Stage</Label>
                 <select
-                  className="w-full rounded-xl border px-3 py-2 text-sm mt-1 bg-slate-50"
+                  className="w-full rounded-xl border px-3 py-2 text-sm mt-1 bg-slate-50 font-medium text-slate-800"
                   value={edit.stage}
                   onChange={(e) => setEdit((x) => ({ ...x, stage: e.target.value }))}
                 >
-                  {STAGES.map((s) => (
-                    <option key={s} value={s}>
-                      {s.replace("_", " ")}
-                    </option>
-                  ))}
+                  {(() => {
+                    const currentPipe = activePipelines.find((p) => p.id === edit.pipelineId);
+                    if (currentPipe && currentPipe.stages.length > 0) {
+                      return currentPipe.stages.map((stg) => (
+                        <option key={stg.id || stg.key} value={stg.key}>
+                          {stg.name} ({stg.key})
+                        </option>
+                      ));
+                    }
+                    return STAGES.map((s) => (
+                      <option key={s} value={s}>
+                        {s.replace("_", " ")}
+                      </option>
+                    ));
+                  })()}
                 </select>
               </div>
               <div>
@@ -882,7 +975,7 @@ export function CrmLeadDetail({
                   value={edit.source}
                   onChange={(e) => setEdit((x) => ({ ...x, source: e.target.value }))}
                 >
-                  {sources.map((s) => (
+                  {dynamicSources.map((s) => (
                     <option key={s} value={s}>
                       {s}
                     </option>
@@ -896,6 +989,16 @@ export function CrmLeadDetail({
                   value={edit.nextFollowUpAt}
                   onChange={(e) => setEdit((x) => ({ ...x, nextFollowUpAt: e.target.value }))}
                   className="mt-1 text-sm"
+                />
+              </div>
+              <div>
+                <Label>Notes / Requirements</Label>
+                <textarea
+                  rows={3}
+                  placeholder="e.g. Looking for land parcel or 3BHK under ₹80 Lakhs..."
+                  value={edit.notes}
+                  onChange={(e) => setEdit((x) => ({ ...x, notes: e.target.value }))}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm mt-1 focus:bg-white text-slate-900 outline-none focus:border-gold"
                 />
               </div>
               <Button disabled={busy} onClick={saveLead} className="w-full mt-2" variant="gold">
@@ -982,10 +1085,18 @@ export function CrmLeadDetail({
           {activeTab === "activity" && (
             <div className="space-y-6">
               {/* Quick Log Editor Box */}
-              <div className="rounded-2xl border bg-slate-50 p-4 shadow-sm space-y-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Quick Log: {activeLogType.toUpperCase()}
-                </p>
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                    <FileText className="h-4 w-4 text-gold" />
+                    Quick Log: {activeLogType.toUpperCase()}
+                  </p>
+                  <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <Clock className="h-3 w-3 text-slate-400" />
+                    {new Date().toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+
                 {activeLogType === "task" ? (
                   <div className="space-y-2">
                     <Input
@@ -1010,9 +1121,19 @@ export function CrmLeadDetail({
                     onChange={(e) => setLogText(e.target.value)}
                   />
                 )}
-                <div className="flex justify-end">
-                  <Button size="sm" variant="gold" disabled={busy || !logText.trim()} onClick={submitQuickLog}>
-                    Save Log
+                <div className="flex items-center justify-between pt-1">
+                  <p className="text-[11px] text-slate-500 italic">
+                    {activeLogType === "task" ? "Task will be saved with due timestamp" : "Note log will be saved with current timestamp"}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="gold"
+                    disabled={busy || !logText.trim()}
+                    onClick={submitQuickLog}
+                    className="gap-1.5 shadow-sm text-xs font-extrabold"
+                  >
+                    <Save className="h-3.5 w-3.5" />
+                    {activeLogType === "task" ? "Save Task" : "Save Note"}
                   </Button>
                 </div>
               </div>

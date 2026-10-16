@@ -1,9 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Edit3, Trash2, X, Loader2, Check, ExternalLink, ShieldCheck, MapPin, Briefcase, MessageSquare, ClipboardList, Calendar, AlertTriangle, ChevronRight, Clock, Flag, CheckCircle2, Circle, ArrowRight } from "lucide-react";
+import { Plus, Edit3, Trash2, X, Loader2, Check, ExternalLink, ShieldCheck, MapPin, Briefcase, MessageSquare, ClipboardList, Calendar, AlertTriangle, ChevronRight, Clock, Flag, CheckCircle2, Circle, ArrowRight, FolderKanban } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { parseStoredPhone } from "@/lib/phone-utils";
+import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
+import { CountrySelect } from "@/components/ui/country-select";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { GlobalStateSelect, GlobalCitySelect, GlobalZipSelect, validatePostalCode } from "@/components/ui/location-select";
+import { State } from "country-state-city";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
+import { TableScrollButtons } from "@/components/ui/table-scroll-buttons";
 
 type Developer = {
   id: string;
@@ -60,6 +68,15 @@ const STATUS_FLOW: Record<string, string> = {
 
 export function DevelopersList({ initialDevelopers }: { initialDevelopers: Developer[] }) {
   const router = useRouter();
+  const { permissions, userGroup, hasAddPermission, hasEditPermission, hasDeletePermission } = useAdminPermissions();
+  const canAdd = hasAddPermission("/admin/developers");
+  const canEdit = hasEditPermission("/admin/developers");
+  const canDelete = hasDeletePermission("/admin/developers");
+
+  const devPerms = (permissions?.[userGroup]?.developers as any) || {};
+  const canSendMessage = devPerms.sendMessage ?? true;
+  const canManageProjects = devPerms.manageProjects ?? true;
+  const canManageTasks = devPerms.manageTasks ?? true;
   const [developers, setDevelopers] = useState<Developer[]>(initialDevelopers);
   
   // Modal / Form state
@@ -75,6 +92,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
+  const [stateCode, setStateCode] = useState("");
   const [zip, setZip] = useState("");
   const [country, setCountry] = useState("IN");
   const [experienceYears, setExperienceYears] = useState<number | "">("");
@@ -114,6 +132,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
     setAddress("");
     setCity("");
     setState("");
+    setStateCode("");
     setZip("");
     setCountry("IN");
     setExperienceYears("");
@@ -127,6 +146,13 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
   }
 
   function openEditModal(dev: Developer) {
+    const getInitialStateCode = (country: string, stateName: string) => {
+      if (!stateName) return "";
+      const states = State.getStatesOfCountry(country);
+      const found = states.find((s) => s.name === stateName);
+      return found ? found.isoCode : "";
+    };
+
     setSelectedDeveloper(dev);
     setName(dev.name);
     setProjectCount(dev.projectCount);
@@ -135,6 +161,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
     setAddress(dev.address || "");
     setCity(dev.city || "");
     setState(dev.state || "");
+    setStateCode(getInitialStateCode(dev.country || "IN", dev.state || ""));
     setZip(dev.zip || "");
     setCountry(dev.country || "IN");
     setExperienceYears(dev.experienceYears !== null ? dev.experienceYears : "");
@@ -155,6 +182,88 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
     
     setLoading(true);
     setError("");
+
+    // Frontend validations
+    const alphaOnly = /^[a-zA-Z\s]+$/;
+    
+    if (name && !alphaOnly.test(name)) {
+      setError("Name must contain only alphabets.");
+      setLoading(false);
+      return;
+    }
+
+    const nameWords = name.trim().split(/\s+/).filter((w: string) => w.length > 0);
+    if (nameWords.length > 30) {
+      setError(`Developer Name cannot exceed 30 words (currently ${nameWords.length}).`);
+      setLoading(false);
+      return;
+    }
+
+    if (email.trim()) {
+      if (!email.trim().includes("@")) {
+        setError("Email address must contain '@'.");
+        setLoading(false);
+        return;
+      }
+      if (!/.+@.+\..+/.test(email.trim())) {
+        setError("Please enter a valid email address (e.g. contact@developer.com).");
+        setLoading(false);
+        return;
+      }
+    }
+
+    if (phone.trim()) {
+      const parsed = parseStoredPhone(phone);
+      if (parsed.national.length !== 10) {
+        setError("Phone number must contain exactly 10 digits.");
+        setLoading(false);
+        return;
+      }
+    }
+    
+    if (address.trim() && /^\d+$/.test(address.trim())) {
+      setError("Street address cannot contain only numbers.");
+      setLoading(false);
+      return;
+    }
+
+    const zipError = validatePostalCode(zip, country);
+    if (zipError) {
+      setError(zipError);
+      setLoading(false);
+      return;
+    }
+
+    if (identityType && identityNumber.trim()) {
+      const idNum = identityNumber.trim();
+      if (identityType === "PAN") {
+        const panRegex = /^[A-Z]{5}\d{4}[A-Z]{1}$/i;
+        if (!panRegex.test(idNum)) {
+          setError("PAN Card must be in the format XXXXX1234X.");
+          setLoading(false);
+          return;
+        }
+      } else if (identityType === "GSTIN") {
+        const gstinRegex = /^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$/i;
+        if (!gstinRegex.test(idNum)) {
+          setError("Invalid GSTIN format.");
+          setLoading(false);
+          return;
+        }
+      } else if (identityType === "Corporate Identity Number (CIN)") {
+        if (idNum.length !== 21) {
+          setError("CIN must be exactly 21 characters.");
+          setLoading(false);
+          return;
+        }
+      }
+    }
+    
+    if (country.trim() && !alphaOnly.test(country)) {
+      setError("Country must contain only alphabets.");
+      setLoading(false);
+      return;
+    }
 
     const payload = {
       name: name.trim(),
@@ -183,6 +292,10 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      if (res.status === 401) {
+        window.location.href = "/login?error=SessionExpired";
+        return;
+      }
       const data = await res.json();
       
       if (!res.ok) throw new Error(data.error || "Failed to save developer details");
@@ -335,8 +448,30 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
     return label;
   }
 
+  const { ref: tableScrollRef, canScrollLeft, canScrollRight, scroll } = useHorizontalScroll([developers]);
+
   return (
     <div className="space-y-6">
+      <AdminPageHeader
+        title="Developers"
+        description="Manage project developers, verification info, and corporate addresses."
+        breadcrumb={[
+          { label: "Admin", href: "/admin" },
+          { label: "Developers" },
+        ]}
+        actions={
+          canAdd ? (
+            <button
+              onClick={openCreateModal}
+              className="flex items-center gap-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 font-bold px-4 py-2.5 text-sm transition shadow-sm cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              Add Developer
+            </button>
+          ) : null
+        }
+      />
+
       {success && (
         <div className="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-700 border border-emerald-100 flex items-center gap-2 animate-in fade-in duration-200">
           <Check className="h-4.5 w-4.5 text-emerald-600" />
@@ -353,18 +488,11 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl font-bold text-slate-900">All Developers</h1>
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 font-semibold px-4 py-2.5 text-sm transition shadow-sm"
-        >
-          <Plus className="h-4 w-4" />
-          Add Developer
-        </button>
+      <div className="flex justify-end">
+        <TableScrollButtons canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} onScroll={scroll} />
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border bg-white shadow-sm">
+      <div ref={tableScrollRef} className="overflow-x-auto rounded-2xl border bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-left text-slate-500 font-medium border-b">
             <tr>
@@ -430,7 +558,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-slate-500 text-xs">
+                <td className="px-6 py-4 text-slate-500 text-xs" suppressHydrationWarning>
                   {new Date(d.createdAt).toLocaleString(undefined, {
                     year: 'numeric',
                     month: 'numeric',
@@ -442,38 +570,56 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-1.5">
-                    <button
-                      onClick={() => router.push(`/admin/messages?userId=${d.id}`)}
-                      disabled={loading}
-                      title="Send Message"
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                    >
-                      <MessageSquare className="h-4.5 w-4.5" />
-                    </button>
-                    <button
-                      onClick={() => openTaskPanel(d)}
-                      disabled={loading}
-                      title="Manage Tasks"
-                      className="p-2 text-violet-600 hover:bg-violet-50 rounded-lg transition"
-                    >
-                      <ClipboardList className="h-4.5 w-4.5" />
-                    </button>
-                    <button
-                      onClick={() => openEditModal(d)}
-                      disabled={loading}
-                      title="Edit Profile"
-                      className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition"
-                    >
-                      <Edit3 className="h-4.5 w-4.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(d.id, d.name)}
-                      disabled={loading}
-                      title="Delete Developer"
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                    >
-                      <Trash2 className="h-4.5 w-4.5" />
-                    </button>
+                    {canSendMessage && (
+                      <button
+                        onClick={() => router.push(`/admin/messages?userId=${d.id}`)}
+                        disabled={loading}
+                        title="Send Message"
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                      >
+                        <MessageSquare className="h-4.5 w-4.5" />
+                      </button>
+                    )}
+                    {canManageProjects && (
+                      <button
+                        onClick={() => router.push(`/admin/projects?developerId=${d.id}`)}
+                        disabled={loading}
+                        title="Manage Projects"
+                        className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition"
+                      >
+                        <FolderKanban className="h-4.5 w-4.5" />
+                      </button>
+                    )}
+                    {canManageTasks && (
+                      <button
+                        onClick={() => openTaskPanel(d)}
+                        disabled={loading}
+                        title="Manage Tasks"
+                        className="p-2 text-violet-600 hover:bg-violet-50 rounded-lg transition font-medium"
+                      >
+                        <ClipboardList className="h-4.5 w-4.5" />
+                      </button>
+                    )}
+                    {canEdit && (
+                      <button
+                        onClick={() => openEditModal(d)}
+                        disabled={loading}
+                        title="Edit Profile"
+                        className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                      >
+                        <Edit3 className="h-4.5 w-4.5" />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => handleDelete(d.id, d.name)}
+                        disabled={loading}
+                        title="Delete Developer"
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                      >
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -676,7 +822,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
       {/* ════════════ Editor Modal ════════════ */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200 border border-slate-100">
+          <div className="relative bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col h-auto max-h-[85vh] animate-in zoom-in-95 duration-200 border border-slate-100">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <div>
@@ -856,47 +1002,46 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                   </label>
 
                   <div className="grid sm:grid-cols-3 gap-4">
-                    <label className="block text-sm">
-                      <span className="text-slate-700 font-semibold">City</span>
-                      <input
-                        type="text"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        placeholder="Pune"
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold transition"
-                      />
-                    </label>
-                    <label className="block text-sm">
-                      <span className="text-slate-700 font-semibold">State / Region</span>
-                      <input
-                        type="text"
-                        value={state}
-                        onChange={(e) => setState(e.target.value)}
-                        placeholder="Maharashtra"
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold transition"
-                      />
-                    </label>
-                    <label className="block text-sm">
-                      <span className="text-slate-700 font-semibold">Zip / PIN Code</span>
-                      <input
-                        type="text"
-                        value={zip}
-                        onChange={(e) => setZip(e.target.value)}
-                        placeholder="411028"
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold transition"
-                      />
-                    </label>
+                    <div>
+                      <span className="text-slate-700 font-semibold text-sm">Country</span>
+                      <div className="mt-1.5">
+                        <CountrySelect value={country} onChange={(code) => { setCountry(code); setState(""); setStateCode(""); setCity(""); }} />
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-slate-700 font-semibold text-sm">State / Region</span>
+                      <div className="mt-1">
+                        <GlobalStateSelect
+                          countryCode={country}
+                          value={stateCode}
+                          onChange={(code, name) => { setStateCode(code); setState(name); setCity(""); }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-slate-700 font-semibold text-sm">City</span>
+                      <div className="mt-1">
+                        <GlobalCitySelect
+                          countryCode={country}
+                          stateCode={stateCode}
+                          value={city}
+                          onChange={setCity}
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <label className="block text-sm max-w-xs">
-                    <span className="text-slate-700 font-semibold">Country</span>
-                    <input
-                      type="text"
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                      placeholder="India"
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold transition"
-                    />
+                    <span className="text-slate-700 font-semibold">{country === "IN" ? "PIN Code" : "ZIP / Postal Code"}</span>
+                    <div className="mt-1.5">
+                      <GlobalZipSelect
+                        countryCode={country}
+                        city={city}
+                        value={zip}
+                        onChange={setZip}
+                        placeholder={country === "IN" ? "6-digit PIN" : "Postal Code"}
+                      />
+                    </div>
                   </label>
                 </div>
               )}
@@ -910,7 +1055,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                 disabled={loading}
                 className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50 transition disabled:opacity-50 text-slate-700"
               >
-                Close
+                Cancel
               </button>
               <button
                 type="button"

@@ -1,5 +1,13 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, getSession } from "@/lib/auth";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { getRolePermissions, getPermissionGroup, hasPermission, getFirstAllowedAdminRoute } from "@/lib/permissions";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { AdminPermissionsProvider } from "@/components/admin/admin-permissions-context";
+import { AdminCurrencyProvider } from "@/components/admin/admin-currency-context";
+import { AdminMainContainer } from "@/components/admin/admin-main-container";
+
+import "./admin-theme.css";
 
 export default async function AdminLayout({
   children,
@@ -7,11 +15,43 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   await requireAdmin();
+  
+  const session = await getSession();
+  const headersList = headers();
+  const pathname = headersList.get("x-pathname") || "/admin";
+  
+  // Verify specific module permission
+  const allowed = await hasPermission(session?.user, pathname);
+  if (!allowed) {
+    if (pathname === "/admin") {
+      const fallback = await getFirstAllowedAdminRoute(session?.user);
+      if (fallback) {
+        redirect(fallback);
+      }
+    }
+    redirect("/dashboard?error=Access+Denied");
+  }
+
+  const permissions = await getRolePermissions();
+  const group = session?.user ? getPermissionGroup(session.user) : "BUYER";
+  const userRole = session?.user?.role || "";
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
-      <AdminSidebar />
-      <div className="flex-1 overflow-auto bg-slate-100/80 p-6 sm:p-8">{children}</div>
-    </div>
+    <AdminPermissionsProvider
+      permissions={permissions}
+      userGroup={group}
+      userRole={userRole}
+    >
+      <AdminCurrencyProvider>
+        <div className="admin-shell flex min-h-screen items-stretch w-full">
+          <AdminSidebar
+            permissions={permissions}
+            userGroup={group}
+            userRole={userRole}
+          />
+          <AdminMainContainer>{children}</AdminMainContainer>
+        </div>
+      </AdminCurrencyProvider>
+    </AdminPermissionsProvider>
   );
 }

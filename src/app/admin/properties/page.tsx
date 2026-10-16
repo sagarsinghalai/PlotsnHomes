@@ -3,8 +3,13 @@ import { Plus } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { PropertiesTable } from "@/components/admin/properties-table";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
+import { hasAddPermissionServer } from "@/lib/permissions";
 
 export default async function AdminPropertiesPage() {
+  const session = await getSession();
+  const canAdd = await hasAddPermissionServer(session?.user, "/admin/properties");
+
   const [properties, total, active] = await Promise.all([
     prisma.property.findMany({
       orderBy: { createdAt: "desc" },
@@ -22,6 +27,7 @@ export default async function AdminPropertiesPage() {
         marketRating: true,
         city: true,
         status: true,
+        images: true,
       },
     }),
     prisma.property.count(),
@@ -35,13 +41,15 @@ export default async function AdminPropertiesPage() {
         description={`${active} active · ${total} total listings — edit prices, photos, and market data`}
         breadcrumb={[{ label: "Admin", href: "/admin" }, { label: "Properties" }]}
         actions={
-          <Link
-            href="/admin/properties/new"
-            className="inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-2.5 text-sm font-semibold text-slate-900 hover:bg-gold-dark"
-          >
-            <Plus className="h-4 w-4" />
-            Add property
-          </Link>
+          canAdd ? (
+            <Link
+              href="/admin/properties/new"
+              className="inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-2.5 text-sm font-semibold text-slate-900 hover:bg-gold-dark shadow-sm"
+            >
+              <Plus className="h-4 w-4" />
+              Add property
+            </Link>
+          ) : undefined
         }
       />
 

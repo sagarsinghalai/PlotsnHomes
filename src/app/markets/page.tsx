@@ -5,6 +5,7 @@ import { Sparkline } from "@/components/market/sparkline";
 import { changeColor, marketRatingColor } from "@/lib/market";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatNumber } from "@/lib/utils";
+import { BodyThemeSync } from "@/components/layout/body-theme-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export default async function MarketsPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
+      <BodyThemeSync theme="dark" />
       <div className="border-b border-slate-800 bg-slate-900/80">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <p className="text-xs font-semibold uppercase tracking-widest text-gold">PlotsnHomes Exchange</p>

@@ -6,12 +6,13 @@ import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { getBhkConfigurations } from "@/lib/system-settings";
+import { getPipelines } from "@/lib/pipeline-store";
 
 export default async function AgentLeadDetailPage({ params }: { params: { id: string } }) {
   const session = await requireAuth([Role.SUPERADMIN, Role.EMPLOYEE, Role.AGENT]);
   const scope = leadScopeForUser(session.user.role, session.user.id);
 
-  const [lead, agents, crmSettings, properties, bhkOptions] = await Promise.all([
+  const [lead, agents, crmSettings, properties, bhkOptions, pipelines] = await Promise.all([
     prisma.lead.findFirst({
       where: { id: params.id, ...scope },
       include: {
@@ -52,6 +53,7 @@ export default async function AgentLeadDetailPage({ params }: { params: { id: st
       },
     }),
     getBhkConfigurations(),
+    getPipelines(),
   ]);
 
   if (!lead) notFound();
@@ -80,6 +82,7 @@ export default async function AgentLeadDetailPage({ params }: { params: { id: st
         templates={crmSettings.messageTemplates}
         properties={properties as any}
         bhkOptions={bhkOptions}
+        pipelines={pipelines}
       />
     </div>
   );

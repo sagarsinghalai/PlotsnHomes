@@ -3,17 +3,18 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
+import { checkUserExists4Params, validateUserDobAge } from "@/lib/user-validation";
 
 const kycSchema = z.object({
-  fullName:           z.string().min(2).optional(),
+  fullName:           z.string().min(2).regex(/^[a-zA-Z\s]+$/, "Name can only contain alphabets and spaces").optional(),
   dateOfBirth:        z.string().nullable().optional(),
-  nationality:        z.string().nullable().optional(),
+  nationality:        z.string().regex(/^[a-zA-Z\s]+$/, "Nationality can only contain alphabets").nullable().optional(),
   idType:             z.string().nullable().optional(),
   idNumber:           z.string().nullable().optional(),
   address:            z.string().nullable().optional(),
-  city:               z.string().nullable().optional(),
-  state:              z.string().nullable().optional(),
-  pinCode:            z.string().nullable().optional(),
+  city:               z.string().regex(/^[a-zA-Z\s]+$/, "City can only contain alphabets").nullable().optional(),
+  state:              z.string().regex(/^[a-zA-Z\s]+$/, "State can only contain alphabets").nullable().optional(),
+  pinCode:            z.string().regex(/^\d{6}$/, "Pin Code must be exactly 6 digits").nullable().optional(),
   country:            z.string().nullable().optional(),
   photoUrl:           z.string().nullable().optional(),
   aadhaarFrontUrl:    z.string().nullable().optional(),
@@ -37,11 +38,11 @@ const loanAppSchema = z.object({
   downPayment: z.number().nullable().optional(),
   creditScore: z.number().nullable().optional(),
   existingEmi: z.number().nullable().optional(),
-  coApplicantName: z.string().nullable().optional(),
+  coApplicantName: z.string().regex(/^[a-zA-Z\s]*$/, "Name can only contain alphabets").nullable().optional(),
   coApplicantIncome: z.number().nullable().optional(),
   propertyType: z.string().nullable().optional(),
   propertyArea: z.string().nullable().optional(),
-  propertyCity: z.string().nullable().optional(),
+  propertyCity: z.string().regex(/^[a-zA-Z\s]*$/, "City can only contain alphabets").nullable().optional(),
   incomeProofUrl: z.string().nullable().optional(),
   bankStatementUrl: z.string().nullable().optional(),
   propertyDocUrl: z.string().nullable().optional(),
@@ -50,23 +51,32 @@ const loanAppSchema = z.object({
 });
 
 const patchSchema = z.object({
-  name: z.string().min(2).optional(),
+  name: z.string().min(2).regex(/^[a-zA-Z\s]+$/, "Name can only contain alphabets and spaces").optional(),
   email: z.string().email().optional(),
   phone: z.string().nullable().optional().refine(
     (val) => {
       if (!val) return true;
-      const digits = val.replace(/\D/g, "");
-      return digits.length >= 10 && digits.length <= 15;
+      return /^\+?[1-9]\d{9,14}$/.test(val);
     },
-    { message: "Phone number must be between 10 and 15 digits." }
+    { message: "Invalid phone number format." }
   ),
+  pan: z.string().nullable().optional(),
+  aadhar: z.string().nullable().optional(),
+  dob: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
-  city: z.string().nullable().optional(),
-  state: z.string().nullable().optional(),
-  zip: z.string().nullable().optional(),
+  city: z.string().regex(/^[a-zA-Z\s]+$/, "City can only contain alphabets").nullable().optional(),
+  state: z.string().regex(/^[a-zA-Z\s]+$/, "State can only contain alphabets").nullable().optional(),
+  zip: z.string().regex(/^\d{6}$/, "Zip Code must be exactly 6 digits").nullable().optional(),
   country: z.string().nullable().optional(),
   role: z.nativeEnum(Role).optional(),
+  managerId: z.string().nullable().optional(),
+  tenantId: z.string().nullable().optional(),
+  franchiseId: z.string().nullable().optional(),
+  branchId: z.string().nullable().optional(),
+  departmentId: z.string().nullable().optional(),
+  teamId: z.string().nullable().optional(),
   active: z.boolean().optional(),
+  commissionRate: z.number().min(0).max(100).optional(),
   kyc: kycSchema.optional(),
   loans: z.array(loanAppSchema).optional(),
 });
@@ -84,6 +94,36 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Validate DOB Age >= 18 from date of account creation
+    const existingKyc = await prisma.kycProfile.findUnique({ where: { userId: params.id } });
+    const dobToValidate = data.dob || data.kyc?.dateOfBirth || (user.dob ? user.dob.toISOString() : undefined) || (existingKyc?.dateOfBirth ?? undefined);
+    if (dobToValidate) {
+      const dobCheck = validateUserDobAge(dobToValidate, user.createdAt);
+      if (!dobCheck.valid) {
+        return NextResponse.json({ error: dobCheck.message }, { status: 400 });
+      }
+    }
+
+    // 4-Parameter Uniqueness Check excluding current user
+    const checkPan = data.pan || (data.kyc?.idType === "PAN" ? data.kyc.idNumber : undefined);
+    const checkAadhar = data.aadhar || (data.kyc?.idType === "Aadhaar" || data.kyc?.idType === "Aadhar" ? data.kyc.idNumber : undefined);
+
+    const check = await checkUserExists4Params({
+      email: data.email,
+      phone: data.phone,
+      pan: checkPan,
+      aadhar: checkAadhar,
+      excludeUserId: params.id,
+    });
+
+    if (check.exists) {
+      return NextResponse.json({ error: check.message }, { status: 400 });
+    }
+
+    if (data.role === Role.SUPERADMIN && auth.session?.user?.role !== Role.SUPERADMIN) {
+      return NextResponse.json({ error: "Only a Super Admin can assign the Super Admin role." }, { status: 403 });
+    }
+
     if (data.role && data.role !== Role.SUPERADMIN && user.role === Role.SUPERADMIN) {
       const adminCount = await prisma.user.count({ where: { role: Role.SUPERADMIN } });
       if (adminCount <= 1) {
@@ -98,13 +138,21 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
           ...(data.name !== undefined && { name: data.name }),
           ...(data.email !== undefined && { email: data.email.toLowerCase() }),
           ...(data.phone !== undefined && { phone: data.phone }),
+          ...(data.dob !== undefined && { dob: data.dob ? new Date(data.dob) : null }),
           ...(data.address !== undefined && { address: data.address }),
           ...(data.city !== undefined && { city: data.city }),
           ...(data.state !== undefined && { state: data.state }),
           ...(data.zip !== undefined && { zip: data.zip }),
           ...(data.country !== undefined && { country: data.country }),
           ...(data.role !== undefined && { role: data.role }),
+          ...(data.managerId !== undefined && { managerId: data.managerId }),
+          ...(data.tenantId !== undefined && { tenantId: data.tenantId }),
+          ...(data.franchiseId !== undefined && { franchiseId: data.franchiseId }),
+          ...(data.branchId !== undefined && { branchId: data.branchId }),
+          ...(data.departmentId !== undefined && { departmentId: data.departmentId }),
+          ...(data.teamId !== undefined && { teamId: data.teamId }),
           ...(data.active !== undefined && { active: data.active }),
+          ...(data.commissionRate !== undefined && { commissionRate: data.commissionRate }),
         },
       });
 

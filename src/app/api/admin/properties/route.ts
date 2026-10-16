@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin-api";
+import { hasAddPermissionServer } from "@/lib/permissions";
 import { propertyCreateSchema, serializeMediaArrays } from "@/lib/property-admin-schema";
 import { getPlatformRates } from "@/lib/system-settings";
 import { prisma } from "@/lib/prisma";
@@ -9,6 +10,14 @@ import { slugify } from "@/lib/utils";
 export async function POST(req: Request) {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
+
+  const canAdd = await hasAddPermissionServer(auth.session.user, "/admin/properties");
+  if (!canAdd) {
+    return NextResponse.json(
+      { error: "Forbidden: You do not have permission to add properties." },
+      { status: 403 }
+    );
+  }
 
   try {
     const body = await req.json();
@@ -79,6 +88,8 @@ export async function POST(req: Request) {
         mapLat: data.mapLat ?? null,
         mapLng: data.mapLng ?? null,
         customFields: data.customFields ?? "[]",
+        developerId: data.developerId ?? null,
+        projectId: data.projectId ?? null,
         ...serializeMediaArrays({
           videos: data.videos ?? [],
           pdfs: data.pdfs ?? [],

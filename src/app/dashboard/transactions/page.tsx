@@ -47,7 +47,13 @@ export default async function TransactionsPage({
   } else if (session.user.role === "SELLER") {
     whereClause = { OR: [{ userId: session.user.id }, { property: { submittedById: session.user.id } }] };
   } else if (session.user.role === "AGENT") {
-    whereClause = { OR: [{ userId: session.user.id }, { property: { agentId: session.user.id } }] };
+    whereClause = {
+      OR: [
+        { userId: session.user.id },
+        { property: { agentId: session.user.id } },
+        { agentCommission: { agentId: session.user.id } },
+      ],
+    };
   } else {
     whereClause = { userId: session.user.id };
   }

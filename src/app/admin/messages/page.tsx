@@ -20,7 +20,7 @@ export default async function AdminMessagesPage({
     prisma.user.findMany({
       where: { role: { in: ["BUYER", "SELLER", "DEMO", "AGENT"] } },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, email: true, phone: true, role: true, country: true },
+      select: { id: true, userId: true, name: true, email: true, phone: true, role: true, country: true },
     }),
     prisma.lead.findMany({
       orderBy: { name: "asc" },

@@ -22,13 +22,23 @@ export function KycManager({ profiles }: { profiles: Kyc[] }) {
 
   async function review(id: string, status: "APPROVED" | "REJECTED") {
     setBusy(id);
-    await fetch(`/api/admin/kyc/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    setBusy(null);
-    router.refresh();
+    try {
+      const res = await fetch(`/api/admin/kyc/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error ?? "Failed to update KYC status.");
+      } else {
+        router.refresh();
+      }
+    } catch (err) {
+      alert("Network error occurred.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   return (

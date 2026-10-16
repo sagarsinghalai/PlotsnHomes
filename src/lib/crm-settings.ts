@@ -37,7 +37,7 @@ const DEFAULT_TEMPLATES: MessageTemplate[] = [
     id: "welcome",
     name: "Welcome — new lead",
     channel: "whatsapp",
-    body: "Hi {{name}}, thanks for your interest in {{property}}. I'm your PlotsnHomes advisor — when is a good time for a quick call?",
+    body: "Hi {{name}}, thanks for your interest in {{property}}. I'm your BrickVest advisor — when is a good time for a quick call?",
   },
   {
     id: "followup",
@@ -49,8 +49,8 @@ const DEFAULT_TEMPLATES: MessageTemplate[] = [
     id: "site_visit",
     name: "Site visit confirmation",
     channel: "email",
-    subject: "Your property tour — PlotsnHomes",
-    body: "Hi {{name}},\n\nYour site visit for {{property}} is confirmed. Reply if you need to reschedule.\n\nPlotsnHomes Team",
+    subject: "Your property tour — BrickVest",
+    body: "Hi {{name}},\n\nYour site visit for {{property}} is confirmed. Reply if you need to reschedule.\n\nBrickVest Team",
   },
 ];
 

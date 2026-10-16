@@ -1,7 +1,7 @@
 "use client";
 
 import type { Property, PropertyStatus, PropertyType, ListingType, User } from "@prisma/client";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { MapPin, Plus, Sparkles, Trash2, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -11,21 +11,131 @@ import { MEDIA_LIMITS, mediaLimitLabel } from "@/lib/media-limits";
 import { PROPERTY_CATEGORIES } from "@/lib/property-categories";
 import { parseImages, parseJsonArray } from "@/lib/utils";
 import { computeAnnualYield, computeRatingFromSlabs, computeSlabForValue, type RatingSlabInput } from "@/lib/calculations";
+import { logActivity } from "@/lib/activity-logs";
+
+import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
 
 type Agent = Pick<User, "id" | "name" | "email">;
+type DeveloperOption = { id: string; name: string };
+type ProjectOption = { id: string; name: string; developerId: string | null };
 
 type PropertyFormProps = {
   agents: Agent[];
   property?: Property & { agent?: Agent | null };
   bhkConfigurations?: string[];
+  developers?: DeveloperOption[];
+  projects?: ProjectOption[];
 };
 
-export function PropertyForm({ agents, property, bhkConfigurations = [] }: PropertyFormProps) {
+export function PropertyForm({
+  agents,
+  property,
+  bhkConfigurations = [],
+  developers = [],
+  projects = [],
+}: PropertyFormProps) {
   const router = useRouter();
+  const { hasAddPermission, hasEditPermission } = useAdminPermissions();
+  const canAdd = hasAddPermission("/admin/properties");
+  const canEdit = hasEditPermission("/admin/properties");
   const isEdit = Boolean(property);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [slabsMap, setSlabsMap] = useState<Record<string, RatingSlabInput[]>>({});
+
+  const [gmapUrl, setGmapUrl] = useState("");
+  const [gmapLoading, setGmapLoading] = useState(false);
+  const [gmapStatus, setGmapStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const parseGoogleMapsLink = async (inputUrl: string) => {
+    const url = inputUrl.trim();
+    if (!url) return;
+    setGmapLoading(true);
+    setGmapStatus(null);
+
+    try {
+      const res = await fetch(`/api/admin/parse-maps-url?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      setGmapLoading(false);
+
+      if (res.ok && data.lat && data.lng) {
+        setForm((f) => ({
+          ...f,
+          mapLat: data.lat,
+          mapLng: data.lng,
+        }));
+        setGmapStatus({
+          type: "success",
+          message: `✓ Extracted: Lat ${data.lat}, Lng ${data.lng}`,
+        });
+      } else {
+        setGmapStatus({
+          type: "error",
+          message: data.error || "Could not extract coordinates from link",
+        });
+      }
+    } catch {
+      setGmapLoading(false);
+      setGmapStatus({
+        type: "error",
+        message: "Failed to parse Google Maps link",
+      });
+    }
+  };
+
+const PRICING_KEYS = [
+  "sharePrice",
+  "totalShares",
+  "sharesSold",
+  "buyFee",
+  "sellFee",
+  "mgmtFee",
+  "wdrFee",
+  "listingFee",
+  "specs",
+];
+
+function parseCustomFieldsObject(raw: any): Record<string, any> {
+  if (!raw) return {};
+  try {
+    let parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (typeof parsed === "string") {
+      parsed = JSON.parse(parsed);
+    }
+    if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+      return parsed;
+    }
+  } catch (err) {
+    console.error("Failed to parse customFields object:", err);
+  }
+  return {};
+}
+
+function safeParseCustomFields(raw: any): Array<{ id: string; section: string; label: string; value: string }> {
+  if (!raw) return [];
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (Array.isArray(parsed)) {
+      return parsed.filter((item) => item && typeof item === "object");
+    }
+    if (typeof parsed === "object" && parsed !== null) {
+      if (Array.isArray(parsed.specs)) {
+        return parsed.specs;
+      }
+      return Object.entries(parsed)
+        .filter(([label]) => !PRICING_KEYS.includes(label))
+        .map(([label, value]) => ({
+          id: Math.random().toString(36).substring(2, 9),
+          section: "location_specs",
+          label,
+          value: typeof value === "object" ? JSON.stringify(value) : String(value ?? ""),
+        }));
+    }
+  } catch (err) {
+    console.error("Failed to parse property customFields:", err);
+  }
+  return [];
+}
 
   // Custom specifications state
   const [customFields, setCustomFields] = useState<{
@@ -33,14 +143,70 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
     section: string;
     label: string;
     value: string;
-  }[]>(
-    property && property.customFields ? JSON.parse(property.customFields) : []
-  );
+  }[]>(() => safeParseCustomFields(property?.customFields));
 
   // Custom field creation state
   const [addingFieldInSection, setAddingFieldInSection] = useState<string | null>(null);
   const [newFieldLabel, setNewFieldLabel] = useState("");
   const [newFieldValue, setNewFieldValue] = useState("");
+
+  const [dynamicCategories, setDynamicCategories] = useState<string[]>([...PROPERTY_CATEGORIES]);
+  const [dynamicListingTypes, setDynamicListingTypes] = useState<Array<{ value: string; label: string }>>([
+    { value: "SALE", label: "Sales" },
+    { value: "RENT", label: "Rentals" },
+    { value: "LEASE", label: "Lease" },
+    { value: "PG", label: "PG / Hostel" },
+  ]);
+  const [dynamicTypes, setDynamicTypes] = useState<string[]>(["RESIDENTIAL", "COMMERCIAL", "LAND", "RENTAL", "INDUSTRIAL", "HOSPITALITY"]);
+  const [dynamicStatuses, setDynamicStatuses] = useState<string[]>(["ACTIVE", "DRAFT", "PENDING", "SOLD", "RENTED", "UNDER_OFFER"]);
+
+  const [propertyDropdownsMap, setPropertyDropdownsMap] = useState<Record<string, Array<{ label: string; value: string }>>>({});
+
+  async function loadAllCategoriesAndOptions() {
+    try {
+      // First fetch custom site settings dropdowns for properties
+      const settingsRes = await fetch("/api/settings/dropdowns");
+      if (settingsRes.ok) {
+        const sData = await settingsRes.json();
+        if (sData.sections && Array.isArray(sData.sections)) {
+          const propSec = sData.sections.find((s: any) => s.sectionKey === "properties");
+          if (propSec && Array.isArray(propSec.fields)) {
+            const map: Record<string, Array<{ label: string; value: string }>> = {};
+            propSec.fields.forEach((field: any) => {
+              map[field.key] = (field.options || [])
+                .filter((o: any) => o.enabled !== false)
+                .map((o: any) => ({ label: o.label, value: o.value }));
+            });
+            setPropertyDropdownsMap(map);
+
+            if (map.listing_type?.length) {
+              setDynamicListingTypes(map.listing_type.map((o) => ({ value: o.value, label: o.label })));
+            }
+            if (map.property_category?.length) {
+              setDynamicCategories(map.property_category.map((o) => o.label));
+            }
+            if (map.property_type?.length) {
+              setDynamicTypes(map.property_type.map((o) => o.value));
+            }
+            if (map.property_status?.length) {
+              setDynamicStatuses(map.property_status.map((o) => o.value));
+            }
+          }
+        }
+      }
+
+      const res = await fetch("/api/admin/categories");
+      const data = await res.json();
+      if (data.success) {
+        if (Array.isArray(data.categories) && data.categories.length > 0) {
+          const catNames = data.categories.map((c: any) => c.name);
+          setDynamicCategories((prev) => Array.from(new Set([...prev, ...PROPERTY_CATEGORIES, ...catNames])));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load categories options:", err);
+    }
+  }
 
   async function loadAllSlabs() {
     const slabTypes = [
@@ -74,6 +240,7 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
 
   useEffect(() => {
     loadAllSlabs();
+    loadAllCategoriesAndOptions();
   }, []);
 
   // Custom Fields Actions
@@ -112,47 +279,22 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
   }
 
   function renderCustomFieldsSection(sectionKey: string) {
-    const fields = customFields.filter((cf) => cf.section === sectionKey);
-
     return (
-      <div className="sm:col-span-2 space-y-4 pt-4 border-t border-slate-100">
+      <div className="col-span-2 space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800 mt-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Custom Specifications</h3>
+          <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            Custom Specifications
+          </h3>
           {addingFieldInSection !== sectionKey && (
             <button
               type="button"
               onClick={() => startAddCustomField(sectionKey)}
-              className="inline-flex items-center gap-1 text-xs font-bold text-gold-dark hover:text-gold transition-colors"
+              className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors"
             >
               <Plus className="h-3.5 w-3.5" /> Add custom detail
             </button>
           )}
         </div>
-        
-        {fields.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {fields.map((cf) => (
-              <div key={cf.id} className="block text-sm space-y-1 relative group">
-                <span className="flex items-center justify-between text-slate-600">
-                  <span className="font-medium">{cf.label}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeCustomField(cf.id)}
-                    className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5"
-                  >
-                    <Trash2 className="h-3 w-3" /> Remove
-                  </button>
-                </span>
-                <input
-                  type="text"
-                  value={cf.value}
-                  onChange={(e) => updateCustomFieldValue(cf.id, e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 bg-slate-50 focus:bg-white transition"
-                />
-              </div>
-            ))}
-          </div>
-        )}
 
         {addingFieldInSection === sectionKey && (
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
@@ -223,6 +365,17 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
   const [newVideoUrl, setNewVideoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
 
+  const initialPriceVal = property?.price ? property.price : 1200000;
+  const initialCustomObj = parseCustomFieldsObject(property?.customFields);
+  const initialSharePrice = initialCustomObj.sharePrice ?? (initialPriceVal ? Math.round(initialPriceVal / 2500) : 480);
+  const initialTotalShares = initialCustomObj.totalShares ?? (initialPriceVal && initialSharePrice ? Math.round(initialPriceVal / initialSharePrice) : 2500);
+  const initialSharesSold = initialCustomObj.sharesSold ?? Math.round(initialTotalShares * 0.68);
+  const initialBuyFee = initialCustomObj.buyFee ?? property?.brokerageRate ?? 0.5;
+  const initialSellFee = initialCustomObj.sellFee ?? 0.3;
+  const initialMgmtFee = initialCustomObj.mgmtFee ?? 1.2;
+  const initialWdrFee = initialCustomObj.wdrFee ?? 0.2;
+  const initialListingFee = initialCustomObj.listingFee ?? 2.5;
+
   const [form, setForm] = useState({
     title: property?.title ?? "",
     symbol: property?.symbol ?? "",
@@ -264,10 +417,20 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
     mapLat: property?.mapLat?.toString() ?? "",
     mapLng: property?.mapLng?.toString() ?? "",
     agentId: property?.agentId ?? agents[0]?.id ?? "",
+    developerId: (property as any)?.developerId ?? "",
+    projectId: (property as any)?.projectId ?? "",
     yieldRate: property?.yieldRate?.toString() ?? "5.5",
     capRate: property?.capRate?.toString() ?? "5.0",
     interestRate: property?.interestRate?.toString() ?? "6.5",
-    brokerageRate: property?.brokerageRate?.toString() ?? "3.0",
+    brokerageRate: property?.brokerageRate?.toString() ?? initialBuyFee.toString(),
+    sharePrice: initialSharePrice.toString(),
+    totalShares: initialTotalShares.toString(),
+    sharesSold: initialSharesSold.toString(),
+    buyFee: initialBuyFee.toString(),
+    sellFee: initialSellFee.toString(),
+    mgmtFee: initialMgmtFee.toString(),
+    wdrFee: initialWdrFee.toString(),
+    listingFee: initialListingFee.toString(),
     change24h: property?.change24h?.toString() ?? "0",
     change7d: property?.change7d?.toString() ?? "0",
     change1m: property?.change1m?.toString() ?? "0",
@@ -277,25 +440,62 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
     volumeScore: property?.volumeScore?.toString() ?? "50",
     featured: property?.featured ?? false,
     yearBuilt: property?.yearBuilt?.toString() ?? "",
+    basePriceRate: (property as any)?.basePriceRate?.toString() ?? "",
+    softLaunchRate: (property as any)?.softLaunchRate?.toString() ?? "",
+    preLaunchRate: (property as any)?.preLaunchRate?.toString() ?? "",
+    launchRate: (property as any)?.launchRate?.toString() ?? "",
   });
 
   function set(key: string, value: string | boolean) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  // Auto-calculate yield and market rating based on Listed vs Current price
+  // Auto-calculate yield and market rating based on Pre-Launch / Soft Launch Rate vs Current Price
   useEffect(() => {
-    const lPrice = parseFloat(form.listedPrice);
-    const cPrice = parseFloat(form.currentPrice);
-    if (lPrice > 0 && cPrice > 0) {
-      const annYield = computeAnnualYield(lPrice, cPrice);
+    const softRate = parseFloat(form.softLaunchRate) || 0;
+    const preRate = parseFloat(form.preLaunchRate) || 0;
+    const launchRate = parseFloat(form.launchRate) || parseFloat(form.basePriceRate) || 0;
+    const lPrice = parseFloat(form.listedPrice) || 0;
+    const cRate = parseFloat(form.currentPrice) || 0;
+
+    const baseVal = softRate > 0 ? softRate : (preRate > 0 ? preRate : (launchRate > 0 ? launchRate : lPrice));
+    const currentVal = cRate > 0 ? cRate : parseFloat(form.price) || 0;
+
+    if (baseVal > 0 && currentVal > 0) {
+      const annYield = computeAnnualYield(baseVal, currentVal);
       const mRating = computeRatingFromSlabs(annYield, slabsMap.yieldRate);
       setForm((f) => {
         if (f.yieldRate === annYield.toFixed(2) && f.marketRating === mRating) return f;
         return { ...f, yieldRate: annYield.toFixed(2), marketRating: mRating };
       });
     }
-  }, [form.listedPrice, form.currentPrice, slabsMap.yieldRate]);
+  }, [form.softLaunchRate, form.preLaunchRate, form.launchRate, form.basePriceRate, form.currentPrice, form.listedPrice, form.price, slabsMap.yieldRate]);
+
+  useEffect(() => {
+    if (property) {
+      const pVal = property.price ?? 1200000;
+      const cObj = parseCustomFieldsObject(property.customFields);
+      const sPrice = cObj.sharePrice ?? (pVal ? Math.round(pVal / 2500) : 480);
+      const tShares = cObj.totalShares ?? (pVal && sPrice ? Math.round(pVal / sPrice) : 2500);
+      const sSold = cObj.sharesSold ?? Math.round(tShares * 0.68);
+      const bFee = cObj.buyFee ?? property.brokerageRate ?? 0.5;
+
+      setForm((f) => ({
+        ...f,
+        price: property.price?.toString() ?? f.price,
+        yieldRate: property.yieldRate?.toString() ?? f.yieldRate,
+        brokerageRate: property.brokerageRate?.toString() ?? bFee.toString(),
+        sharePrice: sPrice.toString(),
+        totalShares: tShares.toString(),
+        sharesSold: sSold.toString(),
+        buyFee: bFee.toString(),
+        sellFee: (cObj.sellFee ?? 0.3).toString(),
+        mgmtFee: (cObj.mgmtFee ?? 1.2).toString(),
+        wdrFee: (cObj.wdrFee ?? 0.2).toString(),
+        listingFee: (cObj.listingFee ?? 2.5).toString(),
+      }));
+    }
+  }, [property]);
 
   function addImage() {
     const url = newImageUrl.trim();
@@ -350,6 +550,14 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (isEdit && !canEdit) {
+      setError("Permission denied: You do not have permission to edit properties.");
+      return;
+    }
+    if (!isEdit && !canAdd) {
+      setError("Permission denied: You do not have permission to add properties.");
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -400,10 +608,12 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
       mapLat: form.mapLat ? parseFloat(form.mapLat) : null,
       mapLng: form.mapLng ? parseFloat(form.mapLng) : null,
       agentId: form.agentId,
+      developerId: form.developerId || null,
+      projectId: form.projectId || null,
       yieldRate: parseFloat(form.yieldRate),
       capRate: parseFloat(form.capRate),
       interestRate: parseFloat(form.interestRate),
-      brokerageRate: parseFloat(form.brokerageRate) || 3.0,
+      brokerageRate: parseFloat(form.buyFee) || parseFloat(form.brokerageRate) || 0.5,
       change24h: parseFloat(form.change24h),
       change7d: parseFloat(form.change7d),
       change1m: parseFloat(form.change1m) || 0,
@@ -413,27 +623,68 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
       volumeScore: parseInt(form.volumeScore, 10) || 0,
       featured: form.featured,
       yearBuilt: form.yearBuilt ? parseInt(form.yearBuilt, 10) : null,
-      customFields: JSON.stringify(customFields),
+      customFields: JSON.stringify({
+        specs: customFields,
+        sharePrice: parseFloat(form.sharePrice) || 0,
+        totalShares: parseInt(form.totalShares, 10) || 0,
+        sharesSold: parseInt(form.sharesSold, 10) || 0,
+        buyFee: parseFloat(form.buyFee) || 0,
+        sellFee: parseFloat(form.sellFee) || 0,
+        mgmtFee: parseFloat(form.mgmtFee) || 0,
+        wdrFee: parseFloat(form.wdrFee) || 0,
+        listingFee: parseFloat(form.listingFee) || 0,
+      }),
+      basePriceRate: form.basePriceRate ? parseFloat(form.basePriceRate) : null,
+      softLaunchRate: form.softLaunchRate ? parseFloat(form.softLaunchRate) : null,
+      preLaunchRate: form.preLaunchRate ? parseFloat(form.preLaunchRate) : null,
+      launchRate: form.launchRate ? parseFloat(form.launchRate) : null,
     };
 
     const url = isEdit
       ? `/api/admin/properties/${property!.id}`
       : "/api/admin/properties";
-    const res = await fetch(url, {
-      method: isEdit ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    setLoading(false);
+    try {
+      const res = await fetch(url, {
+        method: isEdit ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    if (!res.ok) {
-      setError(data.error ?? "Save failed");
-      return;
+      if (res.status === 401) {
+        window.location.href = "/login?error=SessionExpired";
+        return;
+      }
+
+      const data = await res.json();
+      setLoading(false);
+
+      if (!res.ok) {
+        setError(data.error ?? "Save failed");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      if (res.ok) {
+        logActivity({
+          category: "agent",
+          action: isEdit ? "Property Listing Modified" : "New Property Listing Created",
+          actorName: "Bhavya",
+          actorRole: "SUPERADMIN",
+          actorEmail: "bhavya@gmail.com",
+          target: form.title.trim(),
+          details: isEdit
+            ? `Updated property specs, pricing, and media assets for ${form.title.trim()}.`
+            : `Created new property listing for ${form.title.trim()} priced at ₹${form.price} in ${form.city || form.country}.`,
+        });
+
+        router.push("/admin/properties");
+        router.refresh();
+      }
+    } catch (err) {
+      setLoading(false);
+      setError("An unexpected error occurred while saving.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
-
-    router.push("/admin/properties");
-    router.refresh();
   }
 
   return (
@@ -479,6 +730,7 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               <span className="text-slate-600">Listed Price ({currencySymbol("INR")})</span>
               <input
                 type="number"
+                min="0"
                 value={form.listedPrice}
                 onChange={(e) => set("listedPrice", e.target.value)}
                 className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
@@ -488,6 +740,7 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               <span className="text-slate-600">Current Price ({currencySymbol("INR")})</span>
               <input
                 type="number"
+                min="0"
                 value={form.currentPrice}
                 onChange={(e) => set("currentPrice", e.target.value)}
                 className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
@@ -505,6 +758,158 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
             />
           </label>
+
+          {/* Launch Stage Pricing & Appreciation Section (PriceFilters.xlsx) */}
+          <div className="sm:col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 p-4 space-y-4 my-2">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Launch Stage Pricing & Appreciation (Price Filters)</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Configured as per PriceFilters.xlsx formula logic (Rate/sqft, Area, Appreciation % & Amount)</p>
+              </div>
+              <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-950/80 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                Formula Sync
+              </span>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-4">
+              <label className="block text-xs space-y-1">
+                <span className="font-medium text-slate-700 dark:text-slate-300">Soft Launch Rate (₹/sqft)</span>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 6000"
+                  value={form.softLaunchRate}
+                  onChange={(e) => set("softLaunchRate", e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white px-3 py-1.5 text-sm focus:border-gold focus:ring-1 focus:ring-gold"
+                />
+              </label>
+
+              <label className="block text-xs space-y-1">
+                <span className="font-medium text-slate-700 dark:text-slate-300">Pre-Launch Rate (₹/sqft)</span>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 6500"
+                  value={form.preLaunchRate}
+                  onChange={(e) => set("preLaunchRate", e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white px-3 py-1.5 text-sm focus:border-gold focus:ring-1 focus:ring-gold"
+                />
+              </label>
+
+              <label className="block text-xs space-y-1">
+                <span className="font-medium text-slate-700 dark:text-slate-300">Launch Price (₹/sqft)</span>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 7000"
+                  value={form.launchRate}
+                  onChange={(e) => set("launchRate", e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white px-3 py-1.5 text-sm focus:border-gold focus:ring-1 focus:ring-gold"
+                />
+              </label>
+
+              <label className="block text-xs space-y-1">
+                <span className="font-semibold text-emerald-700 dark:text-emerald-400">Current Price (₹/sqft)</span>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 7300"
+                  value={form.currentPrice}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setForm((f) => {
+                      const cRate = parseFloat(val) || 0;
+                      const areaSq = parseFloat(f.sqft) || 1000;
+                      const calcPrice = cRate > 0 ? (cRate * areaSq).toString() : f.price;
+                      return {
+                        ...f,
+                        currentPrice: val,
+                        price: calcPrice,
+                      };
+                    });
+                  }}
+                  className="w-full rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/40 px-3 py-1.5 text-sm font-bold text-emerald-950 dark:text-emerald-200 focus:border-gold focus:ring-1 focus:ring-gold"
+                />
+              </label>
+            </div>
+
+            {/* PriceFilters.xlsx Exact Calculations Table */}
+            {(() => {
+              const sqft = parseFloat(form.sqft) || 1000;
+              const soft = parseFloat(form.softLaunchRate) || 0;
+              const pre = parseFloat(form.preLaunchRate) || 0;
+              const launch = parseFloat(form.launchRate) || 0;
+              const current = parseFloat(form.currentPrice) || 0;
+
+              const softTotal = soft * sqft;
+              const preTotal = pre * sqft;
+              const launchTotal = launch * sqft;
+              const currentTotal = current * sqft;
+
+              const baseRate = soft > 0 ? soft : (pre > 0 ? pre : (launch > 0 ? launch : 0));
+              const baseTotal = baseRate * sqft;
+
+              const appAmount = current > 0 && baseRate > 0 ? current - baseRate : 0;
+              const appTotalAmount = currentTotal > 0 && baseTotal > 0 ? currentTotal - baseTotal : 0;
+              const appPct = baseRate > 0 && current > 0 ? ((current - baseRate) / baseRate) * 100 : 0;
+
+              return (
+                <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    PriceFilters.xlsx Data Matrix
+                  </h4>
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider">
+                        <th className="pb-2">Stage / Parameter</th>
+                        <th className="pb-2 text-emerald-700 dark:text-emerald-400">rate/sqft</th>
+                        <th className="pb-2 text-slate-700 dark:text-slate-300">Area (sqft)</th>
+                        <th className="pb-2 text-gold-dark dark:text-gold">Total Price</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                      <tr>
+                        <td className="py-2 font-semibold text-slate-900 dark:text-white">Soft Launch</td>
+                        <td className="py-2 font-mono text-slate-800 dark:text-slate-200">{soft}</td>
+                        <td className="py-2 font-mono text-slate-800 dark:text-slate-200">{sqft}</td>
+                        <td className="py-2 font-mono font-bold text-slate-900 dark:text-white">₹{softTotal.toLocaleString("en-IN")}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 font-semibold text-slate-900 dark:text-white">Pre Launch</td>
+                        <td className="py-2 font-mono text-slate-800 dark:text-slate-200">{pre}</td>
+                        <td className="py-2 font-mono text-slate-800 dark:text-slate-200">{sqft}</td>
+                        <td className="py-2 font-mono font-bold text-slate-900 dark:text-white">₹{preTotal.toLocaleString("en-IN")}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 font-semibold text-slate-900 dark:text-white">Launch Price</td>
+                        <td className="py-2 font-mono text-slate-800 dark:text-slate-200">{launch}</td>
+                        <td className="py-2 font-mono text-slate-800 dark:text-slate-200">{sqft}</td>
+                        <td className="py-2 font-mono font-bold text-slate-900 dark:text-white">₹{launchTotal.toLocaleString("en-IN")}</td>
+                      </tr>
+                      <tr className="bg-emerald-50/80 dark:bg-emerald-950/60 font-bold">
+                        <td className="py-2 text-emerald-900 dark:text-emerald-200 px-1">Current Price</td>
+                        <td className="py-2 font-mono text-emerald-800 dark:text-emerald-300">{current}</td>
+                        <td className="py-2 font-mono text-slate-900 dark:text-slate-200">{sqft}</td>
+                        <td className="py-2 font-mono text-emerald-800 dark:text-emerald-300">₹{currentTotal.toLocaleString("en-IN")}</td>
+                      </tr>
+                      <tr className="bg-amber-50/80 dark:bg-amber-950/60 font-bold border-t-2 border-slate-200 dark:border-slate-800">
+                        <td className="py-2 text-amber-900 dark:text-amber-200 px-1">Appreciation (%)</td>
+                        <td className="py-2 font-mono text-emerald-700 dark:text-emerald-400">+{appPct.toFixed(2)}%</td>
+                        <td className="py-2 text-slate-400">—</td>
+                        <td className="py-2 font-mono text-emerald-700 dark:text-emerald-400">+{appPct.toFixed(2)}%</td>
+                      </tr>
+                      <tr className="bg-amber-50/80 dark:bg-amber-950/60 font-bold">
+                        <td className="py-2 text-amber-900 dark:text-amber-200 px-1">Appreciation (amount)</td>
+                        <td className="py-2 font-mono text-emerald-700 dark:text-emerald-400">+{appAmount.toLocaleString("en-IN")}</td>
+                        <td className="py-2 font-mono text-slate-800 dark:text-slate-200">{sqft}</td>
+                        <td className="py-2 font-mono text-emerald-700 dark:text-emerald-400">+{appTotalAmount.toLocaleString("en-IN")}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
+          </div>
           <label className="block text-sm">
             <span className="text-slate-600">Listing type</span>
             <select
@@ -519,8 +924,11 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               }}
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
             >
-              <option value="SALE">Sales</option>
-              <option value="RENT">Rentals</option>
+              {dynamicListingTypes.map((lt) => (
+                <option key={lt.value} value={lt.value}>
+                  {lt.label}
+                </option>
+              ))}
             </select>
           </label>
           {form.listingType === "RENT" && (
@@ -545,8 +953,10 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
             >
               <option value="">Select category</option>
-              {PROPERTY_CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
+              {dynamicCategories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
           </label>
@@ -566,7 +976,7 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               onChange={(e) => set("type", e.target.value)}
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
             >
-              {["RESIDENTIAL", "COMMERCIAL", "LAND", "RENTAL"].map((t) => (
+              {dynamicTypes.map((t) => (
                 <option key={t} value={t}>
                   {t}
                 </option>
@@ -580,7 +990,7 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               onChange={(e) => set("status", e.target.value)}
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
             >
-              {["ACTIVE", "DRAFT", "PENDING", "SOLD", "RENTED"].map((s) => (
+              {dynamicStatuses.map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>
@@ -601,6 +1011,49 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               ))}
             </select>
           </label>
+          <label className="block text-sm">
+            <span className="text-slate-600">Builder / developer</span>
+            <select
+              name="developerId"
+              value={form.developerId}
+              onChange={(e) => {
+                const dev = e.target.value;
+                setForm((f) => {
+                  // Clear the project if it no longer belongs to the chosen builder.
+                  const proj = projects.find((p) => p.id === f.projectId);
+                  const keepProject = proj && proj.developerId === dev;
+                  return { ...f, developerId: dev, projectId: keepProject ? f.projectId : "" };
+                });
+              }}
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+            >
+              <option value="">— None —</option>
+              {developers.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="text-slate-600">Project</span>
+            <select
+              name="projectId"
+              value={form.projectId}
+              onChange={(e) => set("projectId", e.target.value)}
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+            >
+              <option value="">— None —</option>
+              {(form.developerId
+                ? projects.filter((p) => p.developerId === form.developerId)
+                : projects
+              ).map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="flex items-center gap-2 text-sm pt-6">
             <input
               type="checkbox"
@@ -609,7 +1062,6 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
             />
             Featured listing
           </label>
-          {renderCustomFieldsSection("listing_details")}
         </div>
       </section>
 
@@ -644,7 +1096,7 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               <button
                 type="button"
                 onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
-                className="absolute top-1 right-1 rounded bg-red-600 p-1 text-white opacity-90"
+                className="absolute top-1 right-1 rounded-md bg-slate-900/80 hover:bg-rose-600 p-1 text-white opacity-90 transition"
               >
                 <Trash2 className="h-3 w-3" />
               </button>
@@ -727,7 +1179,6 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
             <span className="text-slate-600">Virtual tour URL</span>
             <input value={form.virtualTourUrl} onChange={(e) => set("virtualTourUrl", e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2" />
           </label>
-          {renderCustomFieldsSection("media")}
         </div>
       </section>
 
@@ -766,12 +1217,112 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
                   type="number"
                   step="0.01"
                   value={form[key as keyof typeof form] as string}
-                  onChange={(e) => set(key, e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (key === "brokerageRate") {
+                      setForm((f) => ({ ...f, brokerageRate: val, buyFee: val }));
+                    } else {
+                      set(key, val);
+                    }
+                  }}
                   className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
                 />
               </label>
             );
           })}
+
+          {/* Share Price */}
+          <label className="block text-sm space-y-1">
+            <span className="text-slate-600 font-medium">Share price (₹)</span>
+            <input
+              type="number"
+              value={form.sharePrice}
+              onChange={(e) => {
+                const sp = parseFloat(e.target.value) || 0;
+                const price = parseFloat(form.price) || 0;
+                const derivedShares = sp > 0 && price > 0 ? Math.round(price / sp) : form.totalShares;
+                setForm((f) => ({ ...f, sharePrice: e.target.value, totalShares: derivedShares.toString() }));
+              }}
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 font-semibold"
+            />
+          </label>
+
+          {/* Total Shares */}
+          <label className="block text-sm space-y-1">
+            <span className="text-slate-600 font-medium">Total shares</span>
+            <input
+              type="number"
+              value={form.totalShares}
+              onChange={(e) => {
+                const ts = parseInt(e.target.value, 10) || 0;
+                const price = parseFloat(form.price) || 0;
+                const derivedSp = ts > 0 && price > 0 ? Math.round(price / ts) : form.sharePrice;
+                setForm((f) => ({ ...f, totalShares: e.target.value, sharePrice: derivedSp.toString() }));
+              }}
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 font-semibold"
+            />
+          </label>
+
+          {/* Shares Sold */}
+          <label className="block text-sm space-y-1">
+            <span className="text-slate-600 font-medium">Shares sold</span>
+            <input
+              type="number"
+              value={form.sharesSold}
+              onChange={(e) => set("sharesSold", e.target.value)}
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+            />
+          </label>
+
+          {/* Sell Fee % */}
+          <label className="block text-sm space-y-1">
+            <span className="text-slate-600 font-medium">Sell fee %</span>
+            <input
+              type="number"
+              step="0.05"
+              value={form.sellFee}
+              onChange={(e) => set("sellFee", e.target.value)}
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+            />
+          </label>
+
+          {/* Management Fee % */}
+          <label className="block text-sm space-y-1">
+            <span className="text-slate-600 font-medium">Management fee %</span>
+            <input
+              type="number"
+              step="0.05"
+              value={form.mgmtFee}
+              onChange={(e) => set("mgmtFee", e.target.value)}
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+            />
+          </label>
+
+          {/* Withdrawal Fee % */}
+          <label className="block text-sm space-y-1">
+            <span className="text-slate-600 font-medium">Withdrawal fee %</span>
+            <input
+              type="number"
+              step="0.05"
+              value={form.wdrFee}
+              onChange={(e) => set("wdrFee", e.target.value)}
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+            />
+          </label>
+
+          {/* Listing Fee % */}
+          <label className="block text-sm space-y-1">
+            <span className="text-slate-600 font-medium">Listing fee %</span>
+            <input
+              type="number"
+              step="0.05"
+              value={form.listingFee}
+              onChange={(e) => set("listingFee", e.target.value)}
+              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+            />
+          </label>
+
+          {/* Market Rating */}
           <label className="block text-sm space-y-1">
             <span className="flex items-center justify-between text-slate-600">
               <span className="font-medium">Market rating</span>
@@ -791,6 +1342,8 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               ))}
             </select>
           </label>
+
+          {/* Volume Score */}
           <label className="block text-sm space-y-1">
             <span className="text-slate-600 font-medium">Volume score</span>
             <input
@@ -800,6 +1353,7 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
             />
           </label>
+
           {renderCustomFieldsSection("rates_market")}
         </div>
       </section>
@@ -860,26 +1414,11 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 bg-white"
             >
               <option value="">— Select BHK —</option>
-              {(bhkConfigurations.length > 0
+              {(propertyDropdownsMap.configuration?.length
+                ? propertyDropdownsMap.configuration.map((o) => o.label)
+                : bhkConfigurations.length > 0
                 ? bhkConfigurations
-                : [
-                    "1BHK",
-                    "1.5BHK",
-                    "2BHK",
-                    "2.5BHK",
-                    "3BHK",
-                    "3.5BHK",
-                    "4BHK",
-                    "4.5BHK",
-                    "5BHK",
-                    "6BHK",
-                    "7BHK",
-                    "7+BHK",
-                    "Simplex",
-                    "Duplex",
-                    "Triplex",
-                    "Penthouse",
-                  ]
+                : ["1BHK", "2BHK", "3BHK", "4BHK", "5BHK", "Studio", "Duplex", "Penthouse"]
               ).map((cfg) => (
                 <option key={cfg} value={cfg}>
                   {cfg}
@@ -971,9 +1510,14 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
             >
               <option value="">None</option>
-              <option value="Common Lift">Common Lift</option>
-              <option value="Personal Lift">Personal Lift</option>
-              <option value="No Lift">No Lift</option>
+              {(propertyDropdownsMap.lift_type?.length
+                ? propertyDropdownsMap.lift_type.map((o) => o.label)
+                : ["Common Lift", "Personal Lift", "No Lift", "Service Lift"]
+              ).map((lt) => (
+                <option key={lt} value={lt}>
+                  {lt}
+                </option>
+              ))}
             </select>
           </label>
           <label className="block text-sm">
@@ -984,9 +1528,14 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
             >
               <option value="">None</option>
-              <option value="Fully Furnished">Fully Furnished</option>
-              <option value="Semi Furnished">Semi Furnished</option>
-              <option value="Unfurnished">Unfurnished</option>
+              {(propertyDropdownsMap.furnishing_status?.length
+                ? propertyDropdownsMap.furnishing_status.map((o) => o.label)
+                : ["Fully Furnished", "Semi Furnished", "Unfurnished"]
+              ).map((fs) => (
+                <option key={fs} value={fs}>
+                  {fs}
+                </option>
+              ))}
             </select>
           </label>
           <label className="block text-sm">
@@ -997,9 +1546,14 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
             >
               <option value="">None</option>
-              <option value="Available">Available</option>
-              <option value="Sold">Sold</option>
-              <option value="Rented">Rented</option>
+              {(propertyDropdownsMap.availability?.length
+                ? propertyDropdownsMap.availability.map((o) => o.label)
+                : ["Available", "Sold", "Rented", "Under Offer", "Reserved"]
+              ).map((av) => (
+                <option key={av} value={av}>
+                  {av}
+                </option>
+              ))}
             </select>
           </label>
           <div className="col-span-2 grid grid-cols-3 gap-2 mt-2">
@@ -1016,14 +1570,73 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               Study Room
             </label>
           </div>
-          <label className="block text-sm">
-            <span className="text-slate-600">Map latitude</span>
-            <input type="number" step="any" value={form.mapLat} onChange={(e) => set("mapLat", e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2" />
-          </label>
-          <label className="block text-sm">
-            <span className="text-slate-600">Map longitude</span>
-            <input type="number" step="any" value={form.mapLng} onChange={(e) => set("mapLng", e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2" />
-          </label>
+          {/* Google Maps Link / Auto-Fetch Latitude & Longitude */}
+          <div className="col-span-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 p-4 space-y-3 mt-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-200">
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <span>Google Maps Link / Share URL</span>
+                </span>
+              </label>
+              {gmapStatus && (
+                <span className={`text-xs font-bold ${gmapStatus.type === "success" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                  {gmapStatus.message}
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-wrap sm:flex-nowrap gap-2">
+              <input
+                type="text"
+                placeholder="Paste Google Maps URL (e.g. https://maps.google.com/?q=33.749,-84.388 or https://goo.gl/maps/...)"
+                value={gmapUrl}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setGmapUrl(val);
+                  if (val.includes("@") || val.includes("q=") || val.includes("!3d") || val.includes(",")) {
+                    parseGoogleMapsLink(val);
+                  }
+                }}
+                className="flex-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => parseGoogleMapsLink(gmapUrl)}
+                loading={gmapLoading}
+                className="gap-1.5 text-xs font-bold border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 hover:bg-amber-100"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                <span>Fetch Coords</span>
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-1">
+              <label className="block text-sm">
+                <span className="text-slate-600 dark:text-slate-400 font-medium">Map latitude</span>
+                <input
+                  type="number"
+                  step="any"
+                  value={form.mapLat}
+                  onChange={(e) => set("mapLat", e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm font-mono text-slate-900 dark:text-white"
+                  placeholder="e.g. 33.749"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-slate-600 dark:text-slate-400 font-medium">Map longitude</span>
+                <input
+                  type="number"
+                  step="any"
+                  value={form.mapLng}
+                  onChange={(e) => set("mapLng", e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm font-mono text-slate-900 dark:text-white"
+                  placeholder="e.g. -84.388"
+                />
+              </label>
+            </div>
+          </div>
           <label className="block text-sm">
             <span className="text-slate-600">Year built</span>
             <input
@@ -1033,6 +1646,31 @@ export function PropertyForm({ agents, property, bhkConfigurations = [] }: Prope
               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
             />
           </label>
+
+          {/* Dynamically added custom fields appear immediately after Year built */}
+          {Array.isArray(customFields) && customFields.map((cf) => (
+            <label key={cf.id} className="block text-sm relative group">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-slate-700 font-semibold">{cf.label}</span>
+                <button
+                  type="button"
+                  onClick={() => removeCustomField(cf.id)}
+                  className="text-xs text-rose-600 hover:text-rose-700 font-medium transition flex items-center gap-0.5"
+                  title={`Remove ${cf.label}`}
+                >
+                  <Trash2 className="h-3 w-3" /> Remove
+                </button>
+              </div>
+              <input
+                type="text"
+                value={cf.value}
+                onChange={(e) => updateCustomFieldValue(cf.id, e.target.value)}
+                placeholder={`Enter ${cf.label}...`}
+                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 bg-slate-50 focus:bg-white text-slate-900 transition text-sm"
+              />
+            </label>
+          ))}
+
           {renderCustomFieldsSection("location_specs")}
         </div>
       </section>
