@@ -19,6 +19,7 @@ import { DEFAULT_COUNTRY_CODE } from "@/lib/locale-defaults";
 import { ROLE_LABELS } from "@/lib/roles";
 import { activityLabel } from "@/lib/user-activity";
 import { AgentCommissionTracker } from "@/components/admin/agent-commission-tracker";
+import { UserCrmActivity } from "@/components/admin/user-crm-activity";
 import {
   AgentAssignedLeadsSection,
   AgentInterestedPropertiesSection,
@@ -150,6 +151,31 @@ interface DocSlot {
   hint: string;
   icon: string;
   required?: boolean;
+  kind: "image" | "pdf";
+}
+
+// Allowed format + max size per document kind.
+const DOC_RULES = {
+  image: { accept: "image/jpeg,image/png,.jpg,.jpeg,.png", types: ["image/jpeg", "image/png"], maxMB: 5, label: "JPG or PNG · max 5 MB" },
+  pdf: { accept: "application/pdf,.pdf", types: ["application/pdf"], maxMB: 5, label: "PDF only · max 5 MB" },
+} as const;
+
+/** Validate a selected file against its slot's format + size rules. Returns an error message, or "" if valid. */
+function validateDocFile(file: File, kind: "image" | "pdf"): string {
+  const rule = DOC_RULES[kind];
+  const nameOk = kind === "image"
+    ? /\.(jpe?g|png)$/i.test(file.name)
+    : /\.pdf$/i.test(file.name);
+  const typeOk = (rule.types as readonly string[]).includes(file.type) || (!file.type && nameOk);
+  if (!typeOk || !nameOk) {
+    return kind === "image"
+      ? "Only JPG or PNG images are allowed for this document."
+      : "Only PDF files are allowed for this document.";
+  }
+  if (file.size > rule.maxMB * 1024 * 1024) {
+    return `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum allowed is ${rule.maxMB} MB.`;
+  }
+  return "";
 }
 
 const DOC_KEYS = {
@@ -164,14 +190,14 @@ const DOC_KEYS = {
 };
 
 const DOC_SLOTS: DocSlot[] = [
-  { key: "photoUrl",          label: "Live Photo / Selfie",   hint: "Clear face photo, no sunglasses", icon: "🤳", required: true },
-  { key: "aadhaarFrontUrl",   label: "Aadhaar Card — Front",  hint: "Name & Aadhaar number visible",   icon: "🪪", required: true },
-  { key: "aadhaarBackUrl",    label: "Aadhaar Card — Back",   hint: "Address side",                    icon: "🪪", required: true },
-  { key: "panCardUrl",        label: "PAN Card",              hint: "PAN number clearly visible",      icon: "💳", required: true },
-  { key: "drivingLicenseUrl", label: "Driving Licence",       hint: "Optional — front side",           icon: "🚗" },
-  { key: "voterIdUrl",        label: "Voter ID / EPIC",       hint: "Optional — front side",           icon: "🗳️" },
-  { key: "idDocumentUrl",     label: "Other ID Document",     hint: "Passport or any Govt ID",         icon: "📄" },
-  { key: "addressProofUrl",   label: "Address Proof",         hint: "Utility bill / rent agreement",   icon: "🏠" },
+  { key: "photoUrl",          label: "Live Photo / Selfie",   hint: "Clear face photo, no sunglasses", icon: "🤳", required: true, kind: "image" },
+  { key: "aadhaarFrontUrl",   label: "Aadhaar Card — Front",  hint: "Name & Aadhaar number visible",   icon: "🪪", required: true, kind: "image" },
+  { key: "aadhaarBackUrl",    label: "Aadhaar Card — Back",   hint: "Address side",                    icon: "🪪", required: true, kind: "image" },
+  { key: "panCardUrl",        label: "PAN Card",              hint: "PAN number clearly visible",      icon: "💳", required: true, kind: "image" },
+  { key: "drivingLicenseUrl", label: "Driving Licence",       hint: "Optional — front side",           icon: "🚗", kind: "image" },
+  { key: "voterIdUrl",        label: "Voter ID / EPIC",       hint: "Optional — front side",           icon: "🗳️", kind: "image" },
+  { key: "idDocumentUrl",     label: "Other ID Document",     hint: "Passport or any Govt ID",         icon: "📄", kind: "pdf" },
+  { key: "addressProofUrl",   label: "Address Proof",         hint: "Utility bill / rent agreement",   icon: "🏠", kind: "pdf" },
 ];
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
@@ -207,6 +233,11 @@ function AdminDocCard({
   const isImage = state.url && !state.url.endsWith(".pdf");
 
   async function handleFile(file: File) {
+    const validationError = validateDocFile(file, slot.kind);
+    if (validationError) {
+      setLocalError(validationError);
+      return;
+    }
     setLocalUploading(true);
     setLocalError("");
     try {
@@ -255,6 +286,11 @@ function AdminDocCard({
               {slot.required && <span className="text-xs text-red-500 font-bold">*</span>}
             </div>
             <p className="text-xs text-slate-500">{slot.hint}</p>
+            <p className={`inline-flex items-center gap-1 mt-1 text-[11px] font-bold px-1.5 py-0.5 rounded ${
+              slot.kind === "image" ? "bg-blue-50 text-blue-700" : "bg-violet-50 text-violet-700"
+            }`}>
+              {slot.kind === "image" ? "🖼️" : "📄"} {DOC_RULES[slot.kind].label}
+            </p>
 
             {localUploading && (
               <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
@@ -284,11 +320,12 @@ function AdminDocCard({
           <input
             ref={ref}
             type="file"
-            accept="image/*,.pdf"
+            accept={DOC_RULES[slot.kind].accept}
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) handleFile(f);
+              e.target.value = "";
             }}
           />
           <button
@@ -412,31 +449,61 @@ function LoanDocUploader({
   );
 }
 
+// Parse a timestamped loan-notes history string into entries.
+// Supports "[time] [author · userId] text" and legacy "[time] text".
+function parseLoanNotes(raw: string | null | undefined): { time: string | null; author: string | null; text: string }[] {
+  if (!raw || !raw.trim()) return [];
+  return raw
+    .split(/\n\n+/)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .map((chunk) => {
+      const m = chunk.match(/^\[(.*?)\]\s*\[(.*?)\]\s*([\s\S]*)$/);
+      if (m) return { time: m[1], author: m[2], text: m[3] };
+      const m2 = chunk.match(/^\[(.*?)\]\s*([\s\S]*)$/);
+      if (m2) return { time: m2[1], author: null, text: m2[2] };
+      return { time: null, author: null, text: chunk };
+    })
+    .reverse(); // newest first
+}
+
 function LoanAdminNotes({
+  contactId,
+  loanId,
   notes,
   onChange,
 }: {
+  contactId: string;
+  loanId: string;
   notes: string | null;
   onChange: (val: string) => void;
 }) {
   const [newNote, setNewNote] = useState("");
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
 
-  function handleSaveNote() {
-    if (!newNote.trim()) return;
-    const ts = new Date().toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const entry = `[${ts}] ${newNote.trim()}`;
-    const updated = notes ? `${notes}\n\n${entry}` : entry;
-    onChange(updated);
-    setNewNote("");
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+  const history = parseLoanNotes(notes);
+
+  async function handleSaveNote() {
+    const text = newNote.trim();
+    if (!text) return;
+    setSaving(true);
+    setErr("");
+    try {
+      const res = await fetch(`/api/admin/users/${contactId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ addLoanNote: { loanId, text } }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setErr(data.error || "Could not save note."); return; }
+      if (typeof data.appendedLoanNotes === "string") onChange(data.appendedLoanNotes);
+      setNewNote("");
+    } catch {
+      setErr("Could not save note.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -445,43 +512,36 @@ function LoanAdminNotes({
         <label className="text-xs font-bold uppercase tracking-wider text-slate-900">
           Admin Notes
         </label>
-        {savedSuccess && (
-          <span className="text-xs font-bold text-emerald-600 animate-in fade-in">
-            ✓ Note saved with timestamp!
-          </span>
-        )}
+        {err && <span className="text-xs font-bold text-red-600">{err}</span>}
       </div>
 
-      {/* Existing Timestamped Notes History */}
-      {(() => {
-        if (!notes) return <p className="text-xs text-slate-400 italic">No notes saved yet for this application.</p>;
-        const lines = notes.split("\n").filter((l) => l.trim().length > 0);
-        const parsed = lines.map((line) => {
-          const match = line.match(/^\[(.*?)\]\s*(.*)$/);
-          if (match) return { time: match[1], text: match[2] };
-          return { time: null, text: line };
-        });
-
-        return (
-          <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-            {parsed.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-200 bg-white shadow-sm"
-              >
-                <p className="text-sm font-medium text-slate-900 leading-relaxed">
+      {/* Existing notes history — newest first, with author, user ID & timestamp */}
+      {history.length === 0 ? (
+        <p className="text-xs text-slate-400 italic">No notes saved yet for this application.</p>
+      ) : (
+        <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+          {history.map((item, idx) => (
+            <div
+              key={idx}
+              className="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-200 bg-white shadow-sm"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-900 leading-relaxed whitespace-pre-wrap break-words">
                   {item.text}
                 </p>
-                {item.time && (
-                  <span className="text-xs font-mono font-bold text-slate-900 bg-slate-100 border border-slate-300 px-2.5 py-1 rounded-lg shrink-0">
-                    {item.time}
-                  </span>
+                {item.author && (
+                  <p className="mt-1 text-[11px] font-semibold text-slate-500">— {item.author}</p>
                 )}
               </div>
-            ))}
-          </div>
-        );
-      })()}
+              {item.time && (
+                <span className="text-xs font-mono font-bold text-slate-900 bg-slate-100 border border-slate-300 px-2.5 py-1 rounded-lg shrink-0">
+                  {item.time}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* New Note Entry Box */}
       <div className="space-y-2">
@@ -494,15 +554,15 @@ function LoanAdminNotes({
         />
         <div className="flex items-center justify-between">
           <p className="text-[11px] text-slate-500 font-medium">
-            Clicking Save Note automatically attaches a timestamp to your entry.
+            Each note is saved with your name, user ID and a timestamp.
           </p>
           <button
             type="button"
             onClick={handleSaveNote}
-            disabled={!newNote.trim()}
+            disabled={saving || !newNote.trim()}
             className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white px-4 py-2 text-xs font-bold transition shadow-sm"
           >
-            💾 Save Note
+            <Save className="h-3.5 w-3.5" /> {saving ? "Saving…" : "Save Note"}
           </button>
         </div>
       </div>
@@ -529,6 +589,8 @@ export function UserDetailEditor({
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+  const [newKycNote, setNewKycNote] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
 
   const { columns } = useTableColumns("users_directory_v6", []);
   const { getCellValue, updateCell } = useCustomCellData("users_directory_v6");
@@ -827,16 +889,45 @@ export function UserDetailEditor({
   const [adminNoteSavedAt, setAdminNoteSavedAt] = useState<string | null>(null);
 
   async function handleSaveAdminNotes() {
-    const ts = new Date().toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-    setAdminNoteSavedAt(ts);
-    await save();
+    const text = newKycNote.trim();
+    if (!text) return;
+    setSavingNote(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ addKycNote: text }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || "Could not save note."); return; }
+      if (typeof data.appendedNotes === "string") {
+        setKyc((k) => ({ ...k, adminNotes: data.appendedNotes }));
+      }
+      setNewKycNote("");
+      setAdminNoteSavedAt(new Date().toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }));
+    } catch {
+      setError("Could not save note.");
+    } finally {
+      setSavingNote(false);
+    }
+  }
+
+  // Parse the KYC admin-notes history into individual entries.
+  function parseKycNotes(raw: string | null | undefined): { time: string | null; author: string | null; text: string }[] {
+    if (!raw || !raw.trim()) return [];
+    return raw
+      .split(/\n\n+/)
+      .map((chunk) => chunk.trim())
+      .filter(Boolean)
+      .map((chunk) => {
+        const m = chunk.match(/^\[(.*?)\]\s*\[(.*?)\]\s*([\s\S]*)$/);
+        if (m) return { time: m[1], author: m[2], text: m[3] };
+        const m2 = chunk.match(/^\[(.*?)\]\s*([\s\S]*)$/);
+        if (m2) return { time: m2[1], author: null, text: m2[2] };
+        return { time: null, author: null, text: chunk };
+      })
+      .reverse(); // newest first
   }
 
   // Document URL state
@@ -1084,11 +1175,11 @@ export function UserDetailEditor({
       {msg   && <p className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">{msg}</p>}
 
       {/* Profile Summary KPI Cards (User Account Profile) */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-4 lg:grid-cols-9">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         {/* 1. Unique User ID */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs col-span-2 sm:col-span-2 lg:col-span-2">
-          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Unique User ID</p>
-          <div className="flex items-center gap-2 mt-1.5">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs col-span-2 sm:col-span-3 lg:col-span-2 flex flex-col justify-center">
+          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider leading-tight">Unique User ID</p>
+          <div className="flex flex-wrap items-center gap-2 mt-1.5">
             <p className="font-mono text-xs font-extrabold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
               {user.userId || "USR-XXXXX"}
             </p>
@@ -1099,64 +1190,48 @@ export function UserDetailEditor({
         </div>
 
         {/* 2. Total Properties Sold */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs col-span-1 sm:col-span-2 lg:col-span-1">
-          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider truncate">Properties Sold</p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs col-span-1">
+          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider leading-tight">Properties Sold</p>
           <p className="text-xl font-black text-slate-900 mt-1">
             {user.commissionSummary?.totalSoldProperties ?? (user.soldProperties?.length || 0)}
           </p>
         </div>
 
         {/* 3. Total Commission Earned */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs col-span-2 sm:col-span-2 lg:col-span-2">
-          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider truncate">Comm. Earned</p>
-          <p className="text-xl font-black text-emerald-600 mt-1">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs col-span-1">
+          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider leading-tight">Comm. Earned</p>
+          <p className="text-xl font-black text-emerald-600 mt-1 break-words">
             {formatCurrency(user.commissionSummary?.totalCommissionEarned ?? 0)}
           </p>
         </div>
 
         {/* 4. Commission Paid */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs col-span-2 sm:col-span-2 lg:col-span-2">
-          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider truncate">Comm. Paid</p>
-          <p className="text-xl font-black text-blue-600 mt-1">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs col-span-1">
+          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider leading-tight">Comm. Paid</p>
+          <p className="text-xl font-black text-blue-600 mt-1 break-words">
             {formatCurrency(user.commissionSummary?.commissionPaid ?? 0)}
           </p>
         </div>
 
         {/* 5. Commission Pending */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs col-span-2 sm:col-span-2 lg:col-span-2">
-          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider truncate">Comm. Pending</p>
-          <p className="text-xl font-black text-amber-600 mt-1">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs col-span-1">
+          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider leading-tight">Comm. Pending</p>
+          <p className="text-xl font-black text-amber-600 mt-1 break-words">
             {formatCurrency(user.commissionSummary?.commissionPending ?? 0)}
           </p>
         </div>
       </div>
 
-      {/* ── Agent Commission Tracker (Agents Only) ────────────────────── */}
-      {profile.role === "AGENT" && (
-        <AgentCommissionTracker agentId={user.id} isAdmin={true} />
-      )}
-
-      {/* ── Agent Assigned Leads & Interested Properties ───────────────── */}
-      {(profile.role === "AGENT" || (user.leadsOwned && user.leadsOwned.length > 0)) && (
-        <>
-          <AgentAssignedLeadsSection leads={user.leadsOwned || []} />
-          <AgentInterestedPropertiesSection leads={user.leadsOwned || []} />
-        </>
-      )}
-
-      {/* ── User Property Portfolio (Bought & Sold) ────────────────────── */}
-      <UserPropertyPortfolioSection
-        boughtProperties={user.boughtProperties || []}
-        soldProperties={user.soldProperties || []}
-      />
-
-      {/* ── User Transaction History ────────────────────────────────────── */}
-      <UserTransactionHistorySection
-        transactions={user.userTransactions || []}
-        userId={user.id}
-        userEmail={user.email}
-        userName={user.name}
-      />
+      {/* ── CRM Activity (HubSpot-style timeline) ────────────────────────── */}
+      <section className="rounded-2xl border bg-white overflow-hidden">
+        <div className="bg-gradient-to-r from-slate-900 to-slate-700 px-6 py-4">
+          <h2 className="text-lg font-semibold text-white">CRM Activity</h2>
+          <p className="text-slate-300 text-xs mt-0.5">Log notes, emails, calls, tasks & meetings for this contact</p>
+        </div>
+        <div className="p-5">
+          <UserCrmActivity contactId={user.id} contactName={user.name} contactEmail={user.email} />
+        </div>
+      </section>
 
       {/* ── Account & Contact ───────────────────────────────────────────── */}
       <section className="rounded-2xl border bg-white p-5 space-y-3 max-w-4xl">
@@ -1583,10 +1658,19 @@ export function UserDetailEditor({
               <span className="h-6 w-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">3</span>
               Identity Documents
             </h3>
-            <p className="text-xs text-slate-500 mb-4 ml-8">
-              Upload or replace user documents. Accepted: JPG, PNG, PDF (max 5 MB).
-              Documents marked <span className="text-red-500 font-bold">*</span> are required for KYC approval.
-            </p>
+            <div className="text-xs text-slate-500 mb-4 ml-8 space-y-1.5">
+              <p>
+                Documents marked <span className="text-red-500 font-bold">*</span> are required for KYC approval.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 font-semibold">
+                  🖼️ Photo, Aadhaar (front/back), PAN, Driving Licence, Voter ID → <b>JPG / PNG only, max 5 MB</b>
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-lg bg-violet-50 text-violet-700 border border-violet-100 px-2 py-1 font-semibold">
+                  📄 Other ID Document &amp; Address Proof → <b>PDF only, max 5 MB</b>
+                </span>
+              </div>
+            </div>
 
             {/* Progress bar */}
             <div className="ml-8 mb-4">
@@ -1616,38 +1700,9 @@ export function UserDetailEditor({
             </div>
           </div>
 
-          {/* Admin Notes */}
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-              <span className="h-6 w-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">4</span>
-              Admin Notes
-            </h3>
-            <Textarea
-              value={kyc.adminNotes}
-              onChange={(e) => setKyc((k) => ({ ...k, adminNotes: e.target.value }))}
-              className="min-h-[80px]"
-              placeholder="Internal notes about this KYC verification..."
-            />
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                <Clock className="h-3.5 w-3.5 text-slate-400" />
-                <span>
-                  {adminNoteSavedAt ? `Last saved: ${adminNoteSavedAt}` : "No timestamp log yet"}
-                </span>
-              </div>
-              <Button
-                type="button"
-                variant="gold"
-                size="sm"
-                onClick={handleSaveAdminNotes}
-                disabled={busy}
-                className="gap-1.5 shadow-sm text-xs font-bold"
-              >
-                <Save className="h-3.5 w-3.5" />
-                Save Note
-              </Button>
-            </div>
-          </div>
+          {/* KYC Admin Notes removed — admin notes now live in the CRM Activity
+              section at the top of this page (notes, emails, calls, tasks, meetings
+              with author, user ID, timestamp, edit-audit and comments). */}
 
           {/* Quick Approve/Reject buttons */}
           <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
@@ -1676,6 +1731,33 @@ export function UserDetailEditor({
           </div>
         </div>
       </section>
+
+      {/* ── Agent Assigned Leads & Interested Properties ───────────────── */}
+      {(profile.role === "AGENT" || (user.leadsOwned && user.leadsOwned.length > 0)) && (
+        <>
+          <AgentAssignedLeadsSection leads={user.leadsOwned || []} />
+          <AgentInterestedPropertiesSection leads={user.leadsOwned || []} />
+        </>
+      )}
+
+      {/* ── User Property Portfolio (Bought & Sold) ────────────────────── */}
+      <UserPropertyPortfolioSection
+        boughtProperties={user.boughtProperties || []}
+        soldProperties={user.soldProperties || []}
+      />
+
+      {/* ── User Transaction History ────────────────────────────────────── */}
+      <UserTransactionHistorySection
+        transactions={user.userTransactions || []}
+        userId={user.id}
+        userEmail={user.email}
+        userName={user.name}
+      />
+
+      {/* ── Agent Commission Tracker (Agents Only) ────────────────────── */}
+      {profile.role === "AGENT" && (
+        <AgentCommissionTracker agentId={user.id} isAdmin={true} />
+      )}
 
       {/* ── Loan Applications ────────────────────────────────────────────── */}
       <section className="rounded-2xl border bg-white overflow-hidden">
@@ -1946,6 +2028,8 @@ export function UserDetailEditor({
                       </div>
 
                       <LoanAdminNotes
+                        contactId={user.id}
+                        loanId={loan.id}
                         notes={loan.adminNotes}
                         onChange={(val) => updateLoan(idx, "adminNotes", val)}
                       />

@@ -11,6 +11,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
 
 import { validateUserDobAge } from "@/lib/user-validation";
+import { COUNTRY_DIAL_CODES, dialCodeLabel } from "@/lib/country-codes";
 
 export function CreateUserForm() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export function CreateUserForm() {
     name: "",
     email: "",
     password: "",
+    countryCode: "+91",
     phone: "",
     pan: "",
     aadhar: "",
@@ -44,13 +46,11 @@ export function CreateUserForm() {
       }
     }
 
-    if (form.phone.trim()) {
-      const digits = form.phone.replace(/\D/g, "");
-      if (digits.length < 10 || digits.length > 15) {
-        setError("Phone number must contain between 10 and 15 digits.");
-        setBusy(false);
-        return;
-      }
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    if (phoneDigits && phoneDigits.length !== 10) {
+      setError("Phone number must be exactly 10 digits (country code is selected separately).");
+      setBusy(false);
+      return;
     }
 
     if (form.pan.trim() && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(form.pan.trim())) {
@@ -70,7 +70,8 @@ export function CreateUserForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
-        phone: form.phone.trim() || undefined,
+        phone: phoneDigits || undefined,
+        countryCode: phoneDigits ? form.countryCode : undefined,
         pan: form.pan.trim() || undefined,
         aadhar: form.aadhar.trim() || undefined,
         dob: form.dob || undefined,
@@ -127,12 +128,26 @@ export function CreateUserForm() {
           </div>
           <div>
             <Label>Phone (optional)</Label>
-            <Input 
-              type="tel" 
-              placeholder="+91 98765 43210 (10-15 digits)" 
-              value={form.phone} 
-              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} 
-            />
+            <div className="flex gap-2">
+              <select
+                value={form.countryCode}
+                onChange={(e) => setForm((f) => ({ ...f, countryCode: e.target.value }))}
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2 text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-gold shrink-0 max-w-[150px]"
+              >
+                {COUNTRY_DIAL_CODES.map((c) => (
+                  <option key={`${c.code}-${c.name}`} value={c.code}>{dialCodeLabel(c)}</option>
+                ))}
+              </select>
+              <Input
+                type="tel"
+                inputMode="numeric"
+                placeholder="10-digit number"
+                maxLength={10}
+                value={form.phone}
+                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
+                className="flex-1"
+              />
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

@@ -229,115 +229,93 @@ export function AgentAssignedLeadsSection({ leads }: { leads: AgentLead[] }) {
           </p>
         </div>
       ) : (
-        /* Leads Grid / Cards */
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-          {filteredLeads.map((lead) => {
-            const hasBudget = (lead.budgetMin && lead.budgetMin > 0) || (lead.budgetMax && lead.budgetMax > 0);
-            const linkedProp = lead.property || lead.inquiry?.property || lead.showing?.property;
-
-            return (
-              <div
-                key={lead.id}
-                className="rounded-xl border border-slate-200 bg-white p-4 space-y-3 hover:border-slate-300 transition shadow-sm flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  {/* Top Info Header */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <Link
-                        href={lead.userId ? `/admin/users/${lead.userId}` : `/admin/leads?search=${encodeURIComponent(lead.name || lead.email)}`}
-                        className="text-sm font-bold text-slate-900 hover:text-blue-700 hover:underline inline-flex items-center gap-1"
-                      >
-                        {lead.name}
-                        <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />
-                      </Link>
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-1">
-                        <span className="flex items-center gap-1">
-                          <Mail className="h-3 w-3 text-slate-400" />
-                          <a href={`mailto:${lead.email}`} className="hover:underline hover:text-slate-900">
-                            {lead.email}
+        /* Leads List / Table */
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                  <th className="p-3.5">Lead &amp; Contact</th>
+                  <th className="p-3.5">Stage</th>
+                  <th className="p-3.5">Source</th>
+                  <th className="p-3.5">Assigned</th>
+                  <th className="p-3.5">Budget</th>
+                  <th className="p-3.5">Interested Property</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredLeads.map((lead) => {
+                  const hasBudget = (lead.budgetMin && lead.budgetMin > 0) || (lead.budgetMax && lead.budgetMax > 0);
+                  const linkedProp = lead.property || lead.inquiry?.property || lead.showing?.property;
+                  return (
+                    <tr key={lead.id} className="hover:bg-slate-50/60 transition-colors align-top">
+                      {/* Lead & Contact */}
+                      <td className="p-3.5">
+                        <Link
+                          href={lead.userId ? `/admin/users/${lead.userId}` : `/admin/leads?search=${encodeURIComponent(lead.name || lead.email)}`}
+                          className="text-sm font-bold text-slate-900 hover:text-blue-700 hover:underline inline-flex items-center gap-1"
+                        >
+                          {lead.name}
+                          <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />
+                        </Link>
+                        <div className="flex flex-col gap-0.5 text-[11px] text-slate-500 mt-1">
+                          <a href={`mailto:${lead.email}`} className="flex items-center gap-1 hover:underline hover:text-slate-900">
+                            <Mail className="h-3 w-3 text-slate-400" /> {lead.email}
                           </a>
-                        </span>
-                        {lead.phone && (
-                          <span className="flex items-center gap-1">
-                            <Phone className="h-3 w-3 text-slate-400" />
-                            <a href={`tel:${lead.phone}`} className="hover:underline hover:text-slate-900">
-                              {lead.phone}
+                          {lead.phone && (
+                            <a href={`tel:${lead.phone}`} className="flex items-center gap-1 hover:underline hover:text-slate-900">
+                              <Phone className="h-3 w-3 text-slate-400" /> {lead.phone}
                             </a>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      {getStageBadge(lead.stage || lead.leadStatus || "NEW")}
-                      <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
-                        {lead.source}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Details Badges & Budget */}
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Assigned Date</span>
-                      <span className="font-semibold text-slate-800 flex items-center gap-1 mt-0.5">
-                        <Calendar className="h-3 w-3 text-slate-400" />
-                        {new Date(lead.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Budget</span>
-                      <span className="font-semibold text-slate-800 flex items-center gap-1 mt-0.5">
-                        <IndianRupee className="h-3 w-3 text-slate-400" />
+                          )}
+                        </div>
+                      </td>
+                      {/* Stage */}
+                      <td className="p-3.5 whitespace-nowrap">{getStageBadge(lead.stage || lead.leadStatus || "NEW")}</td>
+                      {/* Source */}
+                      <td className="p-3.5">
+                        <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                          {lead.source}
+                        </span>
+                      </td>
+                      {/* Assigned Date */}
+                      <td className="p-3.5 whitespace-nowrap">
+                        <span className="font-semibold text-slate-800 flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-slate-400" />
+                          {new Date(lead.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                        </span>
+                      </td>
+                      {/* Budget */}
+                      <td className="p-3.5 whitespace-nowrap">
                         {hasBudget ? (
-                          <>
-                            {lead.budgetMin ? formatCurrencyINR(lead.budgetMin) : "Any"} -{" "}
-                            {lead.budgetMax ? formatCurrencyINR(lead.budgetMax) : "Flexible"}
-                          </>
+                          <span className="font-semibold text-slate-800 flex items-center gap-1">
+                            <IndianRupee className="h-3 w-3 text-slate-400" />
+                            {lead.budgetMin ? formatCurrencyINR(lead.budgetMin) : "Any"} - {lead.budgetMax ? formatCurrencyINR(lead.budgetMax) : "Flexible"}
+                          </span>
                         ) : (
                           <span className="text-slate-400 italic">Not specified</span>
                         )}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Requirements / Notes */}
-                  {(lead.requirements || lead.notes) && (
-                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs space-y-1">
-                      {lead.requirements && (
-                        <p className="text-slate-700 font-medium">
-                          <span className="font-bold text-slate-900">Requirements: </span>
-                          {lead.requirements}
-                        </p>
-                      )}
-                      {lead.notes && (
-                        <p className="text-slate-500 italic">
-                          <span className="font-bold text-slate-700 not-italic">Notes: </span>
-                          {lead.notes}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Linked Interested Property snippet */}
-                {linkedProp && (
-                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs mt-2">
-                    <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1 truncate">
-                      <Building2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                      Interested Property: <span className="font-bold text-slate-900 truncate">{linkedProp.title}</span>
-                    </span>
-                    <Link
-                      href={`/admin/properties/${linkedProp.id}/edit`}
-                      className="text-[11px] font-bold text-slate-900 hover:text-slate-700 inline-flex items-center gap-0.5 underline shrink-0"
-                    >
-                      View Property <ArrowUpRight className="h-3 w-3" />
-                    </Link>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                      </td>
+                      {/* Interested Property */}
+                      <td className="p-3.5">
+                        {linkedProp ? (
+                          <Link
+                            href={`/admin/properties/${linkedProp.id}/edit`}
+                            className="font-bold text-slate-900 hover:text-blue-700 hover:underline inline-flex items-center gap-1"
+                          >
+                            <Building2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                            <span className="truncate max-w-[180px]">{linkedProp.title}</span>
+                            <ArrowUpRight className="h-3 w-3 text-slate-400" />
+                          </Link>
+                        ) : (
+                          <span className="text-slate-400 italic">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </section>
@@ -375,90 +353,82 @@ export function AgentInterestedPropertiesSection({ leads }: { leads: AgentLead[]
           </p>
         </div>
       ) : (
-        /* Properties Grid */
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-          {interestedProperties.map(({ property, associatedLeads }) => {
-            const thumbnail = getPropertyThumbnail(property);
-
-            return (
-              <div
-                key={property.id}
-                className="rounded-xl border border-slate-200 bg-white p-4 space-y-3 hover:border-slate-300 transition shadow-sm flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  {/* Header & Symbol */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      {thumbnail ? (
-                        <img
-                          src={thumbnail}
-                          alt={property.title}
-                          className="h-12 w-12 rounded-lg object-cover border border-slate-200 shrink-0"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0">
-                          {property.symbol || "PROP"}
+        /* Properties List / Table */
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                  <th className="p-3.5">Property</th>
+                  <th className="p-3.5">Location</th>
+                  <th className="p-3.5">Price</th>
+                  <th className="p-3.5">Interested Lead(s)</th>
+                  <th className="p-3.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {interestedProperties.map(({ property, associatedLeads }) => {
+                  const thumbnail = getPropertyThumbnail(property);
+                  return (
+                    <tr key={property.id} className="hover:bg-slate-50/60 transition-colors align-top">
+                      {/* Property */}
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-2.5">
+                          {thumbnail ? (
+                            <img src={thumbnail} alt={property.title} className="h-10 w-10 rounded-lg object-cover border border-slate-200 shrink-0" />
+                          ) : (
+                            <div className="h-10 w-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-[10px] shrink-0">
+                              {property.symbol || "PROP"}
+                            </div>
+                          )}
+                          <Link href={`/admin/properties/${property.id}/edit`} className="text-sm font-bold text-slate-900 hover:text-blue-700 hover:underline">
+                            {property.title}
+                          </Link>
                         </div>
-                      )}
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-900 leading-tight">
-                          {property.title}
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {property.city}, {property.state} {property.address ? `· ${property.address}` : ""}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-xs font-extrabold text-slate-900 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg shrink-0">
-                      {formatCurrencyINR(property.price)}
-                    </span>
-                  </div>
-
-                  {/* Associated Leads Pills */}
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-1.5">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                      <span className="flex items-center gap-1">
-                        <UserCheck className="h-3 w-3 text-slate-400" />
-                        Interested Lead(s) ({associatedLeads.length})
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 pt-0.5">
-                      {associatedLeads.map((lead) => (
-                        <Link
-                          key={lead.id}
-                          href={lead.userId ? `/admin/users/${lead.userId}` : `/admin/leads?search=${encodeURIComponent(lead.name || lead.email)}`}
-                          className="inline-flex items-center gap-1 text-xs font-semibold bg-white border border-slate-200 hover:border-slate-400 px-2 py-0.5 rounded-md text-slate-800 hover:text-blue-700 transition shadow-2xs group"
-                        >
-                          👤 <span className="font-bold underline group-hover:text-blue-700">{lead.name}</span>
-                          <span className="text-[10px] text-slate-500 font-medium">({lead.stage})</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Property Clickable Navigation Links */}
-                <div className="flex items-center gap-2 pt-3 border-t border-slate-100 mt-3">
-                  <Link
-                    href={`/admin/properties/${property.id}/edit`}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-2 text-xs font-bold transition shadow-xs text-center"
-                  >
-                    <Edit className="h-3.5 w-3.5" />
-                    Property Details &amp; Edit
-                  </Link>
-                  <Link
-                    href={`/properties/${property.slug || property.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs font-semibold border border-slate-200 transition text-center"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Public View
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
+                      </td>
+                      {/* Location */}
+                      <td className="p-3.5 text-slate-600">
+                        {property.city}, {property.state}
+                        {property.address ? <span className="block text-[11px] text-slate-400">{property.address}</span> : null}
+                      </td>
+                      {/* Price */}
+                      <td className="p-3.5 whitespace-nowrap">
+                        <span className="text-xs font-extrabold text-slate-900 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
+                          {formatCurrencyINR(property.price)}
+                        </span>
+                      </td>
+                      {/* Associated Leads */}
+                      <td className="p-3.5">
+                        <div className="flex flex-wrap gap-1.5 max-w-[260px]">
+                          {associatedLeads.map((lead) => (
+                            <Link
+                              key={lead.id}
+                              href={lead.userId ? `/admin/users/${lead.userId}` : `/admin/leads?search=${encodeURIComponent(lead.name || lead.email)}`}
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold bg-white border border-slate-200 hover:border-slate-400 px-2 py-0.5 rounded-md text-slate-800 hover:text-blue-700 transition"
+                            >
+                              👤 <span className="font-bold underline">{lead.name}</span>
+                              <span className="text-[10px] text-slate-500">({lead.stage})</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </td>
+                      {/* Actions */}
+                      <td className="p-3.5 whitespace-nowrap text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <Link href={`/admin/properties/${property.id}/edit`} className="inline-flex items-center gap-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 px-2.5 py-1.5 text-[11px] font-bold transition">
+                            <Edit className="h-3.5 w-3.5" /> Edit
+                          </Link>
+                          <Link href={`/properties/${property.slug || property.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 text-[11px] font-semibold border border-slate-200 transition">
+                            <ExternalLink className="h-3.5 w-3.5" /> View
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </section>

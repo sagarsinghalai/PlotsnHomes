@@ -79,6 +79,12 @@ const patchSchema = z.object({
   commissionRate: z.number().min(0).max(100).optional(),
   kyc: kycSchema.optional(),
   loans: z.array(loanAppSchema).optional(),
+  // A single new admin note to APPEND (with author + timestamp) to the KYC
+  // notes history, instead of overwriting adminNotes.
+  addKycNote: z.string().trim().min(1).max(4000).optional(),
+  // A single new admin note to APPEND (with author + user ID + timestamp) to a
+  // specific loan application's notes history.
+  addLoanNote: z.object({ loanId: z.string().min(1), text: z.string().trim().min(1).max(4000) }).optional(),
 });
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
@@ -129,6 +135,46 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       if (adminCount <= 1) {
         return NextResponse.json({ error: "Cannot demote the last super admin" }, { status: 400 });
       }
+    }
+
+    // Append a new KYC admin note (with author name + user ID + timestamp).
+    let appendedNotes: string | undefined;
+    if (data.addKycNote) {
+      const admin = auth.session?.user?.id
+        ? await prisma.user.findUnique({ where: { id: auth.session.user.id }, select: { name: true, userId: true } })
+        : null;
+      const ts = new Date().toLocaleString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+      });
+      const author = `${admin?.name ?? "Admin"} · ${admin?.userId ?? "—"}`;
+      const entry = `[${ts}] [${author}] ${data.addKycNote}`;
+      const existing = await prisma.kycProfile.findUnique({ where: { userId: params.id }, select: { adminNotes: true } });
+      appendedNotes = existing?.adminNotes ? `${existing.adminNotes}\n\n${entry}` : entry;
+      if (existing) {
+        await prisma.kycProfile.update({ where: { userId: params.id }, data: { adminNotes: appendedNotes } });
+      } else {
+        await prisma.kycProfile.create({ data: { userId: params.id, fullName: user.name, adminNotes: appendedNotes, status: KycStatus.PENDING } });
+      }
+    }
+
+    // Append a new loan admin note (with author name + user ID + timestamp).
+    let appendedLoanNotes: string | undefined;
+    if (data.addLoanNote) {
+      const loan = await prisma.loanApplication.findFirst({
+        where: { id: data.addLoanNote.loanId, userId: params.id },
+        select: { id: true, adminNotes: true },
+      });
+      if (!loan) return NextResponse.json({ error: "Loan application not found" }, { status: 404 });
+      const admin = auth.session?.user?.id
+        ? await prisma.user.findUnique({ where: { id: auth.session.user.id }, select: { name: true, userId: true } })
+        : null;
+      const ts = new Date().toLocaleString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+      });
+      const author = `${admin?.name ?? "Admin"} · ${admin?.userId ?? "—"}`;
+      const entry = `[${ts}] [${author}] ${data.addLoanNote.text}`;
+      appendedLoanNotes = loan.adminNotes ? `${loan.adminNotes}\n\n${entry}` : entry;
+      await prisma.loanApplication.update({ where: { id: loan.id }, data: { adminNotes: appendedLoanNotes } });
     }
 
     const updated = await prisma.$transaction(async (tx) => {
@@ -272,7 +318,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       return u;
     });
 
-    return NextResponse.json({ ok: true, user: updated });
+    return NextResponse.json({ ok: true, user: updated, appendedNotes, appendedLoanNotes });
   } catch (e) {
     if (e instanceof z.ZodError) {
       return NextResponse.json({ error: e.issues[0]?.message }, { status: 400 });

@@ -36,6 +36,7 @@ export interface TableToolbarManagerProps {
   tableTitle?: string;
   addRowLabel?: string;
   onAddRow?: () => void;
+  importSlot?: React.ReactNode;
   columns: ColumnDef[];
   visibleColumnIds: string[];
   onToggleColumn: (columnId: string) => void;
@@ -50,6 +51,7 @@ export function TableToolbarManager({
   tableTitle,
   addRowLabel = "Add Row",
   onAddRow,
+  importSlot,
   columns,
   visibleColumnIds,
   onToggleColumn,
@@ -363,6 +365,9 @@ export function TableToolbarManager({
           <Columns className="h-4 w-4 text-amber-600 dark:text-amber-400" />
           <span>+ Add Column</span>
         </Button>
+
+        {/* Import slot (e.g. bulk import) — sits to the LEFT of Add Row */}
+        {importSlot}
 
         {/* + Add Row Button */}
         {onAddRow && (

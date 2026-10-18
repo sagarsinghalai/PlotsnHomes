@@ -7,6 +7,7 @@ import { PropertyDetailTabs } from "@/components/property/property-detail-tabs";
 import { AgentCard } from "@/components/property/agent-card";
 import { PaymentOptions } from "@/components/property/payment-options";
 import { InquiryForm } from "@/components/property/inquiry-form";
+import { LeadCaptureForm } from "@/components/public/lead-capture-form";
 import { PropertyCard } from "@/components/property/property-card";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
@@ -267,6 +268,12 @@ export default async function PropertyDetailPage({
                 <Link href="/login" className="text-gold-dark underline">Log in</Link> to invest or apply for a loan
               </p>
             )}
+            <LeadCaptureForm
+              propertyId={property.id}
+              source="Property Page"
+              title="Interested in this property?"
+              subtitle="Leave your name and phone number — our expert will call you back."
+            />
             <InquiryForm
               propertyId={property.id}
               defaultName={session?.user?.name ?? ""}

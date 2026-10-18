@@ -130,3 +130,5 @@ __MACOSX/
 
 # Turborepo
 .turbo/
+# Database exports (contain user data — never commit)
+db-export/

@@ -14,10 +14,12 @@ const createSchema = z.object({
   phone: z.string().optional().nullable().or(z.literal("")).refine(
     (val) => {
       if (!val) return true;
-      return /^\+?[1-9]\d{9,14}$/.test(val);
+      // Exactly 10 digits — the country code is stored separately.
+      return /^\d{10}$/.test(val.replace(/\D/g, "")) && val.replace(/\D/g, "").length === 10;
     },
-    { message: "Invalid phone number format." }
+    { message: "Phone number must be exactly 10 digits (country code is stored separately)." }
   ),
+  countryCode: z.string().optional().nullable().or(z.literal("")),
   pan: z.string().optional().nullable().or(z.literal("")),
   aadhar: z.string().optional().nullable().or(z.literal("")),
   dob: z.string().optional().nullable().or(z.literal("")),
@@ -66,7 +68,8 @@ export async function POST(req: Request) {
         name: data.name,
         email,
         passwordHash,
-        phone: data.phone ?? null,
+        phone: data.phone ? data.phone.replace(/\D/g, "") : null,
+        countryCode: data.phone ? (data.countryCode || "+91") : undefined,
         pan: data.pan?.trim().toUpperCase() ?? null,
         aadhar: data.aadhar?.trim() ?? null,
         dob: data.dob ? new Date(data.dob) : null,

@@ -10,6 +10,7 @@ import { getSiteSetting, SITE_SETTING_KEYS, HeroStat, HeroCard, FeaturedArea, He
 import { formatCurrency, parseImages } from "@/lib/utils";
 import { ShieldCheck, CreditCard, Home, Coins, TrendingUp, ArrowRight, Check, ArrowDownLeft, ArrowUpRight, BarChart3, Search, Activity, Landmark, Smartphone, Zap, Sparkles, CheckCircle, Wallet } from "lucide-react";
 import { BodyThemeSync } from "@/components/layout/body-theme-sync";
+import { LeadCaptureForm } from "@/components/public/lead-capture-form";
 
 export default async function HomePage() {
   const [
@@ -685,6 +686,35 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Lead-gen CTA — captures Name + Phone straight into the CRM */}
+      <section id="get-in-touch" className="relative bg-slate-50 py-20 border-t border-slate-200/60 overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a03_1px,transparent_1px),linear-gradient(to_bottom,#0f172a03_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-60" />
+        <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 grid gap-10 lg:grid-cols-2 lg:items-center">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-widest text-gold-dark">Talk to an expert</p>
+            <h2 className="mt-2 font-display text-3xl font-bold text-slate-900 sm:text-4xl">
+              Ready to find your next property?
+            </h2>
+            <p className="mt-4 text-slate-600 leading-relaxed">
+              Share your name and phone number and our property advisors will call you back to
+              understand your requirements — whether you&apos;re buying, renting, or investing.
+            </p>
+            <ul className="mt-6 space-y-2 text-sm text-slate-600">
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold-dark" /> No spam — one quick, friendly call</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold-dark" /> Personalised property recommendations</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold-dark" /> Guidance on payments, loans &amp; KYC</li>
+            </ul>
+          </div>
+          <div className="mx-auto w-full max-w-md">
+            <LeadCaptureForm
+              source="Home Page"
+              title="Request a callback"
+              subtitle="Fill in your details and we'll reach out shortly."
+            />
+          </div>
+        </div>
+      </section>
     </>
   );
 }

@@ -21,10 +21,16 @@ import {
   FolderOpen,
   ChevronRight,
   ChevronDown,
+  Download,
+  Upload,
+  FileSpreadsheet,
+  FileText,
+  Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { roleLabel } from "@/lib/roles";
+import { OrgBulkImportModal, TemplateCol } from "@/components/admin/org-bulk-import-modal";
 
 export type OrgUser = {
   id: string;
@@ -178,6 +184,118 @@ export function OrganizationUnitsManager({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [showAllUsersOverride, setShowAllUsersOverride] = useState(false);
+
+  // Export / Bulk upload
+  const [exportOpen, setExportOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+
+  // Per-tab config for export + bulk upload (not applicable to the matrix tab).
+  const tabConfig = useMemo(() => {
+    switch (activeTab) {
+      case "orgs":
+        return {
+          actionType: "ORGANIZATION",
+          label: "White Label",
+          template: [
+            { header: "Name", example: "Acme Realty" },
+            { header: "Code", example: "WL-ACME" },
+            { header: "Domain", example: "acme.plotsnhomes.com" },
+            { header: "Status", example: "ACTIVE" },
+          ] as TemplateCol[],
+          parentHint: "",
+          rows: () => orgs.map((o) => ({
+            Code: o.code, Name: o.name, Domain: o.domain ?? "",
+            "White Label Admin": o.whiteLabelAdmin?.name ?? "Unassigned",
+            Franchises: o._count?.franchises ?? 0, Users: o._count?.users ?? 0, Status: o.status,
+          })),
+        };
+      case "franchises":
+        return {
+          actionType: "FRANCHISE",
+          label: "Franchise",
+          template: [
+            { header: "Name", example: "West Coast Franchise" },
+            { header: "Code", example: "FR-WEST" },
+            { header: "Organization", example: "Acme Realty" },
+            { header: "Location", example: "Mumbai" },
+            { header: "Status", example: "ACTIVE" },
+          ] as TemplateCol[],
+          parentHint: "The 'Organization' column must match an existing White Label name (leave blank to skip linking).",
+          rows: () => franchises.map((f) => ({
+            Code: f.code, Name: f.name, Organization: f.organization?.name ?? "",
+            "Franchise Admin": f.franchiseAdmin?.name ?? "Unassigned",
+            Location: f.location ?? "", Branches: f._count?.branches ?? 0, Users: f._count?.users ?? 0, Status: f.status,
+          })),
+        };
+      case "branches":
+        return {
+          actionType: "BRANCH",
+          label: "Branch",
+          template: [
+            { header: "Name", example: "Mumbai West Branch" },
+            { header: "Code", example: "BR-MUM-WEST" },
+            { header: "Franchise", example: "West Coast Franchise" },
+            { header: "City", example: "Mumbai" },
+            { header: "Status", example: "ACTIVE" },
+          ] as TemplateCol[],
+          parentHint: "The 'Franchise' column must match an existing Franchise name (leave blank to skip linking).",
+          rows: () => branches.map((b) => ({
+            Code: b.code, Name: b.name, Franchise: b.franchise?.name ?? "",
+            "Branch Manager": b.branchManager?.name ?? "Unassigned",
+            City: b.city ?? "", Departments: b._count?.departments ?? 0, Users: b._count?.users ?? 0, Status: b.status,
+          })),
+        };
+      case "depts":
+        return {
+          actionType: "DEPARTMENT",
+          label: "Department",
+          template: [
+            { header: "Name", example: "Sales Department" },
+            { header: "Code", example: "DEPT-SALES" },
+            { header: "Branch", example: "Mumbai West Branch" },
+            { header: "Status", example: "ACTIVE" },
+          ] as TemplateCol[],
+          parentHint: "The 'Branch' column must match an existing Branch name (leave blank to skip linking).",
+          rows: () => depts.map((d) => ({
+            Code: d.code, Name: d.name, Branch: d.branch?.name ?? "",
+            "Department Head": d.departmentHead?.name ?? "Unassigned",
+            Teams: d._count?.teams ?? 0, Users: d._count?.users ?? 0, Status: d.status,
+          })),
+        };
+      case "teams":
+        return {
+          actionType: "TEAM",
+          label: "Team",
+          template: [
+            { header: "Name", example: "Team Alpha" },
+            { header: "Code", example: "TEAM-ALPHA" },
+            { header: "Department", example: "Sales Department" },
+            { header: "Status", example: "ACTIVE" },
+          ] as TemplateCol[],
+          parentHint: "The 'Department' column must match an existing Department name (leave blank to skip linking).",
+          rows: () => teams.map((t) => ({
+            Code: t.code, Name: t.name, Department: t.department?.name ?? "",
+            "Team Leader": t.teamLeader?.name ?? "Unassigned",
+            Users: t._count?.users ?? 0, Status: t.status,
+          })),
+        };
+      default:
+        return null;
+    }
+  }, [activeTab, orgs, franchises, branches, depts, teams]);
+
+  async function exportCurrentTab(format: "xlsx" | "csv") {
+    setExportOpen(false);
+    if (!tabConfig) return;
+    const XLSX = await import("xlsx");
+    const rows = tabConfig.rows();
+    const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ Info: "No records" }]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, tabConfig.label.slice(0, 28));
+    const date = new Date().toISOString().slice(0, 10);
+    const slug = tabConfig.label.toLowerCase().replace(/\s+/g, "-");
+    XLSX.writeFile(wb, `plotsnhomes-${slug}-${date}.${format}`, { bookType: format });
+  }
 
   // Form Fields
   const [formName, setFormName] = useState("");
@@ -1009,6 +1127,48 @@ export function OrganizationUnitsManager({
               <span>Folder Structure</span>
             </button>
 
+            {/* Export dropdown */}
+            {tabConfig && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setExportOpen((o) => !o)}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-bold px-3 py-1.5 text-xs border border-slate-300 shadow-2xs transition cursor-pointer whitespace-nowrap"
+                  title="Export the current list"
+                >
+                  <Download className="h-4 w-4 text-slate-500 shrink-0" />
+                  <span>Export</span>
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${exportOpen ? "rotate-180" : ""}`} />
+                </button>
+                {exportOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setExportOpen(false)} />
+                    <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-xl z-20 overflow-hidden">
+                      <button type="button" onClick={() => exportCurrentTab("xlsx")} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
+                        <FileSpreadsheet className="h-4 w-4 text-emerald-600" /> Excel (.xlsx)
+                      </button>
+                      <button type="button" onClick={() => exportCurrentTab("csv")} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition border-t border-slate-100">
+                        <FileText className="h-4 w-4 text-blue-600" /> CSV (.csv)
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Bulk Upload Button */}
+            {tabConfig && (
+              <button
+                type="button"
+                onClick={() => setBulkOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-3 py-1.5 text-xs border border-emerald-300 shadow-2xs transition cursor-pointer whitespace-nowrap"
+                title="Bulk upload from Excel / CSV"
+              >
+                <Upload className="h-4 w-4 shrink-0" />
+                <span>Bulk Upload</span>
+              </button>
+            )}
+
             {/* + Add New Button */}
             <button
               type="button"
@@ -1021,6 +1181,18 @@ export function OrganizationUnitsManager({
           </div>
         )}
       </div>
+
+      {tabConfig && (
+        <OrgBulkImportModal
+          open={bulkOpen}
+          onClose={() => setBulkOpen(false)}
+          onImported={() => window.location.reload()}
+          actionType={tabConfig.actionType}
+          entityLabel={tabConfig.label}
+          templateColumns={tabConfig.template}
+          parentHint={tabConfig.parentHint}
+        />
+      )}
 
       {/* Plain White Hierarchy Scope Filter Bar */}
       {activeTab !== "matrix" && (

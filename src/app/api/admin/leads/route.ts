@@ -9,8 +9,8 @@ import { notifyAgentNewLead } from "@/lib/whatsapp-central";
 
 const createSchema = z.object({
   name: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().nullable().optional(),
+  email: z.union([z.string().email(), z.literal("")]).nullable().optional(),
+  phone: z.string().min(1, "Phone number is required"),
   source: z.string().optional(),
   stage: z.string().optional(),
   score: z.number().int().min(0).max(100).optional(),
@@ -95,8 +95,8 @@ export async function POST(req: Request) {
     const lead = await prisma.lead.create({
       data: {
         name: data.name,
-        email: data.email,
-        phone: data.phone ?? null,
+        email: data.email ? data.email : "",
+        phone: data.phone,
         source: data.source ?? "Website",
         stage: stageEnum,
         score: computedScore,

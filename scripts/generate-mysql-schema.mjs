@@ -42,6 +42,8 @@ const TEXT_FIELDS = {
   SubscriptionPlan: ["description", "featuresJson"],
   UserSubscription: ["notes"],
   CustomFieldDef: ["options"],
+  UserActivity: ["body", "subject", "outcome"],
+  ActivityComment: ["body"],
 };
 
 const src = readFileSync(SRC, "utf8");

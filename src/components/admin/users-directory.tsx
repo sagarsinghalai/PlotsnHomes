@@ -1,16 +1,18 @@
 "use client";
 
 import { Role } from "@prisma/client";
-import { Pencil, Plus, Search, SlidersHorizontal, Users, UserCheck, ShieldCheck, UserX, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Pencil, Plus, Search, SlidersHorizontal, Users, UserCheck, ShieldCheck, UserX, X, Download, ChevronDown, FileSpreadsheet, FileText, Loader2, Upload, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, useRef, useEffect } from "react";
-import { hasCrmAccess, isCustomerRole, roleLabel } from "@/lib/roles";
+import { hasCrmAccess, roleLabel } from "@/lib/roles";
 import { activityLabel, isUserOnline } from "@/lib/user-activity";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { TableToolbarManager } from "@/components/ui/table-toolbar-manager";
 import { useTableColumns, useCustomCellData } from "@/hooks/use-table-columns";
 import { EditableCell } from "@/components/ui/editable-cell";
 import { UserDetailModal } from "@/components/admin/user-detail-modal";
+import { BulkImportUsersModal } from "@/components/admin/bulk-import-users-modal";
 
 import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
 
@@ -28,6 +30,7 @@ export type UserRow = {
   country?: string | null;
   role: Role;
   managerName?: string | null;
+  department?: string | null;
   active: boolean;
   lastActiveAt: string | null;
   createdAt: string;
@@ -35,7 +38,24 @@ export type UserRow = {
   _count: { properties: number; transactions: number };
 };
 
-type Tab = "all" | "customers" | "staff" | "agents";
+type Tab = "all" | Role;
+
+// Full role taxonomy in valid hierarchical order (platform → franchise → team → customers).
+const ROLE_HIERARCHY: Role[] = [
+  "SUPERADMIN",
+  "PLATFORM_ADMIN",
+  "WHITE_LABEL_ADMIN",
+  "FRANCHISE_ADMIN",
+  "BRANCH_MANAGER",
+  "DEPARTMENT_HEAD",
+  "TEAM_LEADER",
+  "EXECUTIVE",
+  "EMPLOYEE",
+  "AGENT",
+  "SELLER",
+  "BUYER",
+  "DEMO",
+];
 
 export function UsersDirectory({
   users,
@@ -46,19 +66,46 @@ export function UsersDirectory({
   initialSearch?: string;
   initialTab?: Tab;
 }) {
+  const router = useRouter();
   const { hasEditPermission } = useAdminPermissions();
   const canEdit = hasEditPermission("/admin/users");
-  const [tab, setTab] = useState<Tab>(initialTab);
   const [search, setSearch] = useState(initialSearch);
-  const [roleFilter, setRoleFilter] = useState<string>("ALL");
+  const [roleFilter, setRoleFilter] = useState<string>(
+    initialTab && initialTab !== "all" ? initialTab : "ALL"
+  );
   const [selectedUserFilter, setSelectedUserFilter] = useState<string>("ALL");
   const [modalUser, setModalUser] = useState<UserRow | null>(null);
   const [modalUserIndex, setModalUserIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = 5;
+
+  function showToast(kind: "ok" | "err", text: string) {
+    setToast({ kind, text });
+    setTimeout(() => setToast(null), 3500);
+  }
+
+  async function handleDeleteUser(u: UserRow) {
+    if (!window.confirm(`Delete ${u.name} (${u.userId ?? u.email})? This permanently removes the account and cannot be undone.`)) return;
+    setDeletingId(u.id);
+    try {
+      const res = await fetch(`/api/admin/users/${u.id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { showToast("err", data.error || "Could not delete user."); return; }
+      showToast("ok", `Deleted ${u.name}.`);
+      router.refresh();
+    } catch {
+      showToast("err", "Could not delete user.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
 
   const { getCellValue, updateCell } = useCustomCellData("users_directory");
 
@@ -106,13 +153,10 @@ export function UsersDirectory({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [tab, search, roleFilter, selectedUserFilter]);
+  }, [search, roleFilter, selectedUserFilter]);
 
   const filtered = useMemo(() => {
     let list = users;
-    if (tab === "customers") list = list.filter((u) => isCustomerRole(u.role));
-    if (tab === "staff") list = list.filter((u) => u.role === "EMPLOYEE" || u.role === "SUPERADMIN");
-    if (tab === "agents") list = list.filter((u) => u.role === "AGENT");
     if (roleFilter !== "ALL") {
       list = list.filter((u) => u.role === roleFilter);
     }
@@ -130,7 +174,7 @@ export function UsersDirectory({
       );
     }
     return list;
-  }, [users, tab, search, roleFilter, selectedUserFilter]);
+  }, [users, search, roleFilter, selectedUserFilter]);
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
 
@@ -139,65 +183,75 @@ export function UsersDirectory({
     return filtered.slice(start, start + itemsPerPage);
   }, [filtered, currentPage, itemsPerPage]);
 
-  const scrollTable = (direction: "left" | "right") => {
-    if (tableContainerRef.current) {
-      const scrollAmount = direction === "left" ? -350 : 350;
-      tableContainerRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
-  };
-
-  // Keep the scroll buttons in sync with whether the table can actually scroll.
-  // On wide screens with few columns the table fits, so there is nothing to
-  // scroll — in that case the buttons are disabled instead of appearing broken.
-  useEffect(() => {
-    const el = tableContainerRef.current;
-    if (!el) return;
-    const update = () => {
-      const maxScroll = el.scrollWidth - el.clientWidth;
-      setCanScrollLeft(el.scrollLeft > 1);
-      setCanScrollRight(el.scrollLeft < maxScroll - 1);
-    };
-    update();
-    el.addEventListener("scroll", update, { passive: true });
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => {
-      el.removeEventListener("scroll", update);
-      ro.disconnect();
-    };
-  }, [paginatedUsers, visibleColumnIds]);
-
   const hasActiveFilters =
     search.trim() !== "" ||
     roleFilter !== "ALL" ||
-    selectedUserFilter !== "ALL" ||
-    tab !== "all";
+    selectedUserFilter !== "ALL";
 
   const clearAllFilters = () => {
     setSearch("");
     setRoleFilter("ALL");
     setSelectedUserFilter("ALL");
-    setTab("all");
     setCurrentPage(1);
   };
 
-  const tabs: { id: Tab; label: string; count: number }[] = [
-    { id: "all", label: "All users", count: users.length },
-    {
-      id: "customers",
-      label: "Customers",
-      count: users.filter((u) => isCustomerRole(u.role)).length,
-    },
-    {
-      id: "staff",
-      label: "Staff",
-      count: users.filter((u) => u.role === "EMPLOYEE" || u.role === "SUPERADMIN").length,
-    },
-    {
-      id: "agents",
-      label: "Agents",
-      count: users.filter((u) => u.role === "AGENT").length,
-    },
+  // Close the export menu when clicking outside it.
+  useEffect(() => {
+    if (!exportOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [exportOpen]);
+
+  // Export the currently filtered users to Excel (.xlsx) or CSV.
+  async function exportUsers(format: "xlsx" | "csv") {
+    setExportOpen(false);
+    setExporting(true);
+    try {
+      const XLSX = await import("xlsx");
+      const rows = filtered.map((u) => ({
+        "User ID": u.userId ?? "",
+        Name: u.name,
+        Email: u.email,
+        Phone: u.phone ?? "",
+        Role: roleLabel(u.role),
+        City: u.city ?? "",
+        "KYC Status": u.kycStatus ?? "Not submitted",
+        Status: u.active ? "Active" : "Inactive",
+        "Last Activity": u.lastActiveAt ? new Date(u.lastActiveAt).toLocaleString() : "Never",
+        Joined: new Date(u.createdAt).toLocaleDateString(),
+        Properties: u._count?.properties ?? 0,
+        Transactions: u._count?.transactions ?? 0,
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Users");
+      const date = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `plotsnhomes-users-${date}.${format}`, { bookType: format });
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  const roleCounts = useMemo(() => {
+    const m = new Map<Role, number>();
+    for (const u of users) m.set(u.role, (m.get(u.role) ?? 0) + 1);
+    return m;
+  }, [users]);
+
+  // "All Users" + every account type / role, in hierarchy order. Each pill
+  // drives the single roleFilter so clicking it filters the table below.
+  const filterPills: { value: string; label: string; count: number }[] = [
+    { value: "ALL", label: "All Users", count: users.length },
+    ...ROLE_HIERARCHY.map((r) => ({
+      value: r as string,
+      label: roleLabel(r),
+      count: roleCounts.get(r) ?? 0,
+    })),
   ];
 
   const visibleColumnCount = useMemo(() => {
@@ -233,21 +287,42 @@ export function UsersDirectory({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800 pb-1">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={`px-4 py-2 text-sm font-bold rounded-t-lg border-b-2 -mb-px transition ${
-              tab === t.id
-                ? "border-gold text-gold-dark dark:text-gold font-bold"
-                : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            {t.label} ({t.count})
-          </button>
-        ))}
+      {/* Account type / role filter pills — the single working type filter */}
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+          Filter by account type &amp; role
+        </p>
+        <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-2.5">
+          {filterPills.map((p) => {
+            const active = roleFilter === p.value;
+            const empty = p.count === 0;
+            return (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setRoleFilter(p.value)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                  active
+                    ? "bg-gold text-slate-950 shadow-sm"
+                    : empty
+                      ? "bg-transparent text-slate-400 dark:text-slate-600 hover:bg-white dark:hover:bg-slate-800"
+                      : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-gold/60 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                {p.label}
+                <span
+                  className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-extrabold ${
+                    active
+                      ? "bg-slate-950/15 text-slate-950"
+                      : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300"
+                  }`}
+                >
+                  {p.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <TableToolbarManager
@@ -264,93 +339,110 @@ export function UsersDirectory({
         onUpdateCustomColumn={updateCustomColumn}
         onRemoveCustomColumn={removeCustomColumn}
         onResetColumns={resetColumns}
-      />
-
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <input
-            type="search"
-            placeholder="Search by User ID (e.g. USR-10001), name, email, or phone..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-gold"
-          />
-        </div>
-
-        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-          {/* Clear All Filters */}
+        importSlot={
           <button
             type="button"
-            onClick={clearAllFilters}
-            disabled={!hasActiveFilters}
-            title={hasActiveFilters ? "Clear all filters" : "No filters applied"}
-            className={`inline-flex items-center gap-1 px-3 py-2 rounded-xl border text-xs font-bold transition shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed ${
-              hasActiveFilters
-                ? "border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-500/50 dark:bg-amber-500/10 dark:text-amber-300 dark:hover:bg-amber-500/20"
-                : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
-            }`}
+            onClick={() => setBulkOpen(true)}
+            title="Bulk import users from an Excel or CSV file"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition shadow-xs"
           >
-            <X className="h-4 w-4 stroke-[2.5]" /> Clear All
+            <Upload className="h-4 w-4" />
+            <span>Bulk Import</span>
           </button>
+        }
+      />
 
-          {/* Quick Table Scroll Buttons */}
-          <div className="flex items-center gap-1.5">
+      <BulkImportUsersModal
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        onImported={() => router.refresh()}
+      />
+
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3 space-y-3">
+        {/* Row 1: search + dropdowns */}
+        <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="search"
+              placeholder="Search by User ID (e.g. USR-4TYQ…), name, email, or phone..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-gold shadow-2xs"
+            />
+          </div>
+          <div className="flex gap-2.5">
+            <div className="w-52 sm:w-64">
+              <SearchableSelect
+                options={userDropdownOptions}
+                value={selectedUserFilter}
+                onChange={(val) => setSelectedUserFilter(val)}
+                placeholder="Jump to a specific user..."
+                searchPlaceholder="Search User ID, name, email..."
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: action buttons */}
+        <div className="flex items-center gap-2 flex-wrap justify-between">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Clear All Filters */}
             <button
               type="button"
-              onClick={() => scrollTable("left")}
-              disabled={!canScrollLeft}
-              className="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-slate-900"
-              title={canScrollLeft ? "Scroll Table Left" : "No more columns to the left"}
+              onClick={clearAllFilters}
+              disabled={!hasActiveFilters}
+              title={hasActiveFilters ? "Clear all filters" : "No filters applied"}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed ${
+                hasActiveFilters
+                  ? "bg-amber-500 text-slate-950 hover:bg-amber-600 shadow-sm"
+                  : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
+              }`}
             >
-              <ChevronLeft className="h-4 w-4 stroke-[2.5]" /> Left
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollTable("right")}
-              disabled={!canScrollRight}
-              className="inline-flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-slate-900"
-              title={canScrollRight ? "Scroll Table Right" : "No more columns to the right"}
-            >
-              Right <ChevronRight className="h-4 w-4 stroke-[2.5]" />
+              <X className="h-4 w-4 stroke-[2.5]" /> Clear All
             </button>
           </div>
 
-          <div className="w-48">
-            <SearchableSelect
-              options={userDropdownOptions}
-              value={selectedUserFilter}
-              onChange={(val) => setSelectedUserFilter(val)}
-              placeholder="Select User..."
-              searchPlaceholder="Search User ID, name, email..."
-            />
-          </div>
-          <div className="w-48">
-            <SearchableSelect
-              options={[
-                { value: "ALL", label: "All Roles" },
-                { value: "SUPERADMIN", label: "Super Admin" },
-                { value: "PLATFORM_ADMIN", label: "Platform Admin" },
-                { value: "WHITE_LABEL_ADMIN", label: "White Label Admin" },
-                { value: "FRANCHISE_ADMIN", label: "Franchise Admin" },
-                { value: "BRANCH_MANAGER", label: "Branch Manager" },
-                { value: "DEPARTMENT_HEAD", label: "Department Head" },
-                { value: "TEAM_LEADER", label: "Team Leader" },
-                { value: "EXECUTIVE", label: "Executive" },
-                { value: "EMPLOYEE", label: "Employee" },
-                { value: "AGENT", label: "Agent" },
-                { value: "SELLER", label: "Seller" },
-                { value: "BUYER", label: "Buyer (Customer)" },
-                { value: "DEMO", label: "Demo User" },
-              ]}
-              value={roleFilter}
-              onChange={(val) => setRoleFilter(val)}
-            />
+          {/* Export dropdown */}
+          <div className="relative" ref={exportMenuRef}>
+            <button
+              type="button"
+              onClick={() => setExportOpen((o) => !o)}
+              disabled={exporting || filtered.length === 0}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold hover:bg-slate-800 dark:hover:bg-white transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export the currently filtered users"
+            >
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 stroke-[2.5]" />}
+              Export
+              <span className="hidden sm:inline text-[10px] font-extrabold opacity-70">({filtered.length})</span>
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${exportOpen ? "rotate-180" : ""}`} />
+            </button>
+            {exportOpen && (
+              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl z-30 overflow-hidden">
+                <p className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                  Export {filtered.length} user{filtered.length !== 1 ? "s" : ""}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => exportUsers("xlsx")}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-emerald-600" /> Excel workbook (.xlsx)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => exportUsers("csv")}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition border-t border-slate-100 dark:border-slate-800"
+                >
+                  <FileText className="h-4 w-4 text-blue-600" /> CSV file (.csv)
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div ref={tableContainerRef} className="w-full overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm scrollbar-thin relative">
+      <div className="w-full overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm scrollbar-thin relative">
         <table className="w-full min-w-max border-collapse text-xs text-left">
           <thead className="bg-slate-100/90 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             <tr>
@@ -530,14 +622,28 @@ export function UsersDirectory({
                       className="sticky right-0 z-20 px-4 py-2.5 border-l-2 border-slate-900 dark:border-slate-100 bg-white dark:bg-slate-900 group-hover:bg-slate-100 dark:group-hover:bg-slate-800/95 text-right whitespace-nowrap align-middle shadow-[-6px_0_12px_rgba(0,0,0,0.14)] transition-colors"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Link
-                        href={`/admin/users/${u.id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center gap-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2.5 py-1 text-xs font-extrabold text-amber-950 dark:text-amber-200 hover:bg-gold hover:text-slate-900 shadow-2xs transition"
-                      >
-                        {canEdit ? <Pencil className="h-3 w-3" /> : null}
-                        {canEdit ? "Edit profile" : "View profile"}
-                      </Link>
+                      <div className="inline-flex items-center gap-1.5">
+                        <Link
+                          href={`/admin/users/${u.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          title={canEdit ? "Edit profile" : "View profile"}
+                          className="inline-flex items-center gap-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2.5 py-1 text-xs font-extrabold text-amber-950 dark:text-amber-200 hover:bg-gold hover:text-slate-900 shadow-2xs transition"
+                        >
+                          <Pencil className="h-3 w-3" />
+                          {canEdit ? "Edit" : "View"}
+                        </Link>
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteUser(u); }}
+                            disabled={deletingId === u.id}
+                            title="Delete user"
+                            className="inline-flex items-center justify-center rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 text-slate-500 hover:border-rose-400 hover:text-rose-600 dark:hover:text-rose-400 transition disabled:opacity-50"
+                          >
+                            {deletingId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>
@@ -557,28 +663,6 @@ export function UsersDirectory({
         <div className="text-xs font-extrabold text-slate-700 dark:text-slate-300">
           Showing {filtered.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to{" "}
           {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} users
-        </div>
-
-        {/* Center: Broadened Table Scroll Buttons */}
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => scrollTable("left")}
-            disabled={!canScrollLeft}
-            title={canScrollLeft ? "Scroll Table Left" : "No more columns to the left"}
-            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl border border-slate-900 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:border-slate-700 text-xs font-extrabold uppercase tracking-wider transition shadow-md hover:shadow-lg active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-slate-900 dark:disabled:hover:bg-slate-800"
-          >
-            <ChevronLeft className="h-4 w-4 stroke-[3]" /> Scroll Left
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollTable("right")}
-            disabled={!canScrollRight}
-            title={canScrollRight ? "Scroll Table Right" : "No more columns to the right"}
-            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl border border-slate-900 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:border-slate-700 text-xs font-extrabold uppercase tracking-wider transition shadow-md hover:shadow-lg active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-slate-900 dark:disabled:hover:bg-slate-800"
-          >
-            Scroll Right <ChevronRight className="h-4 w-4 stroke-[3]" />
-          </button>
         </div>
 
         {/* Right: Page Navigation */}
@@ -625,6 +709,17 @@ export function UsersDirectory({
           userIndex={modalUserIndex}
           onClose={() => setModalUser(null)}
         />
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-[10000] rounded-xl px-4 py-3 text-sm font-bold shadow-xl border ${
+          toast.kind === "ok"
+            ? "bg-emerald-600 text-white border-emerald-700"
+            : "bg-rose-600 text-white border-rose-700"
+        }`}>
+          {toast.text}
+        </div>
       )}
     </div>
   );

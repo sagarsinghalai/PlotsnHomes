@@ -24,6 +24,7 @@ import { CRM_STAGES, initials, stageLabel } from "@/lib/crm-ui";
 import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
 import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
 import { TableScrollButtons } from "@/components/ui/table-scroll-buttons";
+import { COUNTRY_DIAL_CODES } from "@/lib/country-codes";
 
 type LeadRow = {
   id: string;
@@ -38,70 +39,7 @@ type LeadRow = {
   property: { symbol: string } | null;
   owner: { name: string } | null;
 };
-
-const WORLD_COUNTRY_CODES = [
-  { code: "+91", label: "🇮🇳 +91" },
-  { code: "+1", label: "🇺🇸 +1" },
-  { code: "+971", label: "🇦🇪 +971" },
-  { code: "+44", label: "🇬🇧 +44" },
-  { code: "+65", label: "🇸🇬 +65" },
-  { code: "+61", label: "🇦🇺 +61" },
-  { code: "+49", label: "🇩🇪 +49" },
-  { code: "+966", label: "🇸🇦 +966" },
-  { code: "+33", label: "🇫🇷 +33" },
-  { code: "+39", label: "🇮🇹 +39" },
-  { code: "+34", label: "🇪🇸 +34" },
-  { code: "+31", label: "🇳🇱 +31" },
-  { code: "+32", label: "🇧🇪 +32" },
-  { code: "+41", label: "🇨🇭 +41" },
-  { code: "+43", label: "🇦🇹 +43" },
-  { code: "+46", label: "🇸🇪 +46" },
-  { code: "+47", label: "🇳🇴 +47" },
-  { code: "+45", label: "🇩🇰 +45" },
-  { code: "+358", label: "🇫🇮 +358" },
-  { code: "+351", label: "🇵🇹 +351" },
-  { code: "+353", label: "🇮🇪 +353" },
-  { code: "+48", label: "🇵🇱 +48" },
-  { code: "+420", label: "🇨🇿 +420" },
-  { code: "+40", label: "🇷🇴 +40" },
-  { code: "+36", label: "🇭🇺 +36" },
-  { code: "+30", label: "🇬🇷 +30" },
-  { code: "+7", label: "🇷🇺 +7" },
-  { code: "+90", label: "🇹🇷 +90" },
-  { code: "+81", label: "🇯🇵 +81" },
-  { code: "+86", label: "🇨🇳 +86" },
-  { code: "+82", label: "🇰🇷 +82" },
-  { code: "+66", label: "🇹🇭 +66" },
-  { code: "+60", label: "🇲🇾 +60" },
-  { code: "+62", label: "🇮🇩 +62" },
-  { code: "+63", label: "🇵🇭 +63" },
-  { code: "+84", label: "🇻🇳 +84" },
-  { code: "+880", label: "🇧🇩 +880" },
-  { code: "+92", label: "🇵🇰 +92" },
-  { code: "+94", label: "🇱🇰 +94" },
-  { code: "+977", label: "🇳🇵 +977" },
-  { code: "+27", label: "🇿🇦 +27" },
-  { code: "+234", label: "🇳🇬 +234" },
-  { code: "+254", label: "🇰🇪 +254" },
-  { code: "+20", label: "🇪🇬 +20" },
-  { code: "+233", label: "🇬🇭 +233" },
-  { code: "+52", label: "🇲🇽 +52" },
-  { code: "+55", label: "🇧🇷 +55" },
-  { code: "+54", label: "🇦🇷 +54" },
-  { code: "+57", label: "🇨🇴 +57" },
-  { code: "+56", label: "🇨🇱 +56" },
-  { code: "+51", label: "🇵🇪 +51" },
-  { code: "+64", label: "🇳🇿 +64" },
-  { code: "+974", label: "🇶🇦 +974" },
-  { code: "+965", label: "🇰🇼 +965" },
-  { code: "+973", label: "🇧🇭 +973" },
-  { code: "+968", label: "🇴🇲 +968" },
-  { code: "+962", label: "🇯🇴 +962" },
-  { code: "+961", label: "🇱🇧 +961" },
-  { code: "+972", label: "🇮🇱 +972" },
-  { code: "+886", label: "🇹🇼 +886" },
-  { code: "+852", label: "🇭🇰 +852" },
-];
+const WORLD_COUNTRY_CODES = COUNTRY_DIAL_CODES.map((c) => ({ code: c.code, label: c.code + " " + c.name }));
 
 const LIFECYCLE_STAGES = ["Lead", "MQL", "SQL", "Opportunity", "Customer", "Evangelist", "Other"];
 const LEAD_STATUSES = [
@@ -223,21 +161,24 @@ export function LeadsTableView({
     }
 
     const emailVal = formData.email.trim().toLowerCase();
-    if (!emailVal) {
-      setFormError("Email address is required.");
-      return;
-    }
-    if (!emailVal.includes("@")) {
-      setFormError("Email address must contain '@'.");
-      return;
-    }
-    if (!/.+@.+\..+/.test(emailVal)) {
-      setFormError("Please enter a valid email address (e.g. user@domain.com).");
-      return;
+    // Email is optional — only validate the format when a value is provided.
+    if (emailVal) {
+      if (!emailVal.includes("@")) {
+        setFormError("Email address must contain '@'.");
+        return;
+      }
+      if (!/.+@.+\..+/.test(emailVal)) {
+        setFormError("Please enter a valid email address (e.g. user@domain.com).");
+        return;
+      }
     }
 
     const cleanPhone = formData.phone.replace(/\D/g, "");
-    if (cleanPhone && cleanPhone.length !== 10) {
+    if (!cleanPhone) {
+      setFormError("Phone number is required.");
+      return;
+    }
+    if (cleanPhone.length !== 10) {
       setFormError("Phone number must be strictly 10 digits.");
       return;
     }
@@ -724,11 +665,10 @@ export function LeadsTableView({
               {/* 2. Email */}
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-1">
-                  Email <span className="text-rose-500">*</span>
+                  Email <span className="text-slate-400 font-semibold">(optional)</span>
                 </label>
                 <input
                   type="email"
-                  required
                   placeholder="rahul@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -739,7 +679,7 @@ export function LeadsTableView({
               {/* 3. Phone number */}
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-1">
-                  Phone number
+                  Phone number <span className="text-rose-500">*</span>
                 </label>
                 <div className="flex gap-2">
                   <select
@@ -755,6 +695,7 @@ export function LeadsTableView({
                   </select>
                   <input
                     type="text"
+                    required
                     placeholder="8319549581"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}

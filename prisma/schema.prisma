@@ -137,6 +137,7 @@ model User {
   displayPassword String?
   name          String
   phone         String?
+  countryCode   String?       @default("+91")
   pan           String?
   aadhar        String?
   dob           DateTime?
@@ -194,6 +195,53 @@ model User {
   subscriptions     UserSubscription[]
   commissionRate    Float?        @default(3.0)
   agentCommissions  AgentCommission[] @relation("AgentCommissions")
+  crmActivities     UserActivity[]    @relation("ContactActivities")
+}
+
+// HubSpot-style CRM activity timeline attached to a User (contact):
+// notes, emails, calls, tasks and meetings.
+model UserActivity {
+  id           String   @id @default(cuid())
+  contactId    String
+  contact      User     @relation("ContactActivities", fields: [contactId], references: [id], onDelete: Cascade)
+  type         String   // NOTE | EMAIL | CALL | TASK | MEETING
+  subject      String?  // email subject / meeting title / task title / call subject
+  body         String?  // note text / email body / call notes / task description / meeting agenda
+  outcome      String?  // call outcome / email direction
+  dueAt        DateTime? // task due date
+  completed    Boolean  @default(false) // task done
+  meetingAt    DateTime? // meeting date & time
+  meetingLink  String?  // Calendly / Cal.com / scheduling link
+  pinned       Boolean  @default(false)
+  authorId     String?
+  authorName   String?  // denormalised for display
+  authorUserId String?  // denormalised public USR- id
+  // Edit audit — who last edited this activity & when
+  editedById   String?
+  editedByName String?
+  editedByUserId String?
+  editedAt     DateTime?
+  comments     ActivityComment[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([contactId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// Comments on a CRM activity (e.g. teammates discussing a note).
+model ActivityComment {
+  id           String       @id @default(cuid())
+  activityId   String
+  activity     UserActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  body         String
+  authorId     String?
+  authorName   String?
+  authorUserId String?
+  createdAt    DateTime     @default(now())
+
+  @@index([activityId])
 }
 
 model Property {
@@ -298,8 +346,9 @@ model Property {
 model Lead {
   id            String      @id @default(cuid())
   name          String
-  email         String
+  email         String      @default("")
   phone         String?
+  countryCode   String?     @default("+91")
   source        String      @default("Website")
   stage         LeadStage   @default(NEW)
   score         Int         @default(50)
@@ -401,6 +450,7 @@ model Inquiry {
   name       String
   email      String
   phone      String?
+  countryCode String?   @default("+91")
   message    String
   createdAt  DateTime  @default(now())
   lead       Lead?
@@ -554,6 +604,7 @@ model PropertyShowing {
   name       String
   email      String
   phone      String?
+  countryCode String?   @default("+91")
   tourDate   DateTime
   tourTime   String
   tourType   String        @default("IN_PERSON")
@@ -593,6 +644,7 @@ model Developer {
   projectCount    Int             @default(0)
   email           String?
   phone           String?
+  countryCode     String?       @default("+91")
   address         String?
   city            String?
   state           String?

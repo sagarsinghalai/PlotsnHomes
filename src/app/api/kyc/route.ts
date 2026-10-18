@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
+import { validateFullName, validateNationality, validateIdNumber } from "@/lib/kyc-validation";
 
 const schema = z.object({
   fullName:           z.string().min(2),
@@ -44,6 +45,31 @@ export async function POST(req: Request) {
 
   try {
     const data = schema.parse(await req.json());
+
+    // Full legal name — letters only, no digits
+    const nameCheck = validateFullName(data.fullName);
+    if (!nameCheck.valid) {
+      return NextResponse.json({ error: nameCheck.message }, { status: 400 });
+    }
+    data.fullName = nameCheck.normalized!;
+
+    // Nationality — letters only, no digits (optional)
+    if (data.nationality) {
+      const natCheck = validateNationality(data.nationality);
+      if (!natCheck.valid) {
+        return NextResponse.json({ error: natCheck.message }, { status: 400 });
+      }
+      data.nationality = natCheck.normalized;
+    }
+
+    // ID number — must match the selected ID type's format
+    if (data.idType || data.idNumber) {
+      const idCheck = validateIdNumber(data.idType ?? "", data.idNumber ?? "");
+      if (!idCheck.valid) {
+        return NextResponse.json({ error: idCheck.message }, { status: 400 });
+      }
+      data.idNumber = idCheck.normalized;
+    }
 
     // Validate DOB Age >= 18 from account creation date
     if (data.dateOfBirth) {

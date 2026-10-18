@@ -211,105 +211,87 @@ export function UserPropertyPortfolioSection({
           </p>
         </div>
       ) : (
-        /* Portfolio Grid */
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-          {filteredItems.map((item) => {
-            const thumbnail = getPropertyThumbnail(item.images, item.image);
-
-            return (
-              <div
-                key={`${item.type}-${item.id}`}
-                className="rounded-xl border border-slate-200 bg-white p-4 space-y-3 hover:border-slate-300 transition shadow-sm flex flex-col justify-between"
-              >
-                <div className="space-y-3">
-                  {/* Top Banner with Type Badge */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      {thumbnail ? (
-                        <img
-                          src={thumbnail}
-                          alt={item.title}
-                          className="h-12 w-12 rounded-lg object-cover border border-slate-200 shrink-0"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0">
-                          {item.symbol || "PROP"}
+        /* Portfolio List / Table */
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                  <th className="p-3.5">Property</th>
+                  <th className="p-3.5">Type</th>
+                  <th className="p-3.5">Amount</th>
+                  <th className="p-3.5">Date</th>
+                  <th className="p-3.5">Ref / Txn ID</th>
+                  <th className="p-3.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredItems.map((item) => {
+                  const thumbnail = getPropertyThumbnail(item.images, item.image);
+                  return (
+                    <tr key={`${item.type}-${item.id}`} className="hover:bg-slate-50/60 transition-colors align-top">
+                      {/* Property */}
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-2.5">
+                          {thumbnail ? (
+                            <img src={thumbnail} alt={item.title} className="h-10 w-10 rounded-lg object-cover border border-slate-200 shrink-0" />
+                          ) : (
+                            <div className="h-10 w-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-[10px] shrink-0">
+                              {item.symbol || "PROP"}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <Link href={`/admin/properties/${item.propertyId}/edit`} className="text-sm font-bold text-slate-900 hover:text-blue-700 hover:underline block truncate max-w-[200px]">
+                              {item.title}
+                            </Link>
+                            <span className="text-[11px] text-slate-500">{item.city}, {item.state}</span>
+                          </div>
                         </div>
-                      )}
-                      <div>
-                        <h3 className="text-sm font-bold text-slate-900 leading-tight">
-                          {item.title}
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {item.city}, {item.state} {item.address ? `· ${item.address}` : ""}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Bought / Sold Pill */}
-                    {item.type === "BOUGHT" ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-300 text-emerald-800 font-extrabold text-[11px] shrink-0 shadow-2xs">
-                        <ShoppingBag className="h-3 w-3 text-emerald-600" />
-                        BOUGHT
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-50 border border-purple-300 text-purple-800 font-extrabold text-[11px] shrink-0 shadow-2xs">
-                        <BadgePercent className="h-3 w-3 text-purple-600" />
-                        SOLD
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Financial & Timestamp Details */}
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs bg-slate-50 p-2.5 rounded-lg">
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        {item.type === "BOUGHT" ? "Purchased Value" : "Sold Price"}
-                      </span>
-                      <span className="font-bold text-slate-900 text-sm flex items-center gap-1 mt-0.5">
+                      </td>
+                      {/* Type */}
+                      <td className="p-3.5 whitespace-nowrap">
+                        {item.type === "BOUGHT" ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-300 text-emerald-800 font-extrabold text-[11px]">
+                            <ShoppingBag className="h-3 w-3 text-emerald-600" /> BOUGHT
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-50 border border-purple-300 text-purple-800 font-extrabold text-[11px]">
+                            <BadgePercent className="h-3 w-3 text-purple-600" /> SOLD
+                          </span>
+                        )}
+                      </td>
+                      {/* Amount */}
+                      <td className="p-3.5 font-bold text-slate-900 text-sm whitespace-nowrap">
                         {formatCurrencyINR(item.amount || item.price)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        {item.type === "BOUGHT" ? "Purchase Date" : "Sale Date"}
-                      </span>
-                      <span className="font-semibold text-slate-800 flex items-center gap-1 mt-0.5 text-[11px]">
-                        <Calendar className="h-3 w-3 text-slate-400 shrink-0" />
-                        {formatDate(item.timestamp)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {item.paymentRef && (
-                    <p className="text-[11px] text-slate-500 font-mono">
-                      Ref / Txn ID: <span className="font-bold text-slate-700">{item.paymentRef}</span>
-                    </p>
-                  )}
-                </div>
-
-                {/* Clickable Navigation Buttons */}
-                <div className="flex items-center gap-2 pt-3 border-t border-slate-100 mt-3">
-                  <Link
-                    href={`/admin/properties/${item.propertyId}/edit`}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-2 text-xs font-bold transition shadow-xs text-center"
-                  >
-                    <Edit className="h-3.5 w-3.5" />
-                    Property Details &amp; Edit
-                  </Link>
-                  <Link
-                    href={`/properties/${item.slug || item.propertyId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 text-xs font-semibold border border-slate-200 transition text-center"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Public View
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
+                      </td>
+                      {/* Date */}
+                      <td className="p-3.5 whitespace-nowrap">
+                        <span className="font-semibold text-slate-800 flex items-center gap-1 text-[11px]">
+                          <Calendar className="h-3 w-3 text-slate-400 shrink-0" />
+                          {formatDate(item.timestamp)}
+                        </span>
+                      </td>
+                      {/* Ref */}
+                      <td className="p-3.5 font-mono text-[11px] text-slate-700 whitespace-nowrap">
+                        {item.paymentRef || "—"}
+                      </td>
+                      {/* Actions */}
+                      <td className="p-3.5 whitespace-nowrap text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <Link href={`/admin/properties/${item.propertyId}/edit`} className="inline-flex items-center gap-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 px-2.5 py-1.5 text-[11px] font-bold transition">
+                            <Edit className="h-3.5 w-3.5" /> Edit
+                          </Link>
+                          <Link href={`/properties/${item.slug || item.propertyId}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 text-[11px] font-semibold border border-slate-200 transition">
+                            <ExternalLink className="h-3.5 w-3.5" /> View
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </section>

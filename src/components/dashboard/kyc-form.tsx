@@ -3,6 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { validateUserDobAge } from "@/lib/user-validation";
+import {
+  validateFullName,
+  validateNationality,
+  validateIdNumber,
+  resolveIdRule,
+} from "@/lib/kyc-validation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type KycStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -319,7 +325,7 @@ export function KycForm() {
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Full Legal Name <span className="text-red-500">*</span></label>
                   <input
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e) => setFullName(e.target.value.replace(/[0-9]/g, ""))}
                     placeholder="As per official documents"
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all"
                     required
@@ -338,7 +344,8 @@ export function KycForm() {
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nationality</label>
                   <input
                     value={nationality}
-                    onChange={(e) => setNationality(e.target.value)}
+                    onChange={(e) => setNationality(e.target.value.replace(/[0-9]/g, ""))}
+                    placeholder="e.g. Indian"
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all"
                   />
                 </div>
@@ -360,10 +367,19 @@ export function KycForm() {
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">ID Number <span className="text-red-500">*</span></label>
                   <input
                     value={idNumber}
-                    onChange={(e) => setIdNumber(e.target.value)}
-                    placeholder="Enter ID number"
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      // Aadhaar is digits only; all other IDs are uppercased alphanumerics.
+                      setIdNumber(idType === "Aadhaar" ? raw.replace(/\D/g, "").slice(0, 12) : raw.toUpperCase());
+                    }}
+                    placeholder={resolveIdRule(idType).rule?.placeholder ?? "Enter ID number"}
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all"
                   />
+                  <p className="text-xs text-slate-400 mt-1">
+                    {idType === "Aadhaar"
+                      ? "Format: 12 digits"
+                      : `Format: ${resolveIdRule(idType).rule?.example ?? "—"}`}
+                  </p>
                 </div>
               </div>
 
@@ -372,6 +388,13 @@ export function KycForm() {
                 <span>ℹ️</span>
                 <span>All information is encrypted and processed per RBI KYC guidelines.</span>
               </div>
+
+              {msg && (
+                <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700 flex gap-2">
+                  <span>⚠️</span>
+                  <span>{msg}</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -506,7 +529,13 @@ export function KycForm() {
                 variant="primary"
                 onClick={() => {
                   if (step === 0) {
-                    if (!fullName) { setMsg("Full name is required."); return; }
+                    const nameCheck = validateFullName(fullName);
+                    if (!nameCheck.valid) { setMsg(nameCheck.message!); return; }
+                    setFullName(nameCheck.normalized!);
+
+                    const natCheck = validateNationality(nationality);
+                    if (!natCheck.valid) { setMsg(natCheck.message!); return; }
+
                     if (dob) {
                       const dobCheck = validateUserDobAge(dob);
                       if (!dobCheck.valid) {
@@ -514,6 +543,10 @@ export function KycForm() {
                         return;
                       }
                     }
+
+                    const idCheck = validateIdNumber(idType, idNumber);
+                    if (!idCheck.valid) { setMsg(idCheck.message!); return; }
+                    setIdNumber(idCheck.normalized!);
                   }
                   setMsg("");
                   setStep((s) => s + 1);
