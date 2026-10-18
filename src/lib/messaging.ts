@@ -189,10 +189,11 @@ export async function sendViaGmail(
     const nodemailer = await import("nodemailer").catch(() => null);
     if (!nodemailer) return null;
 
+    const smtpPort = parseInt(config.gmailSmtpPort || "587", 10) || 587;
     const transporter = nodemailer.createTransport({
       host: config.gmailSmtpHost || "smtp.gmail.com",
-      port: 587,
-      secure: false,
+      port: smtpPort,
+      secure: smtpPort === 465, // SSL on 465, STARTTLS on 587/others
       auth: {
         user: config.gmailSmtpUser,
         pass: config.gmailSmtpPass,

@@ -451,6 +451,11 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
   const [variables, setVariables] = useState<VariableItem[]>([]);
   const [showTpl, setShowTpl] = useState(false);
   const [editorNonce, setEditorNonce] = useState(0); // bump to re-seed the composer editor (e.g. after applying a template)
+  // Meeting-invite send channels + configured sender accounts.
+  const [meetingSend, setMeetingSend] = useState({ email: true, whatsapp: false, sms: false });
+  const [sendEmailNow, setSendEmailNow] = useState(true); // EMAIL composer: actually deliver, not just log
+  const [senders, setSenders] = useState<{ id: string; label: string; fromEmail: string }[]>([]);
+  const [activeSenderId, setActiveSenderId] = useState("");
 
   async function load() {
     setLoading(true);
@@ -479,9 +484,17 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
           const glob: VariableItem[] = (d.globalCustomVariables ?? []).map((v: any) => ({ label: v.name, key: v.key }));
           setVariables([...sys, ...glob]);
         }
+        const sndRes = await fetch("/api/admin/email-senders");
+        if (sndRes.ok) {
+          const d = await sndRes.json();
+          setSenders((d.senders ?? []).map((s: any) => ({ id: s.id, label: s.label, fromEmail: s.fromEmail })));
+          setActiveSenderId(d.activeId ?? "");
+        }
       } catch { /* non-fatal */ }
     })();
   }, []);
+
+  const activeSender = senders.find((s) => s.id === activeSenderId) || senders[0] || null;
 
   // Replace known contact variables in a template string.
   function fillVars(s: string): string {
@@ -531,6 +544,7 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
     if (!hasContent) return;
     // For emails, record the recipients (To / From / Cc / Bcc) as a header in the body.
     let bodyToSave = draft.body;
+    let meetingLinkToSave = draft.meetingLink;
     if (composer === "EMAIL") {
       const rows: string[] = [];
       if (emailTo.trim()) rows.push(`<b>To:</b> ${escapeHtml(emailTo.trim())}`);
@@ -542,6 +556,59 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
     }
     setSaving(true);
     try {
+      // For meetings, send the invite (email / WhatsApp / SMS) through the meetings API.
+      if (composer === "MEETING") {
+        const channels = (["email", "whatsapp", "sms"] as const).filter((c) => meetingSend[c]);
+        if (channels.length > 0) {
+          const parts: string[] = [];
+          const bt = htmlToText(draft.body);
+          if (bt) parts.push(bt);
+          if (draft.meetingAt) parts.push(`Proposed time: ${fmtDateTime(draft.meetingAt)}`);
+          try {
+            const mres = await fetch("/api/admin/meetings", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: contactId,
+                title: draft.subject || "Meeting",
+                message: parts.join("\n\n"),
+                customUrl: draft.meetingLink || undefined,
+                sendVia: channels,
+              }),
+            });
+            const md = await mres.json();
+            if (!mres.ok) {
+              alert(md.error || "Could not send the meeting invite.");
+            } else {
+              if (!meetingLinkToSave && md.scheduleUrl) meetingLinkToSave = md.scheduleUrl;
+              bodyToSave = (draft.body || "") +
+                `<div style="font-size:12px;color:#047857;margin-top:6px">📧 Invite sent via ${channels.join(", ")}${md.scheduleUrl ? ` · <a href="${md.scheduleUrl}" target="_blank" rel="noreferrer">scheduling link</a>` : ""}</div>`;
+            }
+          } catch { alert("Could not send the meeting invite."); }
+        }
+      }
+
+      // For emails, actually deliver the message (not just log it) when requested.
+      if (composer === "EMAIL" && sendEmailNow && emailTo.trim()) {
+        try {
+          const sres = await fetch("/api/admin/crm/send-email", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ to: emailTo, cc: emailCc, bcc: emailBcc, subject: draft.subject, html: draft.body }),
+          });
+          const sd = await sres.json();
+          if (!sres.ok) {
+            alert(sd.error || "Could not send the email. It will be logged only.");
+            bodyToSave += `<div style="font-size:12px;color:#b45309;margin-top:6px">⚠️ Send failed — logged only.</div>`;
+          } else if (sd.delivered && sd.provider !== "dev") {
+            bodyToSave += `<div style="font-size:12px;color:#047857;margin-top:6px">✅ Email sent to recipient.</div>`;
+          } else if (!sd.delivered && sd.error) {
+            alert(`Email could not be sent: ${sd.error}`);
+            bodyToSave += `<div style="font-size:12px;color:#b45309;margin-top:6px">⚠️ Send failed (${escapeHtml(sd.error)}) — logged only.</div>`;
+          } else {
+            bodyToSave += `<div style="font-size:12px;color:#b45309;margin-top:6px">⚠️ Simulated — not actually delivered. Set up Gmail SMTP or verify your Resend domain (Integrations).</div>`;
+          }
+        } catch { alert("Could not send the email. It will be logged only."); }
+      }
+
       const res = await fetch(`/api/admin/users/${contactId}/activities`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -551,7 +618,7 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
           outcome: draft.outcome || null,
           dueAt: draft.dueAt || null,
           meetingAt: draft.meetingAt || null,
-          meetingLink: draft.meetingLink || null,
+          meetingLink: meetingLinkToSave || null,
           attachments: draftMedia.length ? JSON.stringify(draftMedia) : null,
         }),
       });
@@ -784,12 +851,35 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
               <input type="datetime-local" value={draft.dueAt} onChange={(e) => setDraft((d) => ({ ...d, dueAt: e.target.value }))} className={inputCls} /></div>
           )}
           {composer === "MEETING" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <div><label className="text-[11px] font-bold text-slate-500">Date & time</label>
-                <input type="datetime-local" value={draft.meetingAt} onChange={(e) => setDraft((d) => ({ ...d, meetingAt: e.target.value }))} className={inputCls} /></div>
-              <div><label className="text-[11px] font-bold text-slate-500">Scheduling / meeting link</label>
-                <input value={draft.meetingLink} onChange={(e) => setDraft((d) => ({ ...d, meetingLink: e.target.value }))} placeholder="Calendly / Cal.com link" className={inputCls} /></div>
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div><label className="text-[11px] font-bold text-slate-500">Date & time</label>
+                  <input type="datetime-local" value={draft.meetingAt} onChange={(e) => setDraft((d) => ({ ...d, meetingAt: e.target.value }))} className={inputCls} /></div>
+                <div><label className="text-[11px] font-bold text-slate-500">Scheduling / meeting link</label>
+                  <input value={draft.meetingLink} onChange={(e) => setDraft((d) => ({ ...d, meetingLink: e.target.value }))} placeholder="Calendly / Cal.com link" className={inputCls} /></div>
+              </div>
+              {/* Send the invite to the contact */}
+              <div className="rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2.5 space-y-1.5">
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Send invite to {contactName}</p>
+                <div className="flex flex-wrap items-center gap-3 text-xs">
+                  {(["email", "whatsapp", "sms"] as const).map((ch) => (
+                    <label key={ch} className="inline-flex items-center gap-1.5 font-semibold text-slate-700 cursor-pointer">
+                      <input type="checkbox" checked={meetingSend[ch]} onChange={(e) => setMeetingSend((m) => ({ ...m, [ch]: e.target.checked }))} className="rounded border-slate-300" />
+                      {ch === "email" ? "Email" : ch === "whatsapp" ? "WhatsApp" : "SMS"}
+                    </label>
+                  ))}
+                </div>
+                {meetingSend.email && (
+                  <p className="text-[11px] text-slate-500">
+                    Emailed from: <span className="font-semibold text-slate-700">{activeSender ? `${activeSender.label} · ${activeSender.fromEmail}` : "default account"}</span>
+                    <a href="/admin/integrations" className="ml-1 text-blue-600 hover:underline">change</a>
+                  </p>
+                )}
+                {!meetingSend.email && !meetingSend.whatsapp && !meetingSend.sms && (
+                  <p className="text-[11px] text-amber-600">No channel selected — the meeting will only be logged, not sent.</p>
+                )}
+              </div>
+            </>
           )}
           {usesRichText(composer) ? (
             <RichTextEditor key={`new-${composer}-${editorNonce}`} value={draft.body} onChange={(html) => setDraft((d) => ({ ...d, body: html }))}
@@ -801,9 +891,31 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
               placeholder={composer === "CALL" ? "Call notes…" : composer === "TASK" ? "Task details…" : "Agenda / notes…"}
               className={`${inputCls} resize-none`} />
           )}
+          {/* Email delivery toggle */}
+          {composer === "EMAIL" && (
+            <div className="rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2.5 space-y-1">
+              <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                <input type="checkbox" checked={sendEmailNow} onChange={(e) => setSendEmailNow(e.target.checked)} className="rounded border-slate-300" />
+                Send this email to the recipient now
+              </label>
+              {sendEmailNow ? (
+                <p className="text-[11px] text-slate-500">
+                  Sent from: <span className="font-semibold text-slate-700">{activeSender ? `${activeSender.label} · ${activeSender.fromEmail}` : "default account"}</span>
+                  <a href="/admin/integrations" className="ml-1 text-blue-600 hover:underline">change</a>
+                </p>
+              ) : (
+                <p className="text-[11px] text-amber-600">Off — the email will only be logged to the timeline, not delivered.</p>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <button type="button" onClick={createActivity} disabled={saving} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-700 disabled:opacity-50">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save {TYPE_META[composer].label.toLowerCase()}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {composer === "MEETING" && (meetingSend.email || meetingSend.whatsapp || meetingSend.sms)
+                ? "Save & send invite"
+                : composer === "EMAIL" && sendEmailNow
+                ? "Send email"
+                : `Save ${TYPE_META[composer].label.toLowerCase()}`}
             </button>
             <button type="button" onClick={() => setComposer(null)} className="px-3 py-2 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-100">Cancel</button>
           </div>

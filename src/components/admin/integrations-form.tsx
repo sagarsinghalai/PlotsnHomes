@@ -23,6 +23,7 @@ type IntegrationsFormProps = {
     customMeetingUrl: string;
     notificationEmail: string;
     gmailSmtpHost: string;
+    gmailSmtpPort: string;
     gmailSmtpUser: string;
     gmailSmtpPass: string;
     gmailSmtpFrom: string;
@@ -149,17 +150,17 @@ export function IntegrationsForm({ initial, whatsappTemplates = [] }: Integratio
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
-        <h2 className="font-semibold text-slate-900">Gmail / company email notifications</h2>
-        <div className="rounded-xl bg-blue-50 border border-blue-200 p-3 text-xs text-blue-800 space-y-1">
-          <p className="font-bold">📧 How to set up Gmail SMTP (send real emails):</p>
-          <ol className="list-decimal list-inside space-y-0.5">
-            <li>Go to your Google Account &gt; Security &gt; <strong>2-Step Verification</strong> (must be ON)</li>
-            <li>Then go to <strong>App passwords</strong> and create one for "Mail"</li>
-            <li>Copy the 16-character app password</li>
-            <li>Fill in your Gmail address and that app password below</li>
-            <li>All emails sent via BrickVest will now deliver to real inboxes!</li>
-          </ol>
-          <p className="text-blue-600">Alternatively, add <code className="bg-blue-100 px-1 rounded">RESEND_API_KEY</code> to your <code>.env</code> file for Resend delivery.</p>
+        <h2 className="font-semibold text-slate-900">Email (SMTP) — Gmail, Hostinger or any provider</h2>
+        <div className="rounded-xl bg-blue-50 border border-blue-200 p-3 text-xs text-blue-800 space-y-1.5">
+          <p className="font-bold">📧 Send real emails via SMTP. Enter your mailbox details below.</p>
+          <p><strong>Hostinger email</strong> (recommended for a custom domain like you@yourdomain.com):</p>
+          <ul className="list-disc list-inside space-y-0.5">
+            <li>Host: <code className="bg-blue-100 px-1 rounded">smtp.hostinger.com</code> · Port <code className="bg-blue-100 px-1 rounded">465</code> (SSL) or <code className="bg-blue-100 px-1 rounded">587</code></li>
+            <li>User &amp; From: your full email address (e.g. <code className="bg-blue-100 px-1 rounded">info@yourdomain.com</code>)</li>
+            <li>Password: your mailbox password (set in Hostinger → Emails)</li>
+          </ul>
+          <p><strong>Gmail:</strong> host <code className="bg-blue-100 px-1 rounded">smtp.gmail.com</code>, port 587, and a 16-char <strong>App password</strong> (needs 2-Step Verification on).</p>
+          <p className="text-blue-600">Leave these blank to fall back to Resend (<code className="bg-blue-100 px-1 rounded">RESEND_API_KEY</code>).</p>
         </div>
         <Label>Notification inbox (receives alerts)</Label>
         <Input
@@ -167,30 +168,42 @@ export function IntegrationsForm({ initial, whatsappTemplates = [] }: Integratio
           onChange={(e) => set("notificationEmail", e.target.value)}
           placeholder="admin@yourcompany.com"
         />
-        <Label>SMTP host</Label>
-        <Input
-          value={form.gmailSmtpHost}
-          onChange={(e) => set("gmailSmtpHost", e.target.value)}
-          placeholder="smtp.gmail.com"
-        />
-        <Label>Gmail / SMTP user</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="sm:col-span-2">
+            <Label>SMTP host</Label>
+            <Input
+              value={form.gmailSmtpHost}
+              onChange={(e) => set("gmailSmtpHost", e.target.value)}
+              placeholder="smtp.hostinger.com"
+            />
+          </div>
+          <div>
+            <Label>SMTP port</Label>
+            <Input
+              value={form.gmailSmtpPort}
+              onChange={(e) => set("gmailSmtpPort", e.target.value)}
+              placeholder="465"
+            />
+          </div>
+        </div>
+        <Label>SMTP user (full email address)</Label>
         <Input
           value={form.gmailSmtpUser}
           onChange={(e) => set("gmailSmtpUser", e.target.value)}
-          placeholder="you@gmail.com"
+          placeholder="info@yourdomain.com"
         />
-        <Label>App password (16-char Gmail app password)</Label>
+        <Label>Password (mailbox password, or Gmail app password)</Label>
         <Input
           type="password"
           value={form.gmailSmtpPass}
           onChange={(e) => set("gmailSmtpPass", e.target.value)}
-          placeholder="xxxx xxxx xxxx xxxx"
+          placeholder="••••••••••••"
         />
         <Label>From address</Label>
         <Input
           value={form.gmailSmtpFrom}
           onChange={(e) => set("gmailSmtpFrom", e.target.value)}
-          placeholder="BrickVest <you@gmail.com>"
+          placeholder="PlotsnHomes <info@yourdomain.com>"
         />
         <Label>Company name</Label>
         <Input

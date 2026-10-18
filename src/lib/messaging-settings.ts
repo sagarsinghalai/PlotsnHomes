@@ -15,6 +15,7 @@ export const INTEGRATION_KEYS = {
   CUSTOM_MEETING_URL: "custom_meeting_url",
   NOTIFICATION_EMAIL: "notification_email",
   GMAIL_SMTP_HOST: "gmail_smtp_host",
+  GMAIL_SMTP_PORT: "gmail_smtp_port",
   GMAIL_SMTP_USER: "gmail_smtp_user",
   GMAIL_SMTP_PASS: "gmail_smtp_pass",
   GMAIL_SMTP_FROM: "gmail_smtp_from",
@@ -35,6 +36,7 @@ export type MessagingIntegrations = {
   customMeetingUrl: string;
   notificationEmail: string;
   gmailSmtpHost: string;
+  gmailSmtpPort: string;
   gmailSmtpUser: string;
   gmailSmtpPass: string;
   gmailSmtpFrom: string;
@@ -60,6 +62,7 @@ export async function getMessagingIntegrations(): Promise<MessagingIntegrations>
     customMeetingUrl: map[INTEGRATION_KEYS.CUSTOM_MEETING_URL] ?? "",
     notificationEmail: map[INTEGRATION_KEYS.NOTIFICATION_EMAIL] ?? "",
     gmailSmtpHost: map[INTEGRATION_KEYS.GMAIL_SMTP_HOST] ?? "smtp.gmail.com",
+    gmailSmtpPort: map[INTEGRATION_KEYS.GMAIL_SMTP_PORT] || "587",
     gmailSmtpUser: map[INTEGRATION_KEYS.GMAIL_SMTP_USER] ?? "",
     gmailSmtpPass: map[INTEGRATION_KEYS.GMAIL_SMTP_PASS] ?? "",
     gmailSmtpFrom: map[INTEGRATION_KEYS.GMAIL_SMTP_FROM] ?? "",
@@ -95,6 +98,8 @@ export async function saveMessagingIntegrations(data: Partial<MessagingIntegrati
     entries.push([INTEGRATION_KEYS.NOTIFICATION_EMAIL, data.notificationEmail]);
   if (data.gmailSmtpHost !== undefined)
     entries.push([INTEGRATION_KEYS.GMAIL_SMTP_HOST, data.gmailSmtpHost]);
+  if (data.gmailSmtpPort !== undefined)
+    entries.push([INTEGRATION_KEYS.GMAIL_SMTP_PORT, data.gmailSmtpPort]);
   if (data.gmailSmtpUser !== undefined)
     entries.push([INTEGRATION_KEYS.GMAIL_SMTP_USER, data.gmailSmtpUser]);
   if (data.gmailSmtpPass !== undefined)

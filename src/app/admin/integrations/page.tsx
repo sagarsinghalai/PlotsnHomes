@@ -1,4 +1,5 @@
 import { IntegrationsForm } from "@/components/admin/integrations-form";
+import { EmailSendersManager } from "@/components/admin/email-senders-manager";
 import { getCrmSettings } from "@/lib/crm-settings";
 import { getMessagingIntegrations } from "@/lib/messaging-settings";
 
@@ -15,6 +16,7 @@ export default async function AdminIntegrationsPage() {
         WhatsApp Business API, Telegram, Twilio SMS, Calendly / Cal.com, Gmail / company email
       </p>
       <IntegrationsForm initial={config} whatsappTemplates={whatsappTemplates} />
+      <EmailSendersManager />
     </div>
   );
 }

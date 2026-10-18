@@ -20,6 +20,7 @@ const schema = z.object({
   customMeetingUrl: z.string().optional(),
   notificationEmail: z.string().optional(),
   gmailSmtpHost: z.string().optional(),
+  gmailSmtpPort: z.string().optional(),
   gmailSmtpUser: z.string().optional(),
   gmailSmtpPass: z.string().optional(),
   gmailSmtpFrom: z.string().optional(),

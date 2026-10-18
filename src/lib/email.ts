@@ -1,34 +1,94 @@
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
+import { getActiveSender } from "@/lib/email-senders";
+import { getMessagingIntegrations } from "@/lib/messaging-settings";
 
-const apiKey = process.env.RESEND_API_KEY?.trim();
-const isPlaceholderKey = !apiKey || apiKey === "re_..." || !apiKey.startsWith("re_") || apiKey.length < 15;
+const envApiKey = process.env.RESEND_API_KEY?.trim();
+function isRealKey(k?: string): boolean {
+  return Boolean(k && k !== "re_..." && k.startsWith("re_") && k.length >= 15);
+}
 
-const resend = !isPlaceholderKey ? new Resend(apiKey) : null;
-
-const from = process.env.EMAIL_FROM ?? "BrickVest <onboarding@resend.dev>";
+const envFrom = process.env.EMAIL_FROM ?? "BrickVest <onboarding@resend.dev>";
 
 export type SendEmailResult = {
   ok: boolean;
   id: string;
-  provider: "resend" | "dev";
+  provider: "resend" | "dev" | "smtp";
   delivered: boolean;
+  error?: string;
 };
 
-/** Sends email via Resend when configured; logs to DB when EmailLog model exists. Never throws on log failure. */
+/**
+ * Sends email via Resend when configured; logs to DB when EmailLog model exists.
+ * Uses the configured active sender account (from the Email Accounts settings)
+ * when present — or the one named by `fromSenderId` — falling back to the
+ * RESEND_API_KEY / EMAIL_FROM environment values. Never throws on log failure.
+ */
 export async function sendEmail({
   to,
   subject,
   html,
+  cc,
+  bcc,
+  fromSenderId,
 }: {
-  to: string;
+  to: string | string[];
   subject: string;
   html: string;
+  cc?: string | string[];
+  bcc?: string | string[];
+  fromSenderId?: string;
 }): Promise<SendEmailResult> {
-  let provider: "resend" | "dev" = "dev";
+  let provider: "resend" | "dev" | "smtp" = "dev";
   let delivered = false;
   let externalId = "dev";
   let error: string | null = null;
+
+  // 1) Gmail / SMTP takes priority when configured (Integrations → Gmail / company email).
+  try {
+    const integ = await getMessagingIntegrations();
+    if (integ.gmailSmtpUser && integ.gmailSmtpPass) {
+      try {
+        const nm: any = await import("nodemailer");
+        const nodemailer = nm.default ?? nm;
+        const port = parseInt(integ.gmailSmtpPort || "587", 10) || 587;
+        const transporter = nodemailer.createTransport({
+          host: integ.gmailSmtpHost || "smtp.gmail.com",
+          port,
+          secure: port === 465, // SSL on 465, STARTTLS on 587/others
+          auth: { user: integ.gmailSmtpUser, pass: integ.gmailSmtpPass },
+        });
+        const info = await transporter.sendMail({
+          from: integ.gmailSmtpFrom || integ.gmailSmtpUser,
+          to,
+          ...(cc && (Array.isArray(cc) ? cc.length : cc) ? { cc } : {}),
+          ...(bcc && (Array.isArray(bcc) ? bcc.length : bcc) ? { bcc } : {}),
+          subject,
+          html,
+        });
+        provider = "smtp"; delivered = true; externalId = info?.messageId ?? "smtp";
+      } catch (e) {
+        error = e instanceof Error ? e.message : "Gmail SMTP send failed";
+        provider = "smtp"; delivered = false;
+      }
+      await persistEmailLog({
+        to: Array.isArray(to) ? to.join(", ") : to,
+        subject, html, status: delivered ? "SENT" : "FAILED", provider, error,
+      });
+      return { ok: !error, id: externalId, provider, delivered, error: error ?? undefined };
+    }
+  } catch { /* no SMTP config — continue to Resend */ }
+
+  // 2) Resend — resolve which account to send from (active sender account, else env).
+  let from = envFrom;
+  let sendKey = envApiKey;
+  try {
+    const sender = await getActiveSender(fromSenderId);
+    if (sender?.fromEmail) from = sender.fromName ? `${sender.fromName} <${sender.fromEmail}>` : sender.fromEmail;
+    if (sender?.apiKey && isRealKey(sender.apiKey)) sendKey = sender.apiKey;
+  } catch { /* fall back to env */ }
+
+  const resend = isRealKey(sendKey) ? new Resend(sendKey) : null;
 
   if (resend) {
     try {
@@ -37,6 +97,8 @@ export async function sendEmail({
         to,
         subject,
         html,
+        ...(cc && (Array.isArray(cc) ? cc.length : cc) ? { cc } : {}),
+        ...(bcc && (Array.isArray(bcc) ? bcc.length : bcc) ? { bcc } : {}),
       });
       if (resendError) {
         error = resendError.message;
@@ -83,7 +145,7 @@ export async function sendEmail({
   }
 
   await persistEmailLog({
-    to,
+    to: Array.isArray(to) ? to.join(", ") : to,
     subject,
     html,
     status: delivered ? "SENT" : "FAILED",
@@ -95,7 +157,7 @@ export async function sendEmail({
     throw new Error(error);
   }
 
-  return { ok: true, id: externalId, provider, delivered };
+  return { ok: true, id: externalId, provider, delivered, error: error ?? undefined };
 }
 
 async function persistEmailLog(data: {
