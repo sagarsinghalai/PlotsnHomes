@@ -7,6 +7,7 @@ import {
   Settings, ExternalLink, Save, Loader2, Clock, Check, History,
   Bold, Italic, Underline, Link2, Image as ImageIcon, Paperclip, Highlighter,
   Type, MessageSquarePlus, MessageCircle, Send, CornerDownRight, ChevronDown,
+  FileText, X, Download, LayoutTemplate, Braces, Maximize2,
 } from "lucide-react";
 
 type ActType = "NOTE" | "EMAIL" | "CALL" | "TASK" | "MEETING";
@@ -19,6 +20,12 @@ type Comment = {
   createdAt: string;
 };
 
+// A piece of attached media kept in the activity's attachments list.
+type Media = { id: string; name: string; kind: "image" | "file"; mime: string; url: string; size: number };
+
+type TemplateItem = { id: string; name: string; channel: string; subject?: string; body: string };
+type VariableItem = { label: string; key: string };
+
 type Activity = {
   id: string;
   type: ActType;
@@ -28,6 +35,7 @@ type Activity = {
   dueAt: string | null;
   meetingAt: string | null;
   meetingLink: string | null;
+  attachments: string | null;
   completed: boolean;
   authorName: string | null;
   authorUserId: string | null;
@@ -38,6 +46,20 @@ type Activity = {
   createdAt: string;
   updatedAt: string;
 };
+
+function parseMedia(raw: string | null | undefined): Media[] {
+  if (!raw) return [];
+  try { const a = JSON.parse(raw); return Array.isArray(a) ? a : []; } catch { return []; }
+}
+function fmtBytes(n: number): string {
+  if (!n) return "";
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+function genId(): string {
+  try { return crypto.randomUUID(); } catch { return `m-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
+}
 
 const TYPE_META: Record<ActType, { label: string; plural: string; icon: typeof StickyNote; color: string; bg: string }> = {
   NOTE:    { label: "Note",    plural: "Notes",    icon: StickyNote,  color: "text-amber-600",   bg: "bg-amber-50 border-amber-200" },
@@ -96,8 +118,81 @@ function readFileAsDataUrl(file: File): Promise<string> {
 type Draft = { subject: string; body: string; outcome: string; dueAt: string; meetingAt: string; meetingLink: string };
 const emptyDraft = (): Draft => ({ subject: "", body: "", outcome: "", dueAt: "", meetingAt: "", meetingLink: "" });
 
+/* ───────────────────────── Media preview modal ───────────────────────── */
+function MediaPreview({ item, onClose }: { item: Media; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+      <div className="relative max-w-3xl max-h-[85vh] w-full bg-white rounded-xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 bg-slate-50">
+          <p className="text-sm font-bold text-slate-800 truncate">{item.name} <span className="font-medium text-slate-400">· {fmtBytes(item.size)}</span></p>
+          <div className="flex items-center gap-2">
+            <a href={item.url} download={item.name} className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline"><Download className="h-4 w-4" /> Download</a>
+            <button type="button" onClick={onClose} className="p-1 rounded-md hover:bg-slate-200 text-slate-500"><X className="h-4 w-4" /></button>
+          </div>
+        </div>
+        <div className="p-3 overflow-auto max-h-[75vh] bg-slate-100 flex items-center justify-center">
+          {item.kind === "image" ? (
+            <img src={item.url} alt={item.name} className="max-w-full max-h-[70vh] object-contain rounded" />
+          ) : item.mime === "application/pdf" ? (
+            <iframe src={item.url} title={item.name} className="w-full h-[70vh] bg-white rounded" />
+          ) : (
+            <div className="text-center py-10">
+              <FileText className="h-12 w-12 text-slate-400 mx-auto mb-2" />
+              <a href={item.url} download={item.name} className="text-sm font-bold text-blue-600 hover:underline">Download {item.name}</a>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────── Saved attachments list (read view, expand on click) ──────── */
+function SavedAttachments({ raw }: { raw: string | null }) {
+  const items = parseMedia(raw);
+  const [preview, setPreview] = useState<Media | null>(null);
+  const [open, setOpen] = useState(false);
+  if (items.length === 0) return null;
+  return (
+    <div className="pt-1">
+      <button type="button" onClick={() => setOpen((o) => !o)} className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-slate-700">
+        <Paperclip className="h-3.5 w-3.5" /> {items.length} attachment{items.length > 1 ? "s" : ""}
+        <ChevronDown className={`h-3 w-3 transition ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="mt-1.5 space-y-1.5">
+          {items.map((m) => (
+            <button key={m.id} type="button" onClick={() => setPreview(m)} className="w-full flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-left hover:border-slate-300">
+              {m.kind === "image" ? (
+                <img src={m.url} alt={m.name} className="h-9 w-9 rounded object-cover border border-slate-200 shrink-0" />
+              ) : (
+                <span className="h-9 w-9 rounded bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0"><FileText className="h-4 w-4 text-slate-500" /></span>
+              )}
+              <span className="flex-1 min-w-0">
+                <span className="block text-xs font-bold text-slate-700 truncate">{m.name}</span>
+                <span className="block text-[10px] text-slate-400">{fmtBytes(m.size)}</span>
+              </span>
+              <Maximize2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            </button>
+          ))}
+        </div>
+      )}
+      {preview && <MediaPreview item={preview} onClose={() => setPreview(null)} />}
+    </div>
+  );
+}
+
 /* ─────────────────────────── Rich-text editor ─────────────────────────── */
-function RichTextEditor({ value, onChange, placeholder }: { value: string; onChange: (html: string) => void; placeholder: string }) {
+function RichTextEditor({
+  value, onChange, placeholder, media, onMediaChange, variables,
+}: {
+  value: string;
+  onChange: (html: string) => void;
+  placeholder: string;
+  media: Media[];
+  onMediaChange: (m: Media[]) => void;
+  variables?: VariableItem[];
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const imgInput = useRef<HTMLInputElement>(null);
   const attachInput = useRef<HTMLInputElement>(null);
@@ -105,7 +200,10 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
   const [showColor, setShowColor] = useState(false);
   const [showHi, setShowHi] = useState(false);
   const [showSnip, setShowSnip] = useState(false);
+  const [showVars, setShowVars] = useState(false);
   const [empty, setEmpty] = useState(!htmlToText(value || ""));
+  const [pendingImg, setPendingImg] = useState<Media | null>(null);
+  const [preview, setPreview] = useState<Media | null>(null);
 
   // Seed the editable once on mount (uncontrolled afterwards to keep the caret stable).
   useEffect(() => {
@@ -148,22 +246,29 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
     else document.execCommand("insertHTML", false, `<a href="${safe}" target="_blank" rel="noreferrer">${safe}</a>`);
     emit();
   }
+  function insertImageInBody(m: Media) {
+    insertHtml(`<img src="${m.url}" alt="${escapeHtml(m.name)}" style="max-width:100%;border-radius:8px;margin:4px 0;" />`);
+  }
+  function addToAttachments(m: Media) {
+    onMediaChange([...media, m]);
+  }
   async function onPickImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; e.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) { alert("Please choose an image file."); return; }
     if (file.size > MAX_IMAGE_BYTES) { alert("Image must be 2 MB or smaller."); return; }
     const url = await readFileAsDataUrl(file);
-    insertHtml(`<img src="${url}" alt="${file.name}" style="max-width:100%;border-radius:8px;margin:4px 0;" />`);
+    // Ask how to place the image: in the body, as an attachment, or both.
+    setPendingImg({ id: genId(), name: file.name, kind: "image", mime: file.type, url, size: file.size });
   }
   async function onPickAttach(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; e.target.value = "";
     if (!file) return;
     if (file.size > MAX_ATTACH_BYTES) { alert("Attachment must be 3 MB or smaller."); return; }
     const url = await readFileAsDataUrl(file);
-    const kb = Math.max(1, Math.round(file.size / 1024));
-    insertHtml(`<a href="${url}" download="${file.name}" class="crm-attach">📎 ${file.name} <span style="opacity:.6">(${kb} KB)</span></a>`);
+    addToAttachments({ id: genId(), name: file.name, kind: file.type.startsWith("image/") ? "image" : "file", mime: file.type, url, size: file.size });
   }
+  function removeMedia(id: string) { onMediaChange(media.filter((m) => m.id !== id)); }
 
   const btn = "h-8 w-8 inline-flex items-center justify-center rounded-md text-slate-600 hover:bg-slate-100";
   return (
@@ -177,7 +282,7 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
 
         {/* Text colour */}
         <div className="relative">
-          <button type="button" title="Text colour" onMouseDown={(e) => { e.preventDefault(); saveSel(); }} onClick={() => { setShowColor((s) => !s); setShowHi(false); setShowSnip(false); }} className={btn}><Type className="h-4 w-4" /></button>
+          <button type="button" title="Text colour" onMouseDown={(e) => { e.preventDefault(); saveSel(); }} onClick={() => { setShowColor((s) => !s); setShowHi(false); setShowSnip(false); setShowVars(false); }} className={btn}><Type className="h-4 w-4" /></button>
           {showColor && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowColor(false)} />
@@ -192,7 +297,7 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
 
         {/* Highlight */}
         <div className="relative">
-          <button type="button" title="Highlight" onMouseDown={(e) => { e.preventDefault(); saveSel(); }} onClick={() => { setShowHi((s) => !s); setShowColor(false); setShowSnip(false); }} className={btn}><Highlighter className="h-4 w-4" /></button>
+          <button type="button" title="Highlight" onMouseDown={(e) => { e.preventDefault(); saveSel(); }} onClick={() => { setShowHi((s) => !s); setShowColor(false); setShowSnip(false); setShowVars(false); }} className={btn}><Highlighter className="h-4 w-4" /></button>
           {showHi && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowHi(false)} />
@@ -207,12 +312,47 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
         <span className="w-px h-5 bg-slate-200 mx-0.5" />
 
         <button type="button" title="Add link" onMouseDown={(e) => e.preventDefault()} onClick={addLink} className={btn}><Link2 className="h-4 w-4" /></button>
-        <button type="button" title="Insert image" onMouseDown={(e) => { e.preventDefault(); saveSel(); }} onClick={() => imgInput.current?.click()} className={btn}><ImageIcon className="h-4 w-4" /></button>
+
+        {/* Image + placement choice */}
+        <div className="relative">
+          <button type="button" title="Insert image" onMouseDown={(e) => { e.preventDefault(); saveSel(); }} onClick={() => imgInput.current?.click()} className={btn}><ImageIcon className="h-4 w-4" /></button>
+          {pendingImg && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setPendingImg(null)} />
+              <div className="absolute left-0 mt-1 z-20 w-52 p-1 rounded-lg border border-slate-200 bg-white shadow-xl">
+                <p className="px-2.5 py-1 text-[11px] font-bold text-slate-400 uppercase tracking-wide">Add image as…</p>
+                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { insertImageInBody(pendingImg); setPendingImg(null); }} className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-slate-50 text-xs font-bold text-slate-700">Insert in email body</button>
+                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { addToAttachments(pendingImg); setPendingImg(null); }} className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-slate-50 text-xs font-bold text-slate-700">Add as attachment</button>
+                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { insertImageInBody(pendingImg); addToAttachments(pendingImg); setPendingImg(null); }} className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-slate-50 text-xs font-bold text-slate-700">Both</button>
+              </div>
+            </>
+          )}
+        </div>
         <button type="button" title="Attach file" onMouseDown={(e) => { e.preventDefault(); saveSel(); }} onClick={() => attachInput.current?.click()} className={btn}><Paperclip className="h-4 w-4" /></button>
+
+        {/* Variables */}
+        {variables && variables.length > 0 && (
+          <div className="relative">
+            <button type="button" title="Insert variable" onMouseDown={(e) => { e.preventDefault(); saveSel(); }} onClick={() => { setShowVars((s) => !s); setShowColor(false); setShowHi(false); setShowSnip(false); }} className={`${btn} w-auto px-1.5 gap-0.5`}><Braces className="h-4 w-4" /><ChevronDown className="h-3 w-3" /></button>
+            {showVars && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowVars(false)} />
+                <div className="absolute left-0 mt-1 z-20 w-64 max-h-64 overflow-y-auto p-1 rounded-lg border border-slate-200 bg-white shadow-xl">
+                  {variables.map((v) => (
+                    <button key={v.key} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { insertHtml(escapeHtml(v.key)); setShowVars(false); }} className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-slate-50">
+                      <span className="block text-xs font-bold text-slate-700">{v.label}</span>
+                      <span className="block text-[11px] text-slate-400 font-mono truncate">{v.key}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Snippets */}
         <div className="relative">
-          <button type="button" title="Insert snippet" onMouseDown={(e) => { e.preventDefault(); saveSel(); }} onClick={() => { setShowSnip((s) => !s); setShowColor(false); setShowHi(false); }} className={`${btn} w-auto px-1.5 gap-0.5`}><MessageSquarePlus className="h-4 w-4" /><ChevronDown className="h-3 w-3" /></button>
+          <button type="button" title="Insert snippet" onMouseDown={(e) => { e.preventDefault(); saveSel(); }} onClick={() => { setShowSnip((s) => !s); setShowColor(false); setShowHi(false); setShowVars(false); }} className={`${btn} w-auto px-1.5 gap-0.5`}><MessageSquarePlus className="h-4 w-4" /><ChevronDown className="h-3 w-3" /></button>
           {showSnip && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowSnip(false)} />
@@ -244,6 +384,35 @@ function RichTextEditor({ value, onChange, placeholder }: { value: string; onCha
           className="crm-rte min-h-[90px] max-h-[320px] overflow-y-auto px-3 py-2.5 text-sm text-slate-800 outline-none leading-relaxed"
         />
       </div>
+
+      {/* Attachments list (collapsed rows that expand on click) */}
+      {media.length > 0 && (
+        <div className="border-t border-slate-200 px-2.5 py-2 space-y-1.5 bg-slate-50/50">
+          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Attachments ({media.length})</p>
+          {media.map((m) => (
+            <div key={m.id} className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5">
+              <button type="button" onClick={() => setPreview(m)} className="shrink-0" title="Expand">
+                {m.kind === "image" ? (
+                  <img src={m.url} alt={m.name} className="h-8 w-8 rounded object-cover border border-slate-200" />
+                ) : (
+                  <span className="h-8 w-8 rounded bg-slate-100 border border-slate-200 flex items-center justify-center"><FileText className="h-4 w-4 text-slate-500" /></span>
+                )}
+              </button>
+              <button type="button" onClick={() => setPreview(m)} className="flex-1 min-w-0 text-left">
+                <span className="block text-xs font-bold text-slate-700 truncate">{m.name}</span>
+                <span className="block text-[10px] text-slate-400">{fmtBytes(m.size)}</span>
+              </button>
+              <button type="button" onClick={() => setPreview(m)} className="p-1 rounded-md hover:bg-slate-100 text-slate-500" title="Expand"><Maximize2 className="h-3.5 w-3.5" /></button>
+              {m.kind === "image" && (
+                <button type="button" onClick={() => insertImageInBody(m)} className="p-1 rounded-md hover:bg-slate-100 text-slate-500" title="Insert in body"><ImageIcon className="h-3.5 w-3.5" /></button>
+              )}
+              <button type="button" onClick={() => removeMedia(m.id)} className="p-1 rounded-md hover:bg-rose-50 text-rose-500" title="Delete"><Trash2 className="h-3.5 w-3.5" /></button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {preview && <MediaPreview item={preview} onClose={() => setPreview(null)} />}
     </div>
   );
 }
@@ -274,6 +443,14 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [openComments, setOpenComments] = useState<Set<string>>(new Set());
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  // Media attachments for the new-activity composer and the inline editor.
+  const [draftMedia, setDraftMedia] = useState<Media[]>([]);
+  const [editMedia, setEditMedia] = useState<Media[]>([]);
+  // Email templates + variables (loaded once).
+  const [templates, setTemplates] = useState<TemplateItem[]>([]);
+  const [variables, setVariables] = useState<VariableItem[]>([]);
+  const [showTpl, setShowTpl] = useState(false);
+  const [editorNonce, setEditorNonce] = useState(0); // bump to re-seed the composer editor (e.g. after applying a template)
 
   async function load() {
     setLoading(true);
@@ -285,6 +462,53 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [contactId]);
 
+  // Load email templates + merge variables once.
+  useEffect(() => {
+    (async () => {
+      try {
+        const [tplRes, varRes] = await Promise.all([
+          fetch("/api/admin/templates"), fetch("/api/admin/variables"),
+        ]);
+        if (tplRes.ok) {
+          const d = await tplRes.json();
+          setTemplates((d.templates ?? []).filter((t: TemplateItem) => t.channel === "email"));
+        }
+        if (varRes.ok) {
+          const d = await varRes.json();
+          const sys: VariableItem[] = (d.systemVariables ?? []).map((v: any) => ({ label: v.label, key: v.key }));
+          const glob: VariableItem[] = (d.globalCustomVariables ?? []).map((v: any) => ({ label: v.name, key: v.key }));
+          setVariables([...sys, ...glob]);
+        }
+      } catch { /* non-fatal */ }
+    })();
+  }, []);
+
+  // Replace known contact variables in a template string.
+  function fillVars(s: string): string {
+    return (s || "")
+      .replace(/\{\{name\}\}/g, contactName || "")
+      .replace(/\{\{email\}\}/g, contactEmail || "");
+  }
+  function applyTemplate(t: TemplateItem) {
+    let body = fillVars(t.body || "");
+    // Plain-text templates keep their line breaks when shown in the rich editor.
+    if (body && !looksLikeHtml(body)) body = escapeHtml(body).replace(/\n/g, "<br>");
+    setDraft((d) => ({ ...d, subject: fillVars(t.subject || ""), body }));
+    setEditorNonce((n) => n + 1);
+    setShowTpl(false);
+  }
+  async function saveAsTemplate() {
+    const name = window.prompt("Template name");
+    if (!name || !name.trim()) return;
+    const tpl: TemplateItem = { id: `tpl-${Date.now()}`, name: name.trim(), channel: "email", subject: draft.subject || "", body: draft.body || "" };
+    const res = await fetch("/api/admin/templates", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ template: tpl }),
+    });
+    if (res.ok) { setTemplates((list) => [tpl, ...list]); alert("Saved as template."); }
+    else alert("Could not save template.");
+  }
+
   const usesRichText = (t: ActType) => t === "NOTE" || t === "EMAIL";
 
   function openComposer(type: ActType) {
@@ -292,6 +516,8 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
     const d = emptyDraft();
     if (type === "MEETING" && schedulingLink) d.meetingLink = schedulingLink;
     setDraft(d);
+    setDraftMedia([]);
+    setEditorNonce((n) => n + 1);
     if (type === "EMAIL") {
       setEmailTo(contactEmail ? `${contactName} <${contactEmail}>` : contactName);
       setEmailCc(""); setEmailBcc(""); setShowCc(false); setShowBcc(false);
@@ -301,7 +527,7 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
   async function createActivity() {
     if (!composer) return;
     const bodyText = usesRichText(composer) ? htmlToText(draft.body) : draft.body.trim();
-    const hasContent = bodyText || draft.subject.trim() || draft.outcome.trim() || draft.meetingAt || draft.dueAt;
+    const hasContent = bodyText || draft.subject.trim() || draft.outcome.trim() || draft.meetingAt || draft.dueAt || draftMedia.length > 0;
     if (!hasContent) return;
     // For emails, record the recipients (To / From / Cc / Bcc) as a header in the body.
     let bodyToSave = draft.body;
@@ -326,10 +552,11 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
           dueAt: draft.dueAt || null,
           meetingAt: draft.meetingAt || null,
           meetingLink: draft.meetingLink || null,
+          attachments: draftMedia.length ? JSON.stringify(draftMedia) : null,
         }),
       });
       const data = await res.json();
-      if (res.ok) { setActivities((a) => [data.activity, ...a]); setComposer(null); setDraft(emptyDraft()); }
+      if (res.ok) { setActivities((a) => [data.activity, ...a]); setComposer(null); setDraft(emptyDraft()); setDraftMedia([]); }
     } finally { setSaving(false); }
   }
 
@@ -341,6 +568,7 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
       dueAt: a.dueAt ? a.dueAt.slice(0, 16) : "", meetingAt: a.meetingAt ? a.meetingAt.slice(0, 16) : "",
       meetingLink: a.meetingLink ?? "",
     });
+    setEditMedia(parseMedia(a.attachments));
   }
 
   async function saveEdit(id: string) {
@@ -351,6 +579,7 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
         body: JSON.stringify({
           activityId: id, subject: editDraft.subject, body: editDraft.body, outcome: editDraft.outcome,
           dueAt: editDraft.dueAt || null, meetingAt: editDraft.meetingAt || null, meetingLink: editDraft.meetingLink || null,
+          attachments: editMedia.length ? JSON.stringify(editMedia) : null,
         }),
       });
       const data = await res.json();
@@ -479,6 +708,37 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
       {/* Composer panel */}
       {composer && (
         <div className="px-4 py-3 bg-white border-b border-slate-200 space-y-2.5">
+          {/* Email template bar: apply a saved template or save the current email as one */}
+          {composer === "EMAIL" && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="relative">
+                <button type="button" onClick={() => setShowTpl((s) => !s)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50">
+                  <LayoutTemplate className="h-4 w-4" /> Templates <ChevronDown className="h-3 w-3" />
+                </button>
+                {showTpl && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowTpl(false)} />
+                    <div className="absolute left-0 mt-1 z-20 w-72 max-h-64 overflow-y-auto p-1 rounded-lg border border-slate-200 bg-white shadow-xl">
+                      {templates.length === 0 ? (
+                        <p className="px-2.5 py-2 text-xs text-slate-400">No email templates yet. Write one and click “Save as template”.</p>
+                      ) : templates.map((t) => (
+                        <button key={t.id} type="button" onClick={() => applyTemplate(t)} className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-slate-50">
+                          <span className="block text-xs font-bold text-slate-700 truncate">{t.name}</span>
+                          {t.subject && <span className="block text-[11px] text-slate-400 truncate">{t.subject}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              <button type="button" onClick={saveAsTemplate}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50">
+                <Save className="h-4 w-4" /> Save as template
+              </button>
+              <span className="text-[11px] text-slate-400">Variables fill from the contact; use the {"{{ }}"} button to insert more.</span>
+            </div>
+          )}
           {/* HubSpot-style email recipients */}
           {composer === "EMAIL" && (
             <div className="rounded-lg border border-slate-200 divide-y divide-slate-100 text-sm">
@@ -532,7 +792,9 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
             </div>
           )}
           {usesRichText(composer) ? (
-            <RichTextEditor key={`new-${composer}`} value={draft.body} onChange={(html) => setDraft((d) => ({ ...d, body: html }))}
+            <RichTextEditor key={`new-${composer}-${editorNonce}`} value={draft.body} onChange={(html) => setDraft((d) => ({ ...d, body: html }))}
+              media={draftMedia} onMediaChange={setDraftMedia}
+              variables={composer === "EMAIL" ? variables : undefined}
               placeholder={composer === "NOTE" ? "Add a note…" : "Log the email content…"} />
           ) : (
             <textarea value={draft.body} onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))} rows={3}
@@ -616,7 +878,10 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
                             </div>
                           )}
                           {usesRichText(a.type) ? (
-                            <RichTextEditor key={`edit-${a.id}`} value={editDraft.body} onChange={(html) => setEditDraft((d) => ({ ...d, body: html }))} placeholder="Edit the note…" />
+                            <RichTextEditor key={`edit-${a.id}`} value={editDraft.body} onChange={(html) => setEditDraft((d) => ({ ...d, body: html }))}
+                              media={editMedia} onMediaChange={setEditMedia}
+                              variables={a.type === "EMAIL" ? variables : undefined}
+                              placeholder="Edit the note…" />
                           ) : (
                             <textarea value={editDraft.body} onChange={(e) => setEditDraft((d) => ({ ...d, body: e.target.value }))} rows={3} className={`${inputCls} resize-none`} />
                           )}
@@ -641,6 +906,9 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
                           {a.body && (looksLikeHtml(a.body)
                             ? <div className="crm-note text-sm text-slate-700 break-words leading-relaxed" dangerouslySetInnerHTML={{ __html: a.body }} />
                             : <p className="text-sm text-slate-700 whitespace-pre-wrap break-words leading-relaxed">{a.body}</p>)}
+
+                          {/* Attachments (expandable list) */}
+                          <SavedAttachments raw={a.attachments} />
 
                           {/* Edit-audit trail */}
                           {a.editedAt && (

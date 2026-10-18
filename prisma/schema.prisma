@@ -212,6 +212,7 @@ model UserActivity {
   completed    Boolean  @default(false) // task done
   meetingAt    DateTime? // meeting date & time
   meetingLink  String?  // Calendly / Cal.com / scheduling link
+  attachments  String?  // JSON array of attached media { id, name, type, mime, url, size }
   pinned       Boolean  @default(false)
   authorId     String?
   authorName   String?  // denormalised for display

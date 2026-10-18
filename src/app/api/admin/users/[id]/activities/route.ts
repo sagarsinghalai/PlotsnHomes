@@ -17,6 +17,7 @@ const createSchema = z.object({
   dueAt: z.string().optional().nullable(),
   meetingAt: z.string().optional().nullable(),
   meetingLink: z.string().max(1000).optional().nullable(),
+  attachments: z.string().max(BODY_MAX).optional().nullable(),
 });
 
 const patchSchema = z.object({
@@ -27,6 +28,7 @@ const patchSchema = z.object({
   dueAt: z.string().optional().nullable(),
   meetingAt: z.string().optional().nullable(),
   meetingLink: z.string().max(1000).optional().nullable(),
+  attachments: z.string().max(BODY_MAX).optional().nullable(),
   completed: z.boolean().optional(),
   pinned: z.boolean().optional(),
   setSchedulingLink: z.string().max(1000).optional(),
@@ -92,6 +94,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         dueAt: data.dueAt ? new Date(data.dueAt) : null,
         meetingAt: data.meetingAt ? new Date(data.meetingAt) : null,
         meetingLink: data.meetingLink || null,
+        attachments: data.attachments || null,
         authorId: auth.session?.user?.id ?? null,
         authorName: admin?.name ?? "Admin",
         authorUserId: admin?.userId ?? null,
@@ -138,6 +141,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         ...(data.dueAt !== undefined && { dueAt: data.dueAt ? new Date(data.dueAt) : null }),
         ...(data.meetingAt !== undefined && { meetingAt: data.meetingAt ? new Date(data.meetingAt) : null }),
         ...(data.meetingLink !== undefined && { meetingLink: data.meetingLink || null }),
+        ...(data.attachments !== undefined && { attachments: data.attachments || null }),
         ...(data.completed !== undefined && { completed: data.completed }),
         ...(data.pinned !== undefined && { pinned: data.pinned }),
         // Record who made this edit & when (audit trail).

@@ -42,7 +42,7 @@ const TEXT_FIELDS = {
   SubscriptionPlan: ["description", "featuresJson"],
   UserSubscription: ["notes"],
   CustomFieldDef: ["options"],
-  UserActivity: ["body", "subject", "outcome"],
+  UserActivity: ["body", "subject", "outcome", "attachments"],
   ActivityComment: ["body"],
 };
 
