@@ -456,6 +456,7 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
   const [sendEmailNow, setSendEmailNow] = useState(true); // EMAIL composer: actually deliver, not just log
   const [senders, setSenders] = useState<{ id: string; label: string; fromEmail: string }[]>([]);
   const [activeSenderId, setActiveSenderId] = useState("");
+  const [effectiveFrom, setEffectiveFrom] = useState(""); // the address the system actually sends from
 
   async function load() {
     setLoading(true);
@@ -489,12 +490,11 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
           const d = await sndRes.json();
           setSenders((d.senders ?? []).map((s: any) => ({ id: s.id, label: s.label, fromEmail: s.fromEmail })));
           setActiveSenderId(d.activeId ?? "");
+          setEffectiveFrom(d.effectiveFrom ?? "");
         }
       } catch { /* non-fatal */ }
     })();
   }, []);
-
-  const activeSender = senders.find((s) => s.id === activeSenderId) || senders[0] || null;
 
   // Replace known contact variables in a template string.
   function fillVars(s: string): string {
@@ -548,7 +548,7 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
     if (composer === "EMAIL") {
       const rows: string[] = [];
       if (emailTo.trim()) rows.push(`<b>To:</b> ${escapeHtml(emailTo.trim())}`);
-      rows.push(`<b>From:</b> ${escapeHtml(fromEmail ? `${fromName} <${fromEmail}>` : fromName)}`);
+      rows.push(`<b>From:</b> ${escapeHtml(effectiveFrom || (fromEmail ? `${fromName} <${fromEmail}>` : fromName))}`);
       if (emailCc.trim()) rows.push(`<b>Cc:</b> ${escapeHtml(emailCc.trim())}`);
       if (emailBcc.trim()) rows.push(`<b>Bcc:</b> ${escapeHtml(emailBcc.trim())}`);
       const header = `<div style="font-size:12px;color:#475569;border-bottom:1px solid #e2e8f0;padding-bottom:6px;margin-bottom:8px;line-height:1.6">${rows.join("<br/>")}</div>`;
@@ -832,7 +832,8 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
               )}
               <div className="flex items-center gap-2 px-3 py-2 bg-slate-50/60">
                 <span className="w-12 shrink-0 text-xs font-bold text-slate-500">From</span>
-                <span className="flex-1 text-slate-600 truncate">{fromEmail ? `${fromName} <${fromEmail}>` : fromName}</span>
+                <span className="flex-1 text-slate-600 truncate">{effectiveFrom || (fromEmail ? `${fromName} <${fromEmail}>` : fromName)}</span>
+                <a href="/admin/integrations" className="shrink-0 text-xs font-bold text-blue-600 hover:underline">change</a>
               </div>
             </div>
           )}
@@ -871,7 +872,7 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
                 </div>
                 {meetingSend.email && (
                   <p className="text-[11px] text-slate-500">
-                    Emailed from: <span className="font-semibold text-slate-700">{activeSender ? `${activeSender.label} · ${activeSender.fromEmail}` : "default account"}</span>
+                    Emailed from: <span className="font-semibold text-slate-700">{effectiveFrom || "default account"}</span>
                     <a href="/admin/integrations" className="ml-1 text-blue-600 hover:underline">change</a>
                   </p>
                 )}
@@ -900,7 +901,7 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
               </label>
               {sendEmailNow ? (
                 <p className="text-[11px] text-slate-500">
-                  Sent from: <span className="font-semibold text-slate-700">{activeSender ? `${activeSender.label} · ${activeSender.fromEmail}` : "default account"}</span>
+                  Sent from: <span className="font-semibold text-slate-700">{effectiveFrom || "default account"}</span>
                   <a href="/admin/integrations" className="ml-1 text-blue-600 hover:underline">change</a>
                 </p>
               ) : (

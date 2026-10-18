@@ -4,6 +4,7 @@ import { requireAdminApi } from "@/lib/admin-api";
 import {
   getEmailSendersState,
   saveEmailSendersState,
+  getEffectiveFromAddress,
   type EmailSender,
 } from "@/lib/email-senders";
 
@@ -40,7 +41,8 @@ export async function GET() {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
   const state = await getEmailSendersState();
-  return NextResponse.json({ senders: mask(state.senders), activeId: state.activeId });
+  const effectiveFrom = await getEffectiveFromAddress();
+  return NextResponse.json({ senders: mask(state.senders), activeId: state.activeId, effectiveFrom });
 }
 
 export async function POST(req: Request) {

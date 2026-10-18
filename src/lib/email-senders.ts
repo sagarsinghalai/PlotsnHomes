@@ -1,4 +1,5 @@
 import { getSetting, setSetting } from "@/lib/system-settings";
+import { getMessagingIntegrations } from "@/lib/messaging-settings";
 
 // A configurable "from" email account. When apiKey is set it uses its own
 // Resend key (lets you send from different accounts/domains); otherwise it
@@ -41,4 +42,21 @@ export async function getActiveSender(senderId?: string): Promise<EmailSender | 
   if (senders.length === 0) return null;
   const wanted = senderId || activeId;
   return senders.find((s) => s.id === wanted) || senders[0];
+}
+
+/**
+ * The "from" address the system will actually send with, matching the real
+ * send priority: configured Gmail/SMTP first, then the active sender account,
+ * then the EMAIL_FROM environment default.
+ */
+export async function getEffectiveFromAddress(): Promise<string> {
+  try {
+    const integ = await getMessagingIntegrations();
+    if (integ.gmailSmtpUser && integ.gmailSmtpPass) {
+      return integ.gmailSmtpFrom || integ.gmailSmtpUser;
+    }
+  } catch { /* ignore */ }
+  const active = await getActiveSender();
+  if (active?.fromEmail) return active.fromName ? `${active.fromName} <${active.fromEmail}>` : active.fromEmail;
+  return process.env.EMAIL_FROM || "";
 }
