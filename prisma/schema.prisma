@@ -656,6 +656,9 @@ model Developer {
   identityNumber  String?
   website         String?
   description     String?
+  logo                 String?
+  projectsDelivered    Int?
+  ongoingProjectsCount Int?
   tasks           DeveloperTask[]
   projects        Project[]
   properties      Property[]
@@ -734,6 +737,11 @@ model Project {
   configurationsJson    String?    @default("[]")
   towersJson            String?    @default("[]")
   unitsJson             String?    @default("[]")
+
+  // Media assets, pricing extras & sales managers
+  assetsJson            String?    @default("[]")
+  pricingExtraJson      String?    @default("[]")
+  salesManagersJson     String?    @default("[]")
 
   // Amenities & Specifications
   amenitiesJson         String?    @default("{}")

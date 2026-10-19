@@ -24,6 +24,9 @@ const patchSchema = z.object({
   identityNumber: z.string().optional().nullable(),
   website: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
+  logo: z.string().optional().nullable(),
+  projectsDelivered: z.number().int().min(0).optional().nullable(),
+  ongoingProjectsCount: z.number().int().min(0).optional().nullable(),
 });
 
 export async function PATCH(
@@ -73,6 +76,9 @@ export async function PATCH(
         ...(data.identityNumber !== undefined && { identityNumber: data.identityNumber || null }),
         ...(data.website !== undefined && { website: data.website || null }),
         ...(data.description !== undefined && { description: data.description || null }),
+        ...(data.logo !== undefined && { logo: data.logo || null }),
+        ...(data.projectsDelivered !== undefined && { projectsDelivered: data.projectsDelivered }),
+        ...(data.ongoingProjectsCount !== undefined && { ongoingProjectsCount: data.ongoingProjectsCount }),
       },
     });
 

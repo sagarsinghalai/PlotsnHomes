@@ -33,6 +33,7 @@ import {
   TrendingUp,
   UserCheck,
   Users,
+  Users2,
   Workflow,
   Menu,
   X,
@@ -67,6 +68,7 @@ const DEFAULT_NAV: NavGroup[] = [
     title: "People",
     items: [
       { href: "/admin/users", label: "Users & accounts", icon: Users },
+      { href: "/admin/teams", label: "Teams", icon: Users2 },
       { href: "/admin/hierarchy", label: "Team hierarchy", icon: GitFork },
       { href: "/admin/organization", label: "Organizations & Franchises", icon: Building2 },
       { href: "/admin/developers", label: "Developers", icon: Package },

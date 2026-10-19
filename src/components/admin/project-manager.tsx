@@ -38,6 +38,10 @@ import {
   CheckSquare,
   Building,
   Image as ImageIcon,
+  Loader2,
+  FileSpreadsheet,
+  Link2,
+  Film,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +53,12 @@ export interface DeveloperOption {
   name: string;
   email?: string | null;
   phone?: string | null;
+  website?: string | null;
+  description?: string | null;
+  experienceYears?: number | null;
+  logo?: string | null;
+  projectsDelivered?: number | null;
+  ongoingProjectsCount?: number | null;
 }
 
 export interface ProjectData {
@@ -124,6 +134,11 @@ export interface ProjectData {
   configurationsJson?: string | null;
   towersJson?: string | null;
   unitsJson?: string | null;
+
+  // New: media assets, pricing extras & sales managers
+  assetsJson?: string | null;
+  pricingExtraJson?: string | null;
+  salesManagersJson?: string | null;
 
   // 9. Amenities & 10. Nearby & 11. Specs & 12. Docs & 21. Timeline
   amenitiesJson?: string | null;
@@ -343,8 +358,9 @@ export function ProjectManager({
   });
 
   // Section 17: Lead Settings
-  const [leadSettingsObj, setLeadSettingsObj] = useState({
-    assignTeam: "Residential Sales Team Alpha",
+  const [leadSettingsObj, setLeadSettingsObj] = useState<any>({
+    assignTeam: "",
+    assignTeamId: "",
     defaultLeadSource: "Website",
     autoAssignment: true,
     notificationEmail: "leads@projectdomain.com",
@@ -352,20 +368,23 @@ export function ProjectManager({
     leadFormEnabled: true,
   });
 
-  // Section 20: Financial Information
-  const [financialInfoObj, setFinancialInfoObj] = useState({
-    constructionLinkedPlan: true,
-    constructionLinkedPlanDetails: "10% Booking, 15% Excavation, 15% Slab 5, 10% Possession",
-    downPaymentPlan: true,
-    downPaymentPlanDetails: "10% Booking, 80% in 30 Days (8% Discount), 10% Possession",
+  // Section 20: Financial Information (richer structure with listings)
+  const [financialInfoObj, setFinancialInfoObj] = useState<any>({
     emiAvailable: true,
-    loanPartners: "HDFC Bank, ICICI Bank, SBI, Axis Bank, Kotak Mahindra",
-    bankApprovals: "HDFC, SBI, ICICI, Axis Bank, PNB Housing",
     emiCalculator: true,
+    paymentPlans: [
+      { name: "Construction Linked Plan", type: "CLP", details: "10% Booking, 15% Excavation, 15% Slab 5, 10% Possession", enabled: true },
+      { name: "Down Payment Plan", type: "Down Payment", details: "10% Booking, 80% in 30 Days (8% Discount), 10% Possession", enabled: true },
+    ],
+    bankApprovals: [
+      { bankName: "HDFC Bank", loanType: "Home Loan", interestRate: "8.70", maxFundingPct: "80", status: "Approved" },
+      { bankName: "SBI", loanType: "Home Loan", interestRate: "8.50", maxFundingPct: "85", status: "Approved" },
+    ],
+    loanPartners: [{ name: "HDFC Bank" }, { name: "ICICI Bank" }, { name: "SBI" }, { name: "Axis Bank" }],
   });
 
-  // Section 21: Timeline
-  const [timelineObj, setTimelineObj] = useState({
+  // Section 21: Timeline (extended with milestones, videos & video links)
+  const [timelineObj, setTimelineObj] = useState<any>({
     foundationStatus: "Completed",
     structureStatus: "Completed",
     finishingStatus: "Ongoing",
@@ -374,12 +393,15 @@ export function ProjectManager({
       "https://images.unsplash.com/photo-1541888946425-d0fbb186a5b7",
       "https://images.unsplash.com/photo-1503387762-592deb58ef4e",
     ],
+    milestones: [],
+    videos: [],
+    videoLinks: [],
   });
 
   const [newProgressImageUrl, setNewProgressImageUrl] = useState("");
 
-  // Section 22: Analytics
-  const [analyticsObj, setAnalyticsObj] = useState({
+  // Section 22: Analytics (extended with custom metrics)
+  const [analyticsObj, setAnalyticsObj] = useState<any>({
     views: 1240,
     enquiries: 84,
     favorites: 42,
@@ -387,6 +409,7 @@ export function ProjectManager({
     conversions: 12,
     revenue: 45000000,
     leadSources: "Website (45%), Google Ads (30%), Walk-in (15%), Referral (10%)",
+    customMetrics: [],
   });
 
   // Section 25: Relationships
@@ -413,6 +436,52 @@ export function ProjectManager({
   const [newCustomFieldName, setNewCustomFieldName] = useState("");
   const [newCustomFieldType, setNewCustomFieldType] = useState("Text");
   const [newCustomFieldValue, setNewCustomFieldValue] = useState("");
+
+  // New dynamic lists & section helpers
+  const [assetsList, setAssetsList] = useState<any[]>([]);
+  const [pricingExtraList, setPricingExtraList] = useState<any[]>([]);
+  const [salesManagersList, setSalesManagersList] = useState<any[]>([]);
+  const [teamsOptions, setTeamsOptions] = useState<{ id: string; name: string }[]>([]);
+  const [newAmenity, setNewAmenity] = useState("");
+  const [newTag, setNewTag] = useState("");
+  const [newDocLabel, setNewDocLabel] = useState("");
+  const [newVideoLink, setNewVideoLink] = useState("");
+  const [uploading, setUploading] = useState<string | null>(null);
+
+  // Upload a file to the shared /api/upload endpoint (Cloudinary → local fallback).
+  async function uploadFile(file: File, kind?: string): Promise<{ url: string; name: string; type: string; kind: string } | null> {
+    const fd = new FormData();
+    fd.append("file", file);
+    if (kind) fd.append("kind", kind);
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        alert(data.error || "Upload failed");
+        return null;
+      }
+      return { url: data.url, name: data.name, type: data.type, kind: data.kind };
+    } catch {
+      alert("Upload failed. Please try again.");
+      return null;
+    }
+  }
+
+  // Parse the first sheet of an .xlsx/.csv file into row objects, then map each
+  // row via `mapRow` (header lookups are case-insensitive).
+  async function parseExcel(file: File, mapRow: (get: (col: string) => any) => any): Promise<any[]> {
+    const XLSX = await import("xlsx");
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: "array" });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+    return rows.map((row) => {
+      const lower: Record<string, any> = {};
+      Object.keys(row).forEach((k) => { lower[k.toLowerCase().trim()] = row[k]; });
+      const get = (col: string) => lower[col.toLowerCase().trim()] ?? "";
+      return mapRow(get);
+    });
+  }
 
   // Fetch developers if not passed
   useEffect(() => {
@@ -479,6 +548,16 @@ export function ProjectManager({
     fetchProjects();
   }, [selectedDeveloperId, statusFilter, searchQuery]);
 
+  // Load teams for the Lead Settings "Assign Team" dropdown
+  useEffect(() => {
+    fetch("/api/admin/teams")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.teams) setTeamsOptions(data.teams.map((t: any) => ({ id: t.id, name: t.name })));
+      })
+      .catch(() => {});
+  }, []);
+
   const handleOpenAddModal = () => {
     setEditingProjectId(null);
     setFormData({
@@ -518,13 +597,34 @@ export function ProjectManager({
       crmAssignedId: "",
       salesManagerName: "",
     });
+    setAssetsList([]);
+    setPricingExtraList([]);
+    setSalesManagersList([]);
     setActiveTab("basic");
     setModalOpen(true);
   };
 
   const handleOpenEditModal = (proj: ProjectData) => {
     setEditingProjectId(proj.id);
-    setFormData(proj);
+    // Builder Info reflects the linked developer (source of truth): overlay the
+    // developer's profile so the builder name stays consistent with it and the
+    // two-way sync on save never renames the developer by accident. Project
+    // values are kept where the developer has none.
+    const dev = proj.developerId ? developers.find((d) => d.id === proj.developerId) : null;
+    setFormData(
+      dev
+        ? {
+            ...proj,
+            builderName: dev.name,
+            builderLogo: dev.logo ?? proj.builderLogo ?? "",
+            website: dev.website ?? proj.website ?? "",
+            aboutBuilder: dev.description ?? proj.aboutBuilder ?? "",
+            yearsExperience: dev.experienceYears ?? proj.yearsExperience ?? null,
+            projectsDelivered: dev.projectsDelivered ?? proj.projectsDelivered ?? null,
+            ongoingProjectsCount: dev.ongoingProjectsCount ?? proj.ongoingProjectsCount ?? null,
+          }
+        : proj
+    );
 
     try {
       if (proj.configurationsJson) setConfigurationsList(JSON.parse(proj.configurationsJson));
@@ -536,11 +636,61 @@ export function ProjectManager({
       if (proj.amenitiesJson) setAmenitiesMap(JSON.parse(proj.amenitiesJson));
       if (proj.tagsJson) setTagsMap(JSON.parse(proj.tagsJson));
       if (proj.leadSettingsJson) setLeadSettingsObj(JSON.parse(proj.leadSettingsJson));
-      if (proj.financialInfoJson) setFinancialInfoObj(JSON.parse(proj.financialInfoJson));
-      if (proj.timelineJson) setTimelineObj(JSON.parse(proj.timelineJson));
-      if (proj.analyticsJson) setAnalyticsObj(JSON.parse(proj.analyticsJson));
       if (proj.relationshipsJson) setRelationshipsMap(JSON.parse(proj.relationshipsJson));
       if (proj.customFieldsJson) setCustomFieldsList(JSON.parse(proj.customFieldsJson));
+
+      // New dynamic lists
+      setAssetsList(proj.assetsJson ? JSON.parse(proj.assetsJson) : []);
+      setPricingExtraList(proj.pricingExtraJson ? JSON.parse(proj.pricingExtraJson) : []);
+      const parsedManagers = proj.salesManagersJson ? JSON.parse(proj.salesManagersJson) : [];
+      setSalesManagersList(
+        Array.isArray(parsedManagers) && parsedManagers.length > 0
+          ? parsedManagers
+          : proj.salesManagerName
+            ? [{ name: proj.salesManagerName, role: "", phone: proj.salesPhone || "", email: proj.salesEmail || "", whatsapp: proj.salesWhatsapp || "" }]
+            : []
+      );
+
+      // Analytics — ensure customMetrics array
+      if (proj.analyticsJson) {
+        const a = JSON.parse(proj.analyticsJson);
+        setAnalyticsObj({ ...a, customMetrics: Array.isArray(a.customMetrics) ? a.customMetrics : [] });
+      }
+
+      // Timeline — ensure milestones/videos/videoLinks arrays
+      if (proj.timelineJson) {
+        const t = JSON.parse(proj.timelineJson);
+        setTimelineObj({
+          ...t,
+          progressImages: Array.isArray(t.progressImages) ? t.progressImages : [],
+          milestones: Array.isArray(t.milestones) ? t.milestones : [],
+          videos: Array.isArray(t.videos) ? t.videos : [],
+          videoLinks: Array.isArray(t.videoLinks) ? t.videoLinks : [],
+        });
+      }
+
+      // Financial — migrate old flat shape into listings when needed
+      if (proj.financialInfoJson) {
+        const f = JSON.parse(proj.financialInfoJson);
+        const next: any = {
+          emiAvailable: f.emiAvailable ?? true,
+          emiCalculator: f.emiCalculator ?? true,
+          paymentPlans: Array.isArray(f.paymentPlans) ? f.paymentPlans : [],
+          bankApprovals: Array.isArray(f.bankApprovals) ? f.bankApprovals : [],
+          loanPartners: Array.isArray(f.loanPartners) ? f.loanPartners : [],
+        };
+        if (next.paymentPlans.length === 0) {
+          if (f.constructionLinkedPlanDetails) next.paymentPlans.push({ name: "Construction Linked Plan", type: "CLP", details: f.constructionLinkedPlanDetails, enabled: f.constructionLinkedPlan ?? true });
+          if (f.downPaymentPlanDetails) next.paymentPlans.push({ name: "Down Payment Plan", type: "Down Payment", details: f.downPaymentPlanDetails, enabled: f.downPaymentPlan ?? true });
+        }
+        if (next.bankApprovals.length === 0 && typeof f.bankApprovals === "string") {
+          next.bankApprovals = f.bankApprovals.split(",").map((s: string) => ({ bankName: s.trim(), loanType: "Home Loan", interestRate: "", maxFundingPct: "", status: "Approved" })).filter((b: any) => b.bankName);
+        }
+        if (next.loanPartners.length === 0 && typeof f.loanPartners === "string") {
+          next.loanPartners = f.loanPartners.split(",").map((s: string) => ({ name: s.trim() })).filter((p: any) => p.name);
+        }
+        setFinancialInfoObj(next);
+      }
     } catch {}
 
     setActiveTab("basic");
@@ -578,6 +728,9 @@ export function ProjectManager({
       analyticsJson: JSON.stringify(analyticsObj),
       relationshipsJson: JSON.stringify(relationshipsMap),
       customFieldsJson: JSON.stringify(customFieldsList),
+      assetsJson: JSON.stringify(assetsList),
+      pricingExtraJson: JSON.stringify(pricingExtraList),
+      salesManagersJson: JSON.stringify(salesManagersList),
     };
 
     setLoading(true);
@@ -593,6 +746,25 @@ export function ProjectManager({
 
       const data = await res.json();
       if (res.ok && data.success) {
+        // Builder Info ↔ Developer two-way sync: push the edited builder
+        // profile back onto the linked developer record.
+        if (formData.developerId) {
+          const devPayload: any = {};
+          if (formData.builderName?.trim()) devPayload.name = formData.builderName.trim();
+          if (formData.builderLogo !== undefined) devPayload.logo = formData.builderLogo || null;
+          if (formData.aboutBuilder !== undefined) devPayload.description = formData.aboutBuilder || null;
+          if (formData.website !== undefined) devPayload.website = formData.website || null;
+          if (formData.yearsExperience !== undefined && formData.yearsExperience !== null) devPayload.experienceYears = Number(formData.yearsExperience);
+          if (formData.projectsDelivered !== undefined && formData.projectsDelivered !== null) devPayload.projectsDelivered = Number(formData.projectsDelivered);
+          if (formData.ongoingProjectsCount !== undefined && formData.ongoingProjectsCount !== null) devPayload.ongoingProjectsCount = Number(formData.ongoingProjectsCount);
+          if (Object.keys(devPayload).length > 0) {
+            fetch(`/api/admin/developers/${formData.developerId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(devPayload),
+            }).catch(() => {});
+          }
+        }
         setModalOpen(false);
         fetchProjects();
       } else {
@@ -1151,6 +1323,43 @@ export function ProjectManager({
                         <Input value={formData.droneVideoUrl || ""} onChange={(e) => setFormData({ ...formData, droneVideoUrl: e.target.value })} placeholder="https://..." />
                       </div>
                     </div>
+
+                    {/* Uploaded assets (images / PDFs / other) */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Upload Images, PDFs &amp; Other Assets</label>
+                        <label className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold cursor-pointer transition ${uploading === "asset" ? "bg-slate-200 text-slate-500" : "bg-brand text-white hover:bg-brand-hover"}`}>
+                          {uploading === "asset" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                          {uploading === "asset" ? "Uploading..." : "Upload Asset"}
+                          <input type="file" multiple accept="image/*,application/pdf,video/*" className="hidden" disabled={uploading === "asset"}
+                            onChange={async (e) => {
+                              const files = Array.from(e.target.files || []);
+                              if (!files.length) return;
+                              setUploading("asset");
+                              for (const f of files) {
+                                const res = await uploadFile(f);
+                                if (res) setAssetsList((prev) => [...prev, res]);
+                              }
+                              setUploading(null);
+                              e.target.value = "";
+                            }} />
+                        </label>
+                      </div>
+                      {assetsList.length === 0 ? (
+                        <p className="text-[11px] text-slate-400">No assets uploaded yet.</p>
+                      ) : (
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {assetsList.map((a, idx) => (
+                            <div key={idx} className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                              {a.kind === "image" ? <img src={a.url} alt={a.name} className="w-9 h-9 rounded object-cover shrink-0" /> : <FileText className="h-6 w-6 text-slate-400 shrink-0" />}
+                              <a href={a.url} target="_blank" rel="noreferrer" className="flex-1 min-w-0 text-xs font-semibold text-brand-hover truncate hover:underline">{a.name || a.url}</a>
+                              <span className="text-[10px] uppercase text-slate-400 shrink-0">{a.kind}</span>
+                              <button type="button" onClick={() => setAssetsList(assetsList.filter((_, i) => i !== idx))} className="text-rose-600 shrink-0"><X className="h-4 w-4" /></button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -1198,6 +1407,27 @@ export function ProjectManager({
                         <Input type="number" value={formData.registrationCharges || ""} onChange={(e) => setFormData({ ...formData, registrationCharges: parseFloat(e.target.value) || 0 })} placeholder="50000" />
                       </div>
                     </div>
+
+                    {/* Custom pricing fields */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Additional Pricing Fields &amp; Values</label>
+                        <Button type="button" size="sm" variant="gold" onClick={() => setPricingExtraList([...pricingExtraList, { label: "", value: "" }])} className="gap-1 text-xs">
+                          <Plus className="h-3.5 w-3.5" /> Add Field
+                        </Button>
+                      </div>
+                      {pricingExtraList.length === 0 ? (
+                        <p className="text-[11px] text-slate-400">No custom pricing fields. Click &quot;Add Field&quot; to create one.</p>
+                      ) : (
+                        pricingExtraList.map((row, idx) => (
+                          <div key={idx} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] items-center">
+                            <Input value={row.label} onChange={(e) => { const next = [...pricingExtraList]; next[idx].label = e.target.value; setPricingExtraList(next); }} placeholder="Field name (e.g. Club Membership)" />
+                            <Input value={row.value} onChange={(e) => { const next = [...pricingExtraList]; next[idx].value = e.target.value; setPricingExtraList(next); }} placeholder="Value (e.g. ₹2,00,000)" />
+                            <Button type="button" variant="ghost" size="sm" onClick={() => setPricingExtraList(pricingExtraList.filter((_, i) => i !== idx))} className="text-rose-600 shrink-0"><Trash2 className="h-4 w-4" /></Button>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -1208,9 +1438,32 @@ export function ProjectManager({
                       <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
                         6. Unit Configurations Matrix
                       </h4>
-                      <Button type="button" size="sm" variant="gold" onClick={addConfigurationRow} className="gap-1 text-xs">
-                        <Plus className="h-3.5 w-3.5" /> Add Configuration
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <label className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" title="Bulk upload from Excel. Columns: Type, Size, Starting Price, Carpet Area, Builtup Area, Balcony, Bathrooms, Parking">
+                          <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> Upload Excel
+                          <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={async (e) => {
+                            const f = e.target.files?.[0]; if (!f) return;
+                            const rows = await parseExcel(f, (get) => ({
+                              type: String(get("type") || get("configuration") || ""),
+                              size: String(get("size") || ""),
+                              startingPrice: String(get("starting price") || get("price") || ""),
+                              carpetArea: String(get("carpet area") || ""),
+                              builtupArea: String(get("builtup area") || get("built up area") || ""),
+                              balcony: parseInt(get("balcony")) || 0,
+                              bathrooms: parseInt(get("bathrooms")) || 0,
+                              parking: parseInt(get("parking")) || 0,
+                              studyRoom: false, servantRoom: false,
+                            })).catch(() => { alert("Could not read the Excel file."); return []; });
+                            const valid = rows.filter((r: any) => r.type);
+                            if (valid.length) setConfigurationsList((prev) => [...prev, ...valid]);
+                            else alert("No valid rows found. Ensure a 'Type' column exists.");
+                            e.target.value = "";
+                          }} />
+                        </label>
+                        <Button type="button" size="sm" variant="gold" onClick={addConfigurationRow} className="gap-1 text-xs">
+                          <Plus className="h-3.5 w-3.5" /> Add Configuration
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="space-y-3">
@@ -1235,9 +1488,27 @@ export function ProjectManager({
                       <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
                         7. Towers & Building Blocks
                       </h4>
-                      <Button type="button" size="sm" variant="gold" onClick={addTowerRow} className="gap-1 text-xs">
-                        <Plus className="h-3.5 w-3.5" /> Add Tower
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <label className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" title="Bulk upload from Excel. Columns: Tower Name, Total Floors, Lift Count, Status">
+                          <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> Upload Excel
+                          <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={async (e) => {
+                            const f = e.target.files?.[0]; if (!f) return;
+                            const rows = await parseExcel(f, (get) => ({
+                              name: String(get("tower name") || get("name") || get("tower") || ""),
+                              floors: parseInt(get("total floors") || get("floors")) || 0,
+                              liftCount: parseInt(get("lift count") || get("lifts")) || 0,
+                              status: String(get("status") || "Under Construction"),
+                            })).catch(() => { alert("Could not read the Excel file."); return []; });
+                            const valid = rows.filter((r: any) => r.name);
+                            if (valid.length) setTowersList((prev) => [...prev, ...valid]);
+                            else alert("No valid rows found. Ensure a 'Tower Name' column exists.");
+                            e.target.value = "";
+                          }} />
+                        </label>
+                        <Button type="button" size="sm" variant="gold" onClick={addTowerRow} className="gap-1 text-xs">
+                          <Plus className="h-3.5 w-3.5" /> Add Tower
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="space-y-3">
@@ -1285,9 +1556,32 @@ export function ProjectManager({
                       <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
                         8. Inventory Units Linker
                       </h4>
-                      <Button type="button" size="sm" variant="gold" onClick={addInventoryRow} className="gap-1 text-xs">
-                        <Plus className="h-3.5 w-3.5" /> Add Unit
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <label className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" title="Bulk upload from Excel. Columns: Unit No, Tower, Floor, Facing, Area, Config, Status, Price, Parking">
+                          <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> Upload Excel
+                          <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={async (e) => {
+                            const f = e.target.files?.[0]; if (!f) return;
+                            const rows = await parseExcel(f, (get) => ({
+                              unitNo: String(get("unit no") || get("unit") || ""),
+                              tower: String(get("tower") || ""),
+                              floor: parseInt(get("floor")) || 0,
+                              facing: String(get("facing") || ""),
+                              area: String(get("area") || ""),
+                              config: String(get("config") || get("configuration") || ""),
+                              status: String(get("status") || "Available"),
+                              price: parseFloat(get("price")) || 0,
+                              parking: parseInt(get("parking")) || 0,
+                            })).catch(() => { alert("Could not read the Excel file."); return []; });
+                            const valid = rows.filter((r: any) => r.unitNo);
+                            if (valid.length) setInventoryList((prev) => [...prev, ...valid]);
+                            else alert("No valid rows found. Ensure a 'Unit No' column exists.");
+                            e.target.value = "";
+                          }} />
+                        </label>
+                        <Button type="button" size="sm" variant="gold" onClick={addInventoryRow} className="gap-1 text-xs">
+                          <Plus className="h-3.5 w-3.5" /> Add Unit
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="space-y-3">
@@ -1316,11 +1610,23 @@ export function ProjectManager({
                     </h4>
                     <div className="grid gap-3 sm:grid-cols-3">
                       {Object.keys(amenitiesMap).map((key) => (
-                        <label key={key} className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold cursor-pointer">
-                          <input type="checkbox" checked={amenitiesMap[key]} onChange={(e) => setAmenitiesMap({ ...amenitiesMap, [key]: e.target.checked })} className="rounded text-amber-500" />
-                          {key.replace(/([A-Z])/g, " $1").trim()}
+                        <label key={key} className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold cursor-pointer">
+                          <span className="flex items-center gap-2">
+                            <input type="checkbox" checked={amenitiesMap[key]} onChange={(e) => setAmenitiesMap({ ...amenitiesMap, [key]: e.target.checked })} className="rounded text-amber-500" />
+                            {key.replace(/([A-Z])/g, " $1").trim()}
+                          </span>
+                          <button type="button" onClick={(ev) => { ev.preventDefault(); const next = { ...amenitiesMap }; delete next[key]; setAmenitiesMap(next); }} className="text-slate-300 hover:text-rose-600"><X className="h-3.5 w-3.5" /></button>
                         </label>
                       ))}
+                    </div>
+                    <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <Input value={newAmenity} onChange={(e) => setNewAmenity(e.target.value)} placeholder="Add a new amenity (e.g. Co-working Space)" />
+                      <Button type="button" variant="gold" size="sm" className="shrink-0 gap-1" onClick={() => {
+                        const key = newAmenity.trim().replace(/\s+/g, "");
+                        if (!key) return;
+                        setAmenitiesMap({ ...amenitiesMap, [key]: true });
+                        setNewAmenity("");
+                      }}><Plus className="h-3.5 w-3.5" /> Add</Button>
                     </div>
                   </div>
                 )}
@@ -1381,9 +1687,33 @@ export function ProjectManager({
                       {Object.keys(documentsObj).map((key) => (
                         <div key={key} className="space-y-1">
                           <label className="text-xs font-bold text-slate-700 dark:text-slate-300 capitalize">{key.replace(/([A-Z])/g, " $1")}</label>
-                          <Input value={documentsObj[key]} onChange={(e) => setDocumentsObj({ ...documentsObj, [key]: e.target.value })} placeholder="Document PDF URL..." />
+                          <div className="flex gap-1.5">
+                            <Input value={documentsObj[key]} onChange={(e) => setDocumentsObj({ ...documentsObj, [key]: e.target.value })} placeholder="Document PDF URL..." />
+                            <label className="inline-flex items-center justify-center rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 cursor-pointer shrink-0" title="Upload PDF">
+                              {uploading === `doc-${key}` ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" /> : <Upload className="h-4 w-4 text-slate-500" />}
+                              <input type="file" accept="application/pdf,image/*" className="hidden" disabled={!!uploading}
+                                onChange={async (e) => {
+                                  const f = e.target.files?.[0]; if (!f) return;
+                                  setUploading(`doc-${key}`);
+                                  const res = await uploadFile(f);
+                                  if (res) setDocumentsObj((prev) => ({ ...prev, [key]: res.url }));
+                                  setUploading(null);
+                                  e.target.value = "";
+                                }} />
+                            </label>
+                            <button type="button" onClick={() => { const next = { ...documentsObj }; delete next[key]; setDocumentsObj(next); }} className="inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 px-2 text-rose-600 shrink-0" title="Remove field"><Trash2 className="h-4 w-4" /></button>
+                          </div>
                         </div>
                       ))}
+                    </div>
+                    <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <Input value={newDocLabel} onChange={(e) => setNewDocLabel(e.target.value)} placeholder="Add a document / approval field (e.g. Fire NOC)" />
+                      <Button type="button" variant="gold" size="sm" className="shrink-0 gap-1" onClick={() => {
+                        const key = newDocLabel.trim().replace(/\s+(.)/g, (_m, c) => c.toUpperCase()).replace(/\s+/g, "").replace(/^(.)/, (_m, c) => c.toLowerCase());
+                        if (!key || documentsObj[key] !== undefined) { setNewDocLabel(""); return; }
+                        setDocumentsObj({ ...documentsObj, [key]: "" });
+                        setNewDocLabel("");
+                      }}><Plus className="h-3.5 w-3.5" /> Add Field</Button>
                     </div>
                   </div>
                 )}
@@ -1438,10 +1768,35 @@ export function ProjectManager({
                     <h4 className="text-sm font-extrabold text-slate-900 dark:text-white border-b pb-2">
                       15. Builder Information & Profile
                     </h4>
+                    <div className="rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 p-3 text-[11px] text-blue-800 dark:text-blue-300">
+                      Pick a builder from the <strong>Developers</strong> directory — the remaining fields auto-fill from that record. Any edits you make here are synced back to the developer on save.
+                    </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Builder Name</label>
-                        <Input value={formData.builderName || ""} onChange={(e) => setFormData({ ...formData, builderName: e.target.value })} placeholder="Godrej Properties" />
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Builder Name (from Developers)</label>
+                        <select
+                          value={formData.developerId || ""}
+                          onChange={(e) => {
+                            const devId = e.target.value;
+                            const dev = developers.find((d) => d.id === devId);
+                            if (!dev) { setFormData({ ...formData, developerId: devId }); return; }
+                            setFormData({
+                              ...formData,
+                              developerId: devId,
+                              builderName: dev.name,
+                              builderLogo: dev.logo ?? formData.builderLogo ?? "",
+                              website: dev.website ?? formData.website ?? "",
+                              aboutBuilder: dev.description ?? formData.aboutBuilder ?? "",
+                              yearsExperience: dev.experienceYears ?? formData.yearsExperience ?? null,
+                              projectsDelivered: dev.projectsDelivered ?? formData.projectsDelivered ?? null,
+                              ongoingProjectsCount: dev.ongoingProjectsCount ?? formData.ongoingProjectsCount ?? null,
+                            });
+                          }}
+                          className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2.5 text-xs font-bold"
+                        >
+                          <option value="">— Select Developer —</option>
+                          {developers.map((d) => (<option key={d.id} value={d.id}>{d.name}</option>))}
+                        </select>
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Builder Logo URL</label>
@@ -1498,10 +1853,35 @@ export function ProjectManager({
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">CRM Assigned</label>
                         <Input value={formData.crmAssignedId || ""} onChange={(e) => setFormData({ ...formData, crmAssignedId: e.target.value })} placeholder="CRM-MGR-001" />
                       </div>
-                      <div className="sm:col-span-2 space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Sales Manager</label>
-                        <Input value={formData.salesManagerName || ""} onChange={(e) => setFormData({ ...formData, salesManagerName: e.target.value })} placeholder="Rahul Sharma (Senior VP Sales)" />
+                    </div>
+
+                    {/* Multiple sales managers */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Sales Managers</label>
+                        <Button type="button" size="sm" variant="gold" onClick={() => setSalesManagersList([...salesManagersList, { name: "", role: "", phone: "", email: "", whatsapp: "" }])} className="gap-1 text-xs">
+                          <Plus className="h-3.5 w-3.5" /> Add Sales Manager
+                        </Button>
                       </div>
+                      {salesManagersList.length === 0 ? (
+                        <p className="text-[11px] text-slate-400">No sales managers added yet.</p>
+                      ) : (
+                        salesManagersList.map((m, idx) => (
+                          <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-slate-500">Manager {idx + 1}</span>
+                              <button type="button" onClick={() => setSalesManagersList(salesManagersList.filter((_, i) => i !== idx))} className="text-rose-600"><Trash2 className="h-4 w-4" /></button>
+                            </div>
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              <Input value={m.name} onChange={(e) => { const next = [...salesManagersList]; next[idx].name = e.target.value; setSalesManagersList(next); }} placeholder="Name" />
+                              <Input value={m.role} onChange={(e) => { const next = [...salesManagersList]; next[idx].role = e.target.value; setSalesManagersList(next); }} placeholder="Role (e.g. Senior VP Sales)" />
+                              <Input value={m.phone} onChange={(e) => { const next = [...salesManagersList]; next[idx].phone = e.target.value; setSalesManagersList(next); }} placeholder="Phone" />
+                              <Input value={m.email} onChange={(e) => { const next = [...salesManagersList]; next[idx].email = e.target.value; setSalesManagersList(next); }} placeholder="Email" />
+                              <Input value={m.whatsapp} onChange={(e) => { const next = [...salesManagersList]; next[idx].whatsapp = e.target.value; setSalesManagersList(next); }} placeholder="WhatsApp" />
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 )}
@@ -1515,7 +1895,23 @@ export function ProjectManager({
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Assign Team</label>
-                        <Input value={leadSettingsObj.assignTeam} onChange={(e) => setLeadSettingsObj({ ...leadSettingsObj, assignTeam: e.target.value })} placeholder="Residential Sales Alpha" />
+                        <select
+                          value={leadSettingsObj.assignTeamId || ""}
+                          onChange={(e) => {
+                            const id = e.target.value;
+                            const team = teamsOptions.find((t) => t.id === id);
+                            setLeadSettingsObj({ ...leadSettingsObj, assignTeamId: id, assignTeam: team?.name || "" });
+                          }}
+                          className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 text-xs font-bold"
+                        >
+                          <option value="">
+                            {teamsOptions.length === 0 ? "No teams yet — create one under People → Teams" : "— Select Team —"}
+                          </option>
+                          {teamsOptions.map((t) => (<option key={t.id} value={t.id}>{t.name}</option>))}
+                          {leadSettingsObj.assignTeam && !teamsOptions.some((t) => t.id === leadSettingsObj.assignTeamId) && (
+                            <option value={leadSettingsObj.assignTeamId || ""}>{leadSettingsObj.assignTeam} (current)</option>
+                          )}
+                        </select>
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Default Lead Source</label>
@@ -1599,12 +1995,24 @@ export function ProjectManager({
                       19. Tags & Badges
                     </h4>
                     <div className="grid gap-3 sm:grid-cols-3">
-                      {["Luxury", "Near Metro", "Ready to Move", "Investment", "Premium", "Affordable", "Corner Plot", "Lake View", "Hill View", "Smart Home"].map((tag) => (
-                        <label key={tag} className="flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold cursor-pointer bg-slate-50 dark:bg-slate-950">
-                          <input type="checkbox" checked={tagsMap[tag] ?? false} onChange={(e) => setTagsMap({ ...tagsMap, [tag]: e.target.checked })} className="rounded text-amber-500" />
-                          {tag}
+                      {Object.keys(tagsMap).map((tag) => (
+                        <label key={tag} className="flex items-center justify-between gap-2 p-2.5 rounded-xl border text-xs font-bold cursor-pointer bg-slate-50 dark:bg-slate-950">
+                          <span className="flex items-center gap-2">
+                            <input type="checkbox" checked={tagsMap[tag] ?? false} onChange={(e) => setTagsMap({ ...tagsMap, [tag]: e.target.checked })} className="rounded text-amber-500" />
+                            {tag.replace(/([A-Z])/g, " $1").trim()}
+                          </span>
+                          <button type="button" onClick={(ev) => { ev.preventDefault(); const next = { ...tagsMap }; delete next[tag]; setTagsMap(next); }} className="text-slate-300 hover:text-rose-600"><X className="h-3.5 w-3.5" /></button>
                         </label>
                       ))}
+                    </div>
+                    <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <Input value={newTag} onChange={(e) => setNewTag(e.target.value)} placeholder="Add a tag (e.g. Gated Community)" />
+                      <Button type="button" variant="gold" size="sm" className="shrink-0 gap-1" onClick={() => {
+                        const key = newTag.trim().replace(/\s+/g, "");
+                        if (!key) return;
+                        setTagsMap({ ...tagsMap, [key]: true });
+                        setNewTag("");
+                      }}><Plus className="h-3.5 w-3.5" /> Add</Button>
                     </div>
                   </div>
                 )}
@@ -1615,39 +2023,99 @@ export function ProjectManager({
                     <h4 className="text-sm font-extrabold text-slate-900 dark:text-white border-b pb-2">
                       20. Financial Plans & Bank Approvals
                     </h4>
-                    <div className="space-y-3">
-                      <div className="p-3 bg-slate-50 rounded-2xl border space-y-2">
-                        <label className="flex items-center gap-2 text-xs font-bold cursor-pointer">
-                          <input type="checkbox" checked={financialInfoObj.constructionLinkedPlan} onChange={(e) => setFinancialInfoObj({ ...financialInfoObj, constructionLinkedPlan: e.target.checked })} className="rounded text-amber-500" />
-                          Construction Linked Plan (CLP)
+                    <div className="space-y-5">
+                      {/* Toggles */}
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <label className="flex items-center gap-2 text-xs font-bold cursor-pointer p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                          <input type="checkbox" checked={financialInfoObj.emiAvailable} onChange={(e) => setFinancialInfoObj({ ...financialInfoObj, emiAvailable: e.target.checked })} className="rounded text-amber-500" />
+                          Home Loan / EMI Available
                         </label>
-                        <Input value={financialInfoObj.constructionLinkedPlanDetails} onChange={(e) => setFinancialInfoObj({ ...financialInfoObj, constructionLinkedPlanDetails: e.target.value })} placeholder="CLP terms..." />
-                      </div>
-
-                      <div className="p-3 bg-slate-50 rounded-2xl border space-y-2">
-                        <label className="flex items-center gap-2 text-xs font-bold cursor-pointer">
-                          <input type="checkbox" checked={financialInfoObj.downPaymentPlan} onChange={(e) => setFinancialInfoObj({ ...financialInfoObj, downPaymentPlan: e.target.checked })} className="rounded text-amber-500" />
-                          Down Payment Plan
-                        </label>
-                        <Input value={financialInfoObj.downPaymentPlanDetails} onChange={(e) => setFinancialInfoObj({ ...financialInfoObj, downPaymentPlanDetails: e.target.value })} placeholder="Down Payment terms..." />
-                      </div>
-
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Loan Partners</label>
-                          <Input value={financialInfoObj.loanPartners} onChange={(e) => setFinancialInfoObj({ ...financialInfoObj, loanPartners: e.target.value })} placeholder="HDFC, ICICI, SBI..." />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Bank Approvals</label>
-                          <Input value={financialInfoObj.bankApprovals} onChange={(e) => setFinancialInfoObj({ ...financialInfoObj, bankApprovals: e.target.value })} placeholder="Approved banks list..." />
-                        </div>
-                      </div>
-
-                      <div className="pt-2">
-                        <label className="flex items-center gap-2 text-xs font-bold cursor-pointer">
+                        <label className="flex items-center gap-2 text-xs font-bold cursor-pointer p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
                           <input type="checkbox" checked={financialInfoObj.emiCalculator} onChange={(e) => setFinancialInfoObj({ ...financialInfoObj, emiCalculator: e.target.checked })} className="rounded text-amber-500" />
-                          ✓ Enable EMI Calculator Widget on Project Page
+                          Show EMI Calculator Widget
                         </label>
+                      </div>
+
+                      {/* Payment Plans */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                          <h5 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Payment Plans</h5>
+                          <Button type="button" size="sm" variant="gold" className="gap-1 text-xs" onClick={() => setFinancialInfoObj({ ...financialInfoObj, paymentPlans: [...(financialInfoObj.paymentPlans || []), { name: "", type: "CLP", details: "", enabled: true }] })}>
+                            <Plus className="h-3.5 w-3.5" /> Add Plan
+                          </Button>
+                        </div>
+                        {(financialInfoObj.paymentPlans || []).length === 0 ? (
+                          <p className="text-[11px] text-slate-400">No payment plans yet.</p>
+                        ) : (
+                          (financialInfoObj.paymentPlans || []).map((p: any, idx: number) => (
+                            <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
+                              <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto] items-center">
+                                <Input value={p.name} onChange={(e) => { const next = [...financialInfoObj.paymentPlans]; next[idx] = { ...next[idx], name: e.target.value }; setFinancialInfoObj({ ...financialInfoObj, paymentPlans: next }); }} placeholder="Plan name" />
+                                <select value={p.type} onChange={(e) => { const next = [...financialInfoObj.paymentPlans]; next[idx] = { ...next[idx], type: e.target.value }; setFinancialInfoObj({ ...financialInfoObj, paymentPlans: next }); }} className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-xs font-bold">
+                                  {["CLP", "Down Payment", "Flexi", "Subvention", "Possession Linked"].map((t) => (<option key={t} value={t}>{t}</option>))}
+                                </select>
+                                <div className="flex items-center gap-2">
+                                  <label className="flex items-center gap-1 text-[11px] font-bold"><input type="checkbox" checked={p.enabled} onChange={(e) => { const next = [...financialInfoObj.paymentPlans]; next[idx] = { ...next[idx], enabled: e.target.checked }; setFinancialInfoObj({ ...financialInfoObj, paymentPlans: next }); }} className="rounded text-amber-500" /> On</label>
+                                  <button type="button" onClick={() => setFinancialInfoObj({ ...financialInfoObj, paymentPlans: financialInfoObj.paymentPlans.filter((_: any, i: number) => i !== idx) })} className="text-rose-600"><Trash2 className="h-4 w-4" /></button>
+                                </div>
+                              </div>
+                              <Input value={p.details} onChange={(e) => { const next = [...financialInfoObj.paymentPlans]; next[idx] = { ...next[idx], details: e.target.value }; setFinancialInfoObj({ ...financialInfoObj, paymentPlans: next }); }} placeholder="Terms (e.g. 10% Booking, 80% in 30 days...)" />
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      {/* Bank Approvals */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                          <h5 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Approved Banks</h5>
+                          <Button type="button" size="sm" variant="gold" className="gap-1 text-xs" onClick={() => setFinancialInfoObj({ ...financialInfoObj, bankApprovals: [...(financialInfoObj.bankApprovals || []), { bankName: "", loanType: "Home Loan", interestRate: "", maxFundingPct: "", status: "Approved" }] })}>
+                            <Plus className="h-3.5 w-3.5" /> Add Bank
+                          </Button>
+                        </div>
+                        {(financialInfoObj.bankApprovals || []).length > 0 && (
+                          <div className="hidden sm:grid gap-2 sm:grid-cols-[1.3fr_1fr_0.8fr_0.8fr_0.9fr_auto] items-center px-1">
+                            {["Bank", "Loan Type", "Rate %", "Max LTV %", "Status", ""].map((h, i) => (<span key={i} className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{h}</span>))}
+                          </div>
+                        )}
+                        {(financialInfoObj.bankApprovals || []).length === 0 ? (
+                          <p className="text-[11px] text-slate-400">No approved banks yet.</p>
+                        ) : (
+                          (financialInfoObj.bankApprovals || []).map((b: any, idx: number) => (
+                            <div key={idx} className="grid gap-2 sm:grid-cols-[1.3fr_1fr_0.8fr_0.8fr_0.9fr_auto] items-center">
+                              <Input value={b.bankName} onChange={(e) => { const next = [...financialInfoObj.bankApprovals]; next[idx] = { ...next[idx], bankName: e.target.value }; setFinancialInfoObj({ ...financialInfoObj, bankApprovals: next }); }} placeholder="Bank name" />
+                              <Input value={b.loanType} onChange={(e) => { const next = [...financialInfoObj.bankApprovals]; next[idx] = { ...next[idx], loanType: e.target.value }; setFinancialInfoObj({ ...financialInfoObj, bankApprovals: next }); }} placeholder="Home Loan" />
+                              <Input value={b.interestRate} onChange={(e) => { const next = [...financialInfoObj.bankApprovals]; next[idx] = { ...next[idx], interestRate: e.target.value }; setFinancialInfoObj({ ...financialInfoObj, bankApprovals: next }); }} placeholder="8.70" />
+                              <Input value={b.maxFundingPct} onChange={(e) => { const next = [...financialInfoObj.bankApprovals]; next[idx] = { ...next[idx], maxFundingPct: e.target.value }; setFinancialInfoObj({ ...financialInfoObj, bankApprovals: next }); }} placeholder="80" />
+                              <select value={b.status} onChange={(e) => { const next = [...financialInfoObj.bankApprovals]; next[idx] = { ...next[idx], status: e.target.value }; setFinancialInfoObj({ ...financialInfoObj, bankApprovals: next }); }} className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-xs font-bold">
+                                {["Approved", "Pending", "In Process"].map((s) => (<option key={s} value={s}>{s}</option>))}
+                              </select>
+                              <button type="button" onClick={() => setFinancialInfoObj({ ...financialInfoObj, bankApprovals: financialInfoObj.bankApprovals.filter((_: any, i: number) => i !== idx) })} className="text-rose-600 shrink-0"><Trash2 className="h-4 w-4" /></button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      {/* Loan Partners */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                          <h5 className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Loan / Channel Partners</h5>
+                          <Button type="button" size="sm" variant="gold" className="gap-1 text-xs" onClick={() => setFinancialInfoObj({ ...financialInfoObj, loanPartners: [...(financialInfoObj.loanPartners || []), { name: "" }] })}>
+                            <Plus className="h-3.5 w-3.5" /> Add Partner
+                          </Button>
+                        </div>
+                        {(financialInfoObj.loanPartners || []).length === 0 ? (
+                          <p className="text-[11px] text-slate-400">No loan partners yet.</p>
+                        ) : (
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            {(financialInfoObj.loanPartners || []).map((lp: any, idx: number) => (
+                              <div key={idx} className="flex gap-1.5 items-center">
+                                <Input value={lp.name} onChange={(e) => { const next = [...financialInfoObj.loanPartners]; next[idx] = { ...next[idx], name: e.target.value }; setFinancialInfoObj({ ...financialInfoObj, loanPartners: next }); }} placeholder="Partner name" />
+                                <button type="button" onClick={() => setFinancialInfoObj({ ...financialInfoObj, loanPartners: financialInfoObj.loanPartners.filter((_: any, i: number) => i !== idx) })} className="text-rose-600 shrink-0"><Trash2 className="h-4 w-4" /></button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1684,24 +2152,112 @@ export function ProjectManager({
                       </div>
                     </div>
 
-                    <div className="space-y-2 pt-2 border-t">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Monthly Progress Images</label>
-                      <div className="flex gap-2">
-                        <Input value={newProgressImageUrl} onChange={(e) => setNewProgressImageUrl(e.target.value)} placeholder="Progress image URL..." />
-                        <Button type="button" variant="gold" size="sm" onClick={addTimelineProgressImage} className="shrink-0">
-                          Add Image
+                    {/* Construction milestones */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Additional Milestones</label>
+                        <Button type="button" variant="gold" size="sm" className="gap-1 text-xs" onClick={() => setTimelineObj({ ...timelineObj, milestones: [...(timelineObj.milestones || []), { label: "", status: "Pending", date: "" }] })}>
+                          <Plus className="h-3.5 w-3.5" /> Add Milestone
                         </Button>
                       </div>
+                      {(timelineObj.milestones || []).length === 0 ? (
+                        <p className="text-[11px] text-slate-400">No extra milestones. Click &quot;Add Milestone&quot;.</p>
+                      ) : (
+                        (timelineObj.milestones || []).map((m: any, idx: number) => (
+                          <div key={idx} className="grid gap-2 sm:grid-cols-[1.4fr_1fr_1fr_auto] items-center">
+                            <Input value={m.label} onChange={(e) => { const next = [...timelineObj.milestones]; next[idx] = { ...next[idx], label: e.target.value }; setTimelineObj({ ...timelineObj, milestones: next }); }} placeholder="Milestone (e.g. Slab 10 Casting)" />
+                            <select value={m.status} onChange={(e) => { const next = [...timelineObj.milestones]; next[idx] = { ...next[idx], status: e.target.value }; setTimelineObj({ ...timelineObj, milestones: next }); }} className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-xs font-bold">
+                              {["Completed", "Ongoing", "Pending"].map((s) => (<option key={s} value={s}>{s}</option>))}
+                            </select>
+                            <Input value={m.date} onChange={(e) => { const next = [...timelineObj.milestones]; next[idx] = { ...next[idx], date: e.target.value }; setTimelineObj({ ...timelineObj, milestones: next }); }} placeholder="Date (e.g. Mar 2027)" />
+                            <button type="button" onClick={() => setTimelineObj({ ...timelineObj, milestones: timelineObj.milestones.filter((_: any, i: number) => i !== idx) })} className="text-rose-600 shrink-0"><Trash2 className="h-4 w-4" /></button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Progress images (URL or upload) */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Progress Images</label>
+                        <label className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold cursor-pointer transition ${uploading === "timg" ? "bg-slate-200 text-slate-500" : "bg-brand text-white hover:bg-brand-hover"}`}>
+                          {uploading === "timg" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Upload Image
+                          <input type="file" accept="image/*" multiple className="hidden" disabled={!!uploading} onChange={async (e) => {
+                            const files = Array.from(e.target.files || []); if (!files.length) return;
+                            setUploading("timg");
+                            for (const f of files) { const res = await uploadFile(f, "image"); if (res) setTimelineObj((prev: any) => ({ ...prev, progressImages: [...(prev.progressImages || []), res.url] })); }
+                            setUploading(null); e.target.value = "";
+                          }} />
+                        </label>
+                      </div>
+                      <div className="flex gap-2">
+                        <Input value={newProgressImageUrl} onChange={(e) => setNewProgressImageUrl(e.target.value)} placeholder="...or paste a progress image URL" />
+                        <Button type="button" variant="gold" size="sm" onClick={addTimelineProgressImage} className="shrink-0">Add URL</Button>
+                      </div>
                       <div className="flex flex-wrap gap-2 pt-2">
-                        {timelineObj.progressImages.map((imgUrl, i) => (
+                        {(timelineObj.progressImages || []).map((imgUrl: string, i: number) => (
                           <div key={i} className="relative group w-20 h-20 rounded-xl overflow-hidden border">
                             <img src={imgUrl} alt={`Progress ${i + 1}`} className="w-full h-full object-cover" />
-                            <button type="button" onClick={() => setTimelineObj({ ...timelineObj, progressImages: timelineObj.progressImages.filter((_, idx) => idx !== i) })} className="absolute top-1 right-1 bg-rose-600 text-white rounded-full p-0.5">
+                            <button type="button" onClick={() => setTimelineObj({ ...timelineObj, progressImages: timelineObj.progressImages.filter((_: string, idx: number) => idx !== i) })} className="absolute top-1 right-1 bg-rose-600 text-white rounded-full p-0.5">
                               <X className="h-3 w-3" />
                             </button>
                           </div>
                         ))}
                       </div>
+                    </div>
+
+                    {/* Progress videos (upload) */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Progress Videos</label>
+                        <label className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold cursor-pointer transition ${uploading === "tvid" ? "bg-slate-200 text-slate-500" : "bg-brand text-white hover:bg-brand-hover"}`}>
+                          {uploading === "tvid" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Film className="h-3.5 w-3.5" />} Upload Video
+                          <input type="file" accept="video/*" className="hidden" disabled={!!uploading} onChange={async (e) => {
+                            const f = e.target.files?.[0]; if (!f) return;
+                            setUploading("tvid");
+                            const res = await uploadFile(f, "video");
+                            if (res) setTimelineObj((prev: any) => ({ ...prev, videos: [...(prev.videos || []), res.url] }));
+                            setUploading(null); e.target.value = "";
+                          }} />
+                        </label>
+                      </div>
+                      {(timelineObj.videos || []).length === 0 ? (
+                        <p className="text-[11px] text-slate-400">No videos uploaded yet.</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {(timelineObj.videos || []).map((v: string, i: number) => (
+                            <div key={i} className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                              <Film className="h-4 w-4 text-slate-400 shrink-0" />
+                              <a href={v} target="_blank" rel="noreferrer" className="flex-1 min-w-0 text-xs font-semibold text-brand-hover truncate hover:underline">{v}</a>
+                              <button type="button" onClick={() => setTimelineObj({ ...timelineObj, videos: timelineObj.videos.filter((_: string, idx: number) => idx !== i) })} className="text-rose-600 shrink-0"><X className="h-4 w-4" /></button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Video links (YouTube / external) */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Video Links (YouTube / Drive / etc.)</label>
+                      <div className="flex gap-2">
+                        <Input value={newVideoLink} onChange={(e) => setNewVideoLink(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
+                        <Button type="button" variant="gold" size="sm" className="shrink-0 gap-1" onClick={() => {
+                          const url = newVideoLink.trim(); if (!url) return;
+                          setTimelineObj({ ...timelineObj, videoLinks: [...(timelineObj.videoLinks || []), url] });
+                          setNewVideoLink("");
+                        }}><Link2 className="h-3.5 w-3.5" /> Add Link</Button>
+                      </div>
+                      {(timelineObj.videoLinks || []).length > 0 && (
+                        <div className="space-y-1.5">
+                          {(timelineObj.videoLinks || []).map((v: string, i: number) => (
+                            <div key={i} className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                              <Link2 className="h-4 w-4 text-slate-400 shrink-0" />
+                              <a href={v} target="_blank" rel="noreferrer" className="flex-1 min-w-0 text-xs font-semibold text-brand-hover truncate hover:underline">{v}</a>
+                              <button type="button" onClick={() => setTimelineObj({ ...timelineObj, videoLinks: timelineObj.videoLinks.filter((_: string, idx: number) => idx !== i) })} className="text-rose-600 shrink-0"><X className="h-4 w-4" /></button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1741,6 +2297,27 @@ export function ProjectManager({
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Lead Sources Breakdown</label>
                       <Input value={analyticsObj.leadSources} onChange={(e) => setAnalyticsObj({ ...analyticsObj, leadSources: e.target.value })} placeholder="Website (45%), Meta Ads (30%)..." />
+                    </div>
+
+                    {/* Custom analytics fields */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Additional Metrics &amp; Values</label>
+                        <Button type="button" size="sm" variant="gold" onClick={() => setAnalyticsObj({ ...analyticsObj, customMetrics: [...(analyticsObj.customMetrics || []), { label: "", value: "" }] })} className="gap-1 text-xs">
+                          <Plus className="h-3.5 w-3.5" /> Add Field
+                        </Button>
+                      </div>
+                      {(analyticsObj.customMetrics || []).length === 0 ? (
+                        <p className="text-[11px] text-slate-400">No custom metrics. Click &quot;Add Field&quot; to track one.</p>
+                      ) : (
+                        (analyticsObj.customMetrics || []).map((row: any, idx: number) => (
+                          <div key={idx} className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] items-center">
+                            <Input value={row.label} onChange={(e) => { const next = [...analyticsObj.customMetrics]; next[idx] = { ...next[idx], label: e.target.value }; setAnalyticsObj({ ...analyticsObj, customMetrics: next }); }} placeholder="Metric name (e.g. Brochure Downloads)" />
+                            <Input value={row.value} onChange={(e) => { const next = [...analyticsObj.customMetrics]; next[idx] = { ...next[idx], value: e.target.value }; setAnalyticsObj({ ...analyticsObj, customMetrics: next }); }} placeholder="Value" />
+                            <Button type="button" variant="ghost" size="sm" onClick={() => setAnalyticsObj({ ...analyticsObj, customMetrics: analyticsObj.customMetrics.filter((_: any, i: number) => i !== idx) })} className="text-rose-600 shrink-0"><Trash2 className="h-4 w-4" /></Button>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 )}

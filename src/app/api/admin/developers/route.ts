@@ -24,6 +24,9 @@ const createSchema = z.object({
   identityNumber: z.string().optional().nullable(),
   website: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
+  logo: z.string().optional().nullable(),
+  projectsDelivered: z.number().int().min(0).optional().nullable(),
+  ongoingProjectsCount: z.number().int().min(0).optional().nullable(),
 });
 
 export async function POST(req: Request) {
@@ -60,6 +63,9 @@ export async function POST(req: Request) {
         identityNumber: data.identityNumber || null,
         website: data.website || null,
         description: data.description || null,
+        logo: data.logo || null,
+        projectsDelivered: data.projectsDelivered ?? null,
+        ongoingProjectsCount: data.ongoingProjectsCount ?? null,
       },
     });
 

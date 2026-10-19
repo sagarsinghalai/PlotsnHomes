@@ -143,6 +143,11 @@ export async function POST(req: Request) {
       towersJson,
       unitsJson,
 
+      // Media assets, pricing extras & sales managers
+      assetsJson,
+      pricingExtraJson,
+      salesManagersJson,
+
       // Amenities & Specifications
       amenitiesJson,
       nearbyPlacesJson,
@@ -278,6 +283,9 @@ export async function POST(req: Request) {
         configurationsJson: typeof configurationsJson === "string" ? configurationsJson : JSON.stringify(configurationsJson || []),
         towersJson: typeof towersJson === "string" ? towersJson : JSON.stringify(towersJson || []),
         unitsJson: typeof unitsJson === "string" ? unitsJson : JSON.stringify(unitsJson || []),
+        assetsJson: typeof assetsJson === "string" ? assetsJson : JSON.stringify(assetsJson || []),
+        pricingExtraJson: typeof pricingExtraJson === "string" ? pricingExtraJson : JSON.stringify(pricingExtraJson || []),
+        salesManagersJson: typeof salesManagersJson === "string" ? salesManagersJson : JSON.stringify(salesManagersJson || []),
 
         // Amenities & Specifications
         amenitiesJson: typeof amenitiesJson === "string" ? amenitiesJson : JSON.stringify(amenitiesJson || {}),

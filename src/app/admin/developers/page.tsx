@@ -25,6 +25,9 @@ export default async function DevelopersPage() {
     identityNumber: d.identityNumber,
     website: d.website,
     description: d.description,
+    logo: d.logo,
+    projectsDelivered: d.projectsDelivered,
+    ongoingProjectsCount: d.ongoingProjectsCount,
     createdAt: d.createdAt.toISOString(),
   }));
 

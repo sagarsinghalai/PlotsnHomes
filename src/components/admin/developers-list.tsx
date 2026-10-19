@@ -30,6 +30,9 @@ type Developer = {
   identityNumber: string | null;
   website: string | null;
   description: string | null;
+  logo?: string | null;
+  projectsDelivered?: number | null;
+  ongoingProjectsCount?: number | null;
   createdAt: Date | string;
 };
 
@@ -102,6 +105,9 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
   const [identityNumber, setIdentityNumber] = useState("");
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
+  const [logo, setLogo] = useState("");
+  const [projectsDelivered, setProjectsDelivered] = useState<number | "">("");
+  const [ongoingProjectsCount, setOngoingProjectsCount] = useState<number | "">("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -142,6 +148,9 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
     setIdentityNumber("");
     setWebsite("");
     setDescription("");
+    setLogo("");
+    setProjectsDelivered("");
+    setOngoingProjectsCount("");
     setError("");
     setActiveTab("general");
     setIsOpen(true);
@@ -171,6 +180,9 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
     setIdentityNumber(dev.identityNumber || "");
     setWebsite(dev.website || "");
     setDescription(dev.description || "");
+    setLogo(dev.logo || "");
+    setProjectsDelivered(dev.projectsDelivered ?? "");
+    setOngoingProjectsCount(dev.ongoingProjectsCount ?? "");
     setError("");
     setActiveTab("general");
     setIsOpen(true);
@@ -282,6 +294,9 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
       identityNumber: identityNumber.trim() || null,
       website: website.trim() || null,
       description: description.trim() || null,
+      logo: logo.trim() || null,
+      projectsDelivered: projectsDelivered === "" ? null : Number(projectsDelivered),
+      ongoingProjectsCount: ongoingProjectsCount === "" ? null : Number(ongoingProjectsCount),
     };
 
     try {
@@ -971,6 +986,41 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                         value={projectCount}
                         onChange={(e) => setProjectCount(parseInt(e.target.value) || 0)}
                         placeholder="e.g. 5"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand transition"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    <label className="block text-sm">
+                      <span className="text-slate-700 font-semibold">Projects Delivered</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={projectsDelivered}
+                        onChange={(e) => setProjectsDelivered(e.target.value === "" ? "" : Number(e.target.value))}
+                        placeholder="e.g. 120"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand transition"
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-slate-700 font-semibold">Ongoing Projects</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={ongoingProjectsCount}
+                        onChange={(e) => setOngoingProjectsCount(e.target.value === "" ? "" : Number(e.target.value))}
+                        placeholder="e.g. 45"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand transition"
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-slate-700 font-semibold">Logo URL</span>
+                      <input
+                        type="url"
+                        value={logo}
+                        onChange={(e) => setLogo(e.target.value)}
+                        placeholder="https://logo.url/logo.png"
                         className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand transition"
                       />
                     </label>
