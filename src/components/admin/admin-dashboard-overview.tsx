@@ -364,19 +364,19 @@ export function AdminDashboardOverview({
             <div className="mt-4 h-16 w-full relative">
               <svg className="h-full w-full overflow-visible" viewBox="0 0 200 50" preserveAspectRatio="none">
                 <defs>
-                  <linearGradient id="goldAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#c9a227" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#c9a227" stopOpacity="0.0" />
+                  <linearGradient id="brandAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3347b0" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#3347b0" stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
                 <path
                   d="M 0 40 Q 35 15 70 30 T 140 10 T 200 25 L 200 50 L 0 50 Z"
-                  fill="url(#goldAreaGrad)"
+                  fill="url(#brandAreaGrad)"
                 />
                 <path
                   d="M 0 40 Q 35 15 70 30 T 140 10 T 200 25"
                   fill="none"
-                  stroke="#c9a227"
+                  stroke="#3347b0"
                   strokeWidth="3"
                   strokeLinecap="round"
                 />

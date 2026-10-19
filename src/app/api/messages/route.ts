@@ -89,7 +89,7 @@ export async function POST(req: Request) {
           <p><strong>Client:</strong> ${session.user.name} (${session.user.email})</p>
           <hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0" />
           <p style="white-space:pre-wrap;background:#f8fafc;padding:12px;border-radius:8px">${body.trim()}</p>
-          <p style="margin-top:20px"><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001"}/admin/messages" style="background:#c9a227;color:#0f172a;padding:10px 20px;text-decoration:none;border-radius:6px;font-weight:600">Reply in Chat Workspace</a></p>
+          <p style="margin-top:20px"><a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001"}/admin/messages" style="background:#3347b0;color:#0f172a;padding:10px 20px;text-decoration:none;border-radius:6px;font-weight:600">Reply in Chat Workspace</a></p>
         </div>
       `;
       await sendEmail({

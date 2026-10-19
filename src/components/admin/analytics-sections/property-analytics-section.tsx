@@ -227,12 +227,12 @@ export function PropertyAnalyticsSection({ data }: PropertyAnalyticsProps) {
             <svg viewBox={`0 0 ${chartW} ${chartH}`} className="h-full w-full overflow-visible">
               <defs>
                 <linearGradient id="sqftAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#c9a227" stopOpacity="0.45" />
-                  <stop offset="100%" stopColor="#c9a227" stopOpacity="0.0" />
+                  <stop offset="0%" stopColor="#3347b0" stopOpacity="0.45" />
+                  <stop offset="100%" stopColor="#3347b0" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
               {sqftAreaPath && <path d={sqftAreaPath} fill="url(#sqftAreaGrad)" />}
-              {sqftLinePath && <path d={sqftLinePath} fill="none" stroke="#c9a227" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />}
+              {sqftLinePath && <path d={sqftLinePath} fill="none" stroke="#3347b0" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />}
             </svg>
           </div>
         </div>

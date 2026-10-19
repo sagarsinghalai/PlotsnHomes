@@ -77,7 +77,7 @@ export function InvoiceReceipt({
   table { width: 100%; border-collapse: collapse; margin: 24px 0; }
   th, td { border: 1px solid #e2e8f0; padding: 10px 12px; text-align: left; }
   th { background: #f8fafc; font-size: 12px; text-transform: uppercase; }
-  .header { border-bottom: 3px solid #c9a227; padding-bottom: 20px; margin-bottom: 24px; }
+  .header { border-bottom: 3px solid #3347b0; padding-bottom: 20px; margin-bottom: 24px; }
   .gold { color: #92700c; }
   .total { font-size: 1.25rem; font-weight: bold; }
 </style></head><body>${el.innerHTML}</body></html>`;

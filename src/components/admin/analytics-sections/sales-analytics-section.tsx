@@ -238,13 +238,13 @@ export function SalesAnalyticsSection({ data }: SalesAnalyticsProps) {
                   </filter>
                   <linearGradient id="goldLineGrad" x1="0" y1="0" x2="1" y2="0">
                     <stop offset="0%" stopColor="#d97706" />
-                    <stop offset="50%" stopColor="#c9a227" />
+                    <stop offset="50%" stopColor="#3347b0" />
                     <stop offset="100%" stopColor="#fbbf24" />
                   </linearGradient>
-                  <linearGradient id="goldAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#c9a227" stopOpacity="0.45" />
-                    <stop offset="60%" stopColor="#c9a227" stopOpacity="0.1" />
-                    <stop offset="100%" stopColor="#c9a227" stopOpacity="0.0" />
+                  <linearGradient id="brandAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#3347b0" stopOpacity="0.45" />
+                    <stop offset="60%" stopColor="#3347b0" stopOpacity="0.1" />
+                    <stop offset="100%" stopColor="#3347b0" stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
 
@@ -264,7 +264,7 @@ export function SalesAnalyticsSection({ data }: SalesAnalyticsProps) {
                   );
                 })}
 
-                {revAreaPath && <path d={revAreaPath} fill="url(#goldAreaGrad)" />}
+                {revAreaPath && <path d={revAreaPath} fill="url(#brandAreaGrad)" />}
                 {revLinePath && (
                   <path
                     d={revLinePath}

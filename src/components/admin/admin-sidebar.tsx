@@ -370,15 +370,18 @@ export function AdminSidebar({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-brand shadow-lg text-white md:hidden hover:bg-brand-hover transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+        aria-label={isOpen ? "Close admin menu" : "Open admin menu"}
+        aria-expanded={isOpen}
         title="Toggle Admin Menu"
       >
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        {isOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
       </button>
 
       {/* Mobile Backdrop Overlay */}
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}
+          aria-hidden="true"
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
         />
       )}
@@ -400,9 +403,10 @@ export function AdminSidebar({
             type="button"
             onClick={handleResetLayout}
             className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-slate-900 transition flex items-center gap-1 text-[10px] font-medium"
+            aria-label="Reset menu order"
             title="Reset menu order"
           >
-            <RotateCcw className="h-3.5 w-3.5" />
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </div>
 
@@ -416,7 +420,7 @@ export function AdminSidebar({
           />
         </div>
 
-        <nav className="flex-1 min-h-0 overflow-y-auto p-3 space-y-6">
+        <nav aria-label="Admin navigation" className="flex-1 min-h-0 overflow-y-auto p-3 space-y-6">
           {filteredNav.length === 0 && (
             <p className="px-3 text-xs text-slate-500">No settings found.</p>
           )}

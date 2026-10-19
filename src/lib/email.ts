@@ -213,7 +213,7 @@ export function welcomeEmailHtml(name: string) {
       <h1 style="color:#0f172a">Welcome to BrickVest</h1>
       <p>Hi ${name},</p>
       <p>Your account is ready. Browse premium listings, run investment calculators, and connect with verified agents.</p>
-      <p><a href="${appUrl}/properties" style="background:#c9a227;color:#0f172a;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:600">Explore properties</a></p>
+      <p><a href="${appUrl}/properties" style="background:#3347b0;color:#0f172a;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:600">Explore properties</a></p>
     </div>
   `;
 }
