@@ -1241,12 +1241,34 @@ export function ProjectManager({
                     </div>
 
                     <div className="space-y-3">
+                      {/* Column headers */}
+                      {towersList.length > 0 && (
+                        <div className="hidden sm:grid gap-2 sm:grid-cols-5 items-center px-3">
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tower Name</span>
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Total Floors</span>
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Lift Count</span>
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Status</span>
+                          <span className="sr-only">Actions</span>
+                        </div>
+                      )}
                       {towersList.map((t, idx) => (
                         <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 grid gap-2 sm:grid-cols-5 items-center">
-                          <Input value={t.name} onChange={(e) => { const next = [...towersList]; next[idx].name = e.target.value; setTowersList(next); }} placeholder="Tower Name (e.g. Tower A)" />
-                          <Input type="number" value={t.floors} onChange={(e) => { const next = [...towersList]; next[idx].floors = parseInt(e.target.value) || 0; setTowersList(next); }} placeholder="Total Floors" />
-                          <Input type="number" value={t.liftCount} onChange={(e) => { const next = [...towersList]; next[idx].liftCount = parseInt(e.target.value) || 0; setTowersList(next); }} placeholder="Lift Count" />
-                          <Input value={t.status} onChange={(e) => { const next = [...towersList]; next[idx].status = e.target.value; setTowersList(next); }} placeholder="Status" />
+                          <div>
+                            <label className="sm:hidden block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1">Tower Name</label>
+                            <Input value={t.name} onChange={(e) => { const next = [...towersList]; next[idx].name = e.target.value; setTowersList(next); }} placeholder="Tower Name (e.g. Tower A)" />
+                          </div>
+                          <div>
+                            <label className="sm:hidden block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1">Total Floors</label>
+                            <Input type="number" value={t.floors} onChange={(e) => { const next = [...towersList]; next[idx].floors = parseInt(e.target.value) || 0; setTowersList(next); }} placeholder="Total Floors" />
+                          </div>
+                          <div>
+                            <label className="sm:hidden block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1">Lift Count</label>
+                            <Input type="number" value={t.liftCount} onChange={(e) => { const next = [...towersList]; next[idx].liftCount = parseInt(e.target.value) || 0; setTowersList(next); }} placeholder="Lift Count" />
+                          </div>
+                          <div>
+                            <label className="sm:hidden block text-[11px] font-bold uppercase tracking-wide text-slate-500 mb-1">Status</label>
+                            <Input value={t.status} onChange={(e) => { const next = [...towersList]; next[idx].status = e.target.value; setTowersList(next); }} placeholder="Status" />
+                          </div>
                           <Button type="button" variant="ghost" size="sm" onClick={() => setTowersList(towersList.filter((_, i) => i !== idx))} className="text-rose-600 shrink-0">
                             <Trash2 className="h-4 w-4" />
                           </Button>
