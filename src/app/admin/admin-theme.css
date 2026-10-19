@@ -1,6 +1,11 @@
 /* ─── IBM Plex Mono + Cabinet Grotesk ─── */
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap');
 
+/* ─── Admin page TITLE font: Georgia serif on every admin page (h1) ─── */
+.admin-main-container h1 {
+  font-family: Georgia, "Times New Roman", serif !important;
+}
+
 /* ─── Admin Shell Root ─── */
 .admin-shell {
   --bg:   #08090d;
