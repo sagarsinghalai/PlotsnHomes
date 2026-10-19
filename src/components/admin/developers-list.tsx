@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { ViewToggle, useViewMode, viewContainerClass } from "@/components/admin/view-toggle";
 import { Plus, Edit3, Trash2, X, Loader2, Check, ExternalLink, ShieldCheck, MapPin, Briefcase, MessageSquare, ClipboardList, Calendar, AlertTriangle, ChevronRight, Clock, Flag, CheckCircle2, Circle, ArrowRight, FolderKanban } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { parseStoredPhone } from "@/lib/phone-utils";
@@ -78,6 +79,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
   const canManageProjects = devPerms.manageProjects ?? true;
   const canManageTasks = devPerms.manageTasks ?? true;
   const [developers, setDevelopers] = useState<Developer[]>(initialDevelopers);
+  const [viewMode, setViewMode] = useViewMode("admin-developers", "list");
   
   // Modal / Form state
   const [isOpen, setIsOpen] = useState(false);
@@ -488,10 +490,58 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
         </div>
       )}
 
-      <div className="flex justify-end">
-        <TableScrollButtons canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} onScroll={scroll} />
+      <div className="flex items-center justify-end gap-2">
+        {viewMode === "list" && (
+          <TableScrollButtons canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} onScroll={scroll} />
+        )}
+        <ViewToggle mode={viewMode} onChange={setViewMode} />
       </div>
 
+      {viewMode !== "list" ? (
+        developers.length === 0 ? (
+          <div className="py-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-500">
+            No developers found. Click &quot;Add Developer&quot; to register one.
+          </div>
+        ) : (
+          <div className={viewContainerClass(viewMode)}>
+            {developers.map((d) => (
+              <div key={d.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs hover:shadow-md transition flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white truncate">{d.name}</h3>
+                    {d.email && <p className="text-xs text-slate-500 truncate">{d.email}</p>}
+                    {d.phone && <p className="text-xs text-slate-500">{d.phone}</p>}
+                  </div>
+                  {d.identityNumber ? (
+                    <span className="shrink-0 inline-flex items-center gap-1 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold">
+                      <ShieldCheck className="h-3.5 w-3.5" />{d.identityType}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1 border-t border-slate-100 dark:border-slate-800 pt-2">
+                  {(d.city || d.state || d.country) && (
+                    <p className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />{[d.city, d.state, d.country].filter(Boolean).join(", ")}</p>
+                  )}
+                  <p className="flex items-center gap-1.5"><Briefcase className="h-3.5 w-3.5 text-slate-400 shrink-0" />Experience: <strong className="text-slate-900 dark:text-white">{d.experienceYears !== null ? `${d.experienceYears} yrs` : "—"}</strong></p>
+                  <p>Projects: <strong className="text-slate-900 dark:text-white">{d.projectCount}</strong></p>
+                </div>
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 mt-auto">
+                  {canEdit && (
+                    <button onClick={() => openEditModal(d)} disabled={loading} className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">
+                      <Edit3 className="h-3.5 w-3.5" /> Edit
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button onClick={() => handleDelete(d.id, d.name)} disabled={loading} className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg" title="Delete Developer">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      ) : (
       <div ref={tableScrollRef} className="overflow-x-auto rounded-2xl border bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-left text-slate-500 font-medium border-b">
@@ -634,6 +684,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
           </tbody>
         </table>
       </div>
+      )}
 
       {/* ════════════ Task Panel (slide-over) ════════════ */}
       {taskDev && (
