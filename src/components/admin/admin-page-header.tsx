@@ -20,7 +20,7 @@ export function AdminPageHeader({
               <span key={i} className="flex items-center gap-1">
                 {i > 0 && <span className="text-slate-300 dark:text-slate-700 font-normal">/</span>}
                 {b.href ? (
-                  <Link href={b.href} className="hover:text-gold-dark dark:hover:text-gold transition">
+                  <Link href={b.href} className="hover:text-brand-hover dark:hover:text-brand transition">
                     {b.label}
                   </Link>
                 ) : (

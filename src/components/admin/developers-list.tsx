@@ -463,7 +463,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
           canAdd ? (
             <button
               onClick={openCreateModal}
-              className="flex items-center gap-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 font-bold px-4 py-2.5 text-sm transition shadow-sm cursor-pointer"
+              className="flex items-center gap-2 rounded-xl bg-brand hover:bg-brand-hover text-white font-bold px-4 py-2.5 text-sm transition shadow-sm cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               Add Developer
@@ -517,7 +517,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                           href={d.website.startsWith("http") ? d.website : `https://${d.website}`} 
                           target="_blank" 
                           rel="noopener noreferrer" 
-                          className="inline-flex items-center gap-1 text-gold-dark hover:underline"
+                          className="inline-flex items-center gap-1 text-brand-hover hover:underline"
                         >
                           {d.website}
                           <ExternalLink className="h-3 w-3" />
@@ -529,7 +529,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                 <td className="px-6 py-4">
                   <div className="space-y-1.5">
                     {d.identityNumber ? (
-                      <div className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 border border-amber-100 px-2 py-0.5 text-xs text-gold-dark font-medium">
+                      <div className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 border border-amber-100 px-2 py-0.5 text-xs text-brand-hover font-medium">
                         <ShieldCheck className="h-3.5 w-3.5" />
                         <span>{d.identityType}: {d.identityNumber}</span>
                       </div>
@@ -860,7 +860,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                   onClick={() => setActiveTab(t.id as any)}
                   className={`py-3.5 font-semibold border-b-2 transition -mb-px ${
                     activeTab === t.id
-                      ? "border-gold text-gold-dark"
+                      ? "border-brand text-brand-hover"
                       : "border-transparent text-slate-500 hover:text-slate-800"
                   }`}
                 >
@@ -882,7 +882,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="e.g. Amanora Builders"
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold transition"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand transition"
                       />
                     </label>
                     <label className="block text-sm">
@@ -892,7 +892,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                         value={website}
                         onChange={(e) => setWebsite(e.target.value)}
                         placeholder="e.g. www.amanorabuilders.com"
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold transition"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand transition"
                       />
                     </label>
                   </div>
@@ -909,7 +909,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                           setExperienceYears(v === "" ? "" : Number(v));
                         }}
                         placeholder="e.g. 15"
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold transition"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand transition"
                       />
                     </label>
                     <label className="block text-sm">
@@ -920,7 +920,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                         value={projectCount}
                         onChange={(e) => setProjectCount(parseInt(e.target.value) || 0)}
                         placeholder="e.g. 5"
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold transition"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand transition"
                       />
                     </label>
                   </div>
@@ -932,7 +932,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Write a brief introduction about the builder group, specialties, reputation, etc."
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold transition resize-none"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand transition resize-none"
                     />
                   </label>
                 </div>
@@ -948,7 +948,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="contact@developer.com"
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold transition"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand transition"
                       />
                     </label>
                     <label className="block text-sm">
@@ -965,7 +965,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                       <select
                         value={identityType}
                         onChange={(e) => setIdentityType(e.target.value)}
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold bg-white transition"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand bg-white transition"
                       >
                         <option value="RERA Registration">RERA Registration</option>
                         <option value="GSTIN">GSTIN (Taxation ID)</option>
@@ -981,7 +981,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                         value={identityNumber}
                         onChange={(e) => setIdentityNumber(e.target.value)}
                         placeholder="e.g. RAJ/PRJ/2026/9981"
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold transition"
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand transition"
                       />
                     </label>
                   </div>
@@ -997,7 +997,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="e.g. 5th Floor, Tower B, Amanora Park Town"
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold transition"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand transition"
                     />
                   </label>
 
@@ -1061,7 +1061,7 @@ export function DevelopersList({ initialDevelopers }: { initialDevelopers: Devel
                 type="button"
                 onClick={handleSave}
                 disabled={loading || !name.trim()}
-                className="flex items-center gap-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 px-5 py-2 text-sm font-semibold transition disabled:opacity-50"
+                className="flex items-center gap-2 rounded-xl bg-brand hover:bg-brand-hover text-white px-5 py-2 text-sm font-semibold transition disabled:opacity-50"
               >
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {selectedDeveloper ? "Save Changes" : "Register Developer"}

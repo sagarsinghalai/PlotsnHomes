@@ -145,7 +145,7 @@ type Props = {
 
 // Premium Glassmorphic / Dark Luxury Field styling
 const fieldClass =
-  "w-full rounded-xl border border-slate-800 bg-slate-950/60 px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30 transition-all duration-200 hover:border-slate-700 hover:bg-slate-950/80";
+  "w-full rounded-xl border border-slate-800 bg-slate-950/60 px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/30 transition-all duration-200 hover:border-slate-700 hover:bg-slate-950/80";
 
 export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = [], bhkOptions = [] }: Props) {
   const router = useRouter();
@@ -269,7 +269,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               onClick={() => handleTabChange(tab.id)}
               className={`px-5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
                 listingType === tab.id
-                  ? "bg-gold text-slate-950 shadow-md font-bold"
+                  ? "bg-brand text-white shadow-md font-bold"
                   : "text-slate-400 hover:text-white hover:bg-white/5"
               }`}
             >
@@ -277,7 +277,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
             </button>
           ))}
         </div>
-        <div className="hidden sm:block text-[10px] font-bold text-gold tracking-widest uppercase">
+        <div className="hidden sm:block text-[10px] font-bold text-brand tracking-widest uppercase">
           PlotsnHomes Portal
         </div>
       </div>
@@ -285,7 +285,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
       {/* Furnishing quick-pick — shown for RENT only */}
       {listingType === "RENT" && (
         <div className="flex items-center gap-2 px-5 pt-4 pb-0 flex-wrap">
-          <span className="text-[10px] font-bold text-gold/80 uppercase tracking-wider">Furnishing:</span>
+          <span className="text-[10px] font-bold text-brand/80 uppercase tracking-wider">Furnishing:</span>
           {FURNISHING_OPTIONS.map((opt) => (
             <button
               key={opt.value}
@@ -293,8 +293,8 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               onClick={() => setFurnishing(furnishing === opt.value ? "" : opt.value)}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-semibold transition-all duration-150 ${
                 furnishing === opt.value
-                  ? "border-gold bg-gold text-slate-950 shadow-sm"
-                  : "border-white/10 bg-slate-900/40 text-slate-300 hover:border-gold/50 hover:bg-gold/10 hover:text-gold"
+                  ? "border-brand bg-brand text-white shadow-sm"
+                  : "border-white/10 bg-slate-900/40 text-slate-300 hover:border-brand/50 hover:bg-brand/10 hover:text-brand"
               }`}
             >
               {furnishing === opt.value && <X className="h-3 w-3" />}
@@ -309,7 +309,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
           {/* Bedrooms */}
           <div className="lg:col-span-3">
-            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
               Bedrooms
             </label>
             <div className="relative">
@@ -326,24 +326,24 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
             </div>
           </div>
 
           {/* Search Box */}
           <div className="lg:col-span-6 relative">
-            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
               Search Property
             </label>
             <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gold/80" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-brand/80" />
               <input
                 name="q"
                 type="text"
                 list="property-suggestions"
                 defaultValue={params.get("q") ?? ""}
                 placeholder="Property name, symbol ID (e.g. BV-TN-0012), or city..."
-                className="w-full rounded-xl border border-slate-800 bg-slate-950/60 pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30 transition-all duration-200 hover:border-slate-700 hover:bg-slate-950/80"
+                className="w-full rounded-xl border border-slate-800 bg-slate-950/60 pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/30 transition-all duration-200 hover:border-slate-700 hover:bg-slate-950/80"
               />
               {suggestions.length > 0 && (
                 <datalist id="property-suggestions">
@@ -359,7 +359,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
 
           {/* Category */}
           <div className="lg:col-span-3">
-            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
               Category
             </label>
             <div className="relative">
@@ -374,13 +374,13 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                   <option key={c} value={c} className="bg-slate-950 text-slate-100">{c}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
             </div>
           </div>
 
           {/* City */}
           <div className="lg:col-span-2">
-            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
               City
             </label>
             <div className="relative">
@@ -392,13 +392,13 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
             </div>
           </div>
 
           {/* Area */}
           <div className="lg:col-span-3">
-            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
               Area / Locality
             </label>
             <div className="relative">
@@ -410,13 +410,13 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
             </div>
           </div>
 
           {/* Min Price */}
           <div className="lg:col-span-2">
-            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
               Min Price
             </label>
             <div className="space-y-1.5">
@@ -434,21 +434,21 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
               </div>
               <input
                 type="number"
                 placeholder="Custom amount"
                 value={customMinPrice}
                 onChange={(e) => setCustomMinPrice(e.target.value)}
-                className="w-full rounded-xl border border-dashed border-slate-800 bg-slate-950/20 px-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:border-gold focus:outline-none"
+                className="w-full rounded-xl border border-dashed border-slate-800 bg-slate-950/20 px-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none"
               />
             </div>
           </div>
 
           {/* Max Price */}
           <div className="lg:col-span-2">
-            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
               Max Price
             </label>
             <div className="space-y-1.5">
@@ -466,28 +466,28 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
               </div>
               <input
                 type="number"
                 placeholder="Custom amount"
                 value={customMaxPrice}
                 onChange={(e) => setCustomMaxPrice(e.target.value)}
-                className="w-full rounded-xl border border-dashed border-slate-800 bg-slate-950/20 px-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:border-gold focus:outline-none"
+                className="w-full rounded-xl border border-dashed border-slate-800 bg-slate-950/20 px-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none"
               />
             </div>
           </div>
 
           {/* Search Button */}
           <div className="lg:col-span-3 flex flex-col justify-end">
-            <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5 opacity-0 select-none hidden lg:block">
+            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5 opacity-0 select-none hidden lg:block">
               Submit
             </label>
             <div className="flex gap-2">
               <button
                 type="submit"
                 disabled={pending}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gold via-amber-500 to-gold-dark hover:brightness-110 active:scale-[0.98] px-4 py-2.5 text-sm font-bold text-slate-950 shadow-md shadow-gold/10 hover:shadow-lg hover:shadow-gold/25 transition-all duration-200 disabled:opacity-50 h-[44px]"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand via-amber-500 to-brand-hover hover:brightness-110 active:scale-[0.98] px-4 py-2.5 text-sm font-bold text-slate-950 shadow-md shadow-brand/10 hover:shadow-lg hover:shadow-brand/25 transition-all duration-200 disabled:opacity-50 h-[44px]"
               >
                 <Search className="h-4 w-4 text-slate-950 stroke-[2.5px]" />
                 {pending ? "Searching…" : "Search"}
@@ -517,7 +517,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
           <button
             type="button"
             onClick={() => setShowMore((v) => !v)}
-            className="flex items-center gap-1.5 text-xs font-bold text-gold/85 hover:text-gold uppercase tracking-wider transition-all duration-150"
+            className="flex items-center gap-1.5 text-xs font-bold text-brand/85 hover:text-brand uppercase tracking-wider transition-all duration-150"
           >
             <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showMore ? "rotate-180" : ""}`} />
             {showMore ? "Hide Advanced Filters" : "Show Advanced Filters"}
@@ -530,7 +530,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
 
                 {/* Bathrooms */}
                 <div>
-                  <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
                     Bathrooms
                   </label>
                   <div className="relative">
@@ -542,13 +542,13 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
                   </div>
                 </div>
 
                 {/* Min sq.ft */}
                 <div>
-                  <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
                     Min sq.ft
                   </label>
                   <input
@@ -563,7 +563,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
 
               {/* Property Extras */}
               <div className="bg-slate-900/30 p-4 rounded-xl border border-white/5">
-                <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-3">
+                <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-3">
                   Property Extras
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
@@ -574,7 +574,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                         <option value="" className="bg-slate-950 text-slate-100">Any</option>
                         {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n} className="bg-slate-950 text-slate-100">{n}+ balconies</option>)}
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
                     </div>
                   </div>
                   <div>
@@ -586,7 +586,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                         <option value="Personal Lift" className="bg-slate-950 text-slate-100">Personal Lift</option>
                         <option value="No Lift" className="bg-slate-950 text-slate-100">No Lift</option>
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
                     </div>
                   </div>
                   <div>
@@ -602,21 +602,21 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                         <option value="Sold" className="bg-slate-950 text-slate-100">Sold</option>
                         <option value="Rented" className="bg-slate-950 text-slate-100">Rented</option>
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold/80 h-4 w-4" />
+                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
                     </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-white/5 pt-4">
-                  <label className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-gold/50 has-[:checked]:bg-gold/10 has-[:checked]:text-gold hover:scale-[1.02] active:scale-[0.98]">
-                    <input type="checkbox" name="servantRoom" value="1" defaultChecked={params.get("servantRoom") === "1"} className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-gold focus:ring-gold/30 transition duration-150 cursor-pointer" />
+                  <label className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-brand/50 has-[:checked]:bg-brand/10 has-[:checked]:text-brand hover:scale-[1.02] active:scale-[0.98]">
+                    <input type="checkbox" name="servantRoom" value="1" defaultChecked={params.get("servantRoom") === "1"} className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-brand focus:ring-brand/30 transition duration-150 cursor-pointer" />
                     <span>Servant Room</span>
                   </label>
-                  <label className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-gold/50 has-[:checked]:bg-gold/10 has-[:checked]:text-gold hover:scale-[1.02] active:scale-[0.98]">
-                    <input type="checkbox" name="pujaRoom" value="1" defaultChecked={params.get("pujaRoom") === "1"} className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-gold focus:ring-gold/30 transition duration-150 cursor-pointer" />
+                  <label className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-brand/50 has-[:checked]:bg-brand/10 has-[:checked]:text-brand hover:scale-[1.02] active:scale-[0.98]">
+                    <input type="checkbox" name="pujaRoom" value="1" defaultChecked={params.get("pujaRoom") === "1"} className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-brand focus:ring-brand/30 transition duration-150 cursor-pointer" />
                     <span>Puja Ghar</span>
                   </label>
-                  <label className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-gold/50 has-[:checked]:bg-gold/10 has-[:checked]:text-gold hover:scale-[1.02] active:scale-[0.98]">
-                    <input type="checkbox" name="studyRoom" value="1" defaultChecked={params.get("studyRoom") === "1"} className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-gold focus:ring-gold/30 transition duration-150 cursor-pointer" />
+                  <label className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-brand/50 has-[:checked]:bg-brand/10 has-[:checked]:text-brand hover:scale-[1.02] active:scale-[0.98]">
+                    <input type="checkbox" name="studyRoom" value="1" defaultChecked={params.get("studyRoom") === "1"} className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-brand focus:ring-brand/30 transition duration-150 cursor-pointer" />
                     <span>Study Room</span>
                   </label>
                 </div>
@@ -624,18 +624,18 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
 
               {/* Amenities */}
               <div className="bg-slate-900/30 p-4 rounded-xl border border-white/5">
-                <label className="block text-[10px] font-bold text-gold/85 uppercase tracking-widest mb-3">
+                <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-3">
                   Amenities
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {AMENITIES.map(([key, label]) => (
-                    <label key={key} className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-gold/50 has-[:checked]:bg-gold/10 has-[:checked]:text-gold hover:scale-[1.02] active:scale-[0.98]">
+                    <label key={key} className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-brand/50 has-[:checked]:bg-brand/10 has-[:checked]:text-brand hover:scale-[1.02] active:scale-[0.98]">
                       <input
                         type="checkbox"
                         name={key}
                         value="1"
                         defaultChecked={params.get(key) === "1"}
-                        className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-gold focus:ring-gold/30 transition duration-150 cursor-pointer"
+                        className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-brand focus:ring-brand/30 transition duration-150 cursor-pointer"
                       />
                       <span>{label}</span>
                     </label>

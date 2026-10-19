@@ -65,7 +65,7 @@ export function GoalsManager({ goals }: { goals: Goal[] }) {
                 {g.current} / {g.target}
               </p>
               <div className="mt-3 h-2 rounded-full bg-slate-100">
-                <div className="h-full rounded-full bg-gold" style={{ width: `${pct}%` }} />
+                <div className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
               </div>
               <p className="text-xs text-slate-400 mt-2">{g.owner?.name ?? "All team"}</p>
             </div>

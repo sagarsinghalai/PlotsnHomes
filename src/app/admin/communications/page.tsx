@@ -18,7 +18,7 @@ export default function CommunicationsPage() {
       <div className="mt-8">
         <SettingsCardGrid cards={cards} />
       </div>
-      <Link href="/admin/crm" className="inline-block mt-6 text-gold-dark hover:underline">
+      <Link href="/admin/crm" className="inline-block mt-6 text-brand-hover hover:underline">
         ← CRM pipeline
       </Link>
     </div>

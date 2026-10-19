@@ -718,7 +718,7 @@ export function CrmLeadDetail({
     <div className="space-y-6">
       <Link
         href={agentMode ? "/dashboard/crm" : "/admin/crm"}
-        className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-gold-dark"
+        className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-brand-hover"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to CRM
@@ -729,7 +729,7 @@ export function CrmLeadDetail({
         <div>
           <div className="flex items-center gap-3">
             <h1 className="font-display text-3xl font-bold text-slate-900">{lead.name}</h1>
-            <div className="flex items-center gap-1.5 rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold text-gold-dark">
+            <div className="flex items-center gap-1.5 rounded-full bg-brand/15 px-3 py-1 text-xs font-semibold text-brand-hover">
               <Sparkles className="h-3.5 w-3.5" />
               Lead Score: {lead.score}
             </div>
@@ -998,7 +998,7 @@ export function CrmLeadDetail({
                   placeholder="e.g. Looking for land parcel or 3BHK under ₹80 Lakhs..."
                   value={edit.notes}
                   onChange={(e) => setEdit((x) => ({ ...x, notes: e.target.value }))}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm mt-1 focus:bg-white text-slate-900 outline-none focus:border-gold"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm mt-1 focus:bg-white text-slate-900 outline-none focus:border-brand"
                 />
               </div>
               <Button disabled={busy} onClick={saveLead} className="w-full mt-2" variant="gold">
@@ -1018,7 +1018,7 @@ export function CrmLeadDetail({
                       key={t.id}
                       type="button"
                       onClick={() => openWhatsApp(t)}
-                      className="w-full text-left rounded-lg border px-3 py-2 text-sm hover:bg-slate-50 hover:border-gold/30 transition flex items-center justify-between"
+                      className="w-full text-left rounded-lg border px-3 py-2 text-sm hover:bg-slate-50 hover:border-brand/30 transition flex items-center justify-between"
                     >
                       <span>{t.name}</span>
                       <ExternalLink className="h-3 w-3 text-slate-400" />
@@ -1035,7 +1035,7 @@ export function CrmLeadDetail({
             <button
               onClick={() => setActiveTab("overview")}
               className={`pb-3 px-6 font-semibold text-sm border-b-2 transition ${
-                activeTab === "overview" ? "border-gold-dark text-gold-dark" : "border-transparent text-slate-500 hover:text-slate-800"
+                activeTab === "overview" ? "border-brand-hover text-brand-hover" : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
               Overview
@@ -1043,7 +1043,7 @@ export function CrmLeadDetail({
             <button
               onClick={() => setActiveTab("requirements")}
               className={`pb-3 px-6 font-semibold text-sm border-b-2 transition ${
-                activeTab === "requirements" ? "border-gold-dark text-gold-dark" : "border-transparent text-slate-500 hover:text-slate-800"
+                activeTab === "requirements" ? "border-brand-hover text-brand-hover" : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
               Requirements
@@ -1051,7 +1051,7 @@ export function CrmLeadDetail({
             <button
               onClick={() => setActiveTab("properties")}
               className={`pb-3 px-6 font-semibold text-sm border-b-2 transition ${
-                activeTab === "properties" ? "border-gold-dark text-gold-dark" : "border-transparent text-slate-500 hover:text-slate-800"
+                activeTab === "properties" ? "border-brand-hover text-brand-hover" : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
               Properties
@@ -1059,7 +1059,7 @@ export function CrmLeadDetail({
             <button
               onClick={() => setActiveTab("activity")}
               className={`pb-3 px-6 font-semibold text-sm border-b-2 transition ${
-                activeTab === "activity" ? "border-gold-dark text-gold-dark" : "border-transparent text-slate-500 hover:text-slate-800"
+                activeTab === "activity" ? "border-brand-hover text-brand-hover" : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
               Activity
@@ -1067,7 +1067,7 @@ export function CrmLeadDetail({
             <button
               onClick={() => setActiveTab("offers")}
               className={`pb-3 px-6 font-semibold text-sm border-b-2 transition ${
-                activeTab === "offers" ? "border-gold-dark text-gold-dark" : "border-transparent text-slate-500 hover:text-slate-800"
+                activeTab === "offers" ? "border-brand-hover text-brand-hover" : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
               Offers
@@ -1075,7 +1075,7 @@ export function CrmLeadDetail({
             <button
               onClick={() => setActiveTab("intelligence")}
               className={`pb-3 px-6 font-semibold text-sm border-b-2 transition ${
-                activeTab === "intelligence" ? "border-gold-dark text-gold-dark" : "border-transparent text-slate-500 hover:text-slate-800"
+                activeTab === "intelligence" ? "border-brand-hover text-brand-hover" : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
               Lead Intelligence
@@ -1088,7 +1088,7 @@ export function CrmLeadDetail({
               <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 shadow-sm space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                    <FileText className="h-4 w-4 text-gold" />
+                    <FileText className="h-4 w-4 text-brand" />
                     Quick Log: {activeLogType.toUpperCase()}
                   </p>
                   <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1">
@@ -1408,7 +1408,7 @@ export function CrmLeadDetail({
                         {/* Property details */}
                         <div className="flex-1 min-w-0 space-y-1">
                           <div className="flex items-start justify-between gap-2">
-                            <h5 className="font-bold text-slate-900 text-sm truncate hover:text-gold-dark">
+                            <h5 className="font-bold text-slate-900 text-sm truncate hover:text-brand-hover">
                               <Link href={`/properties/${p.slug}`} target="_blank">{p.title}</Link>
                             </h5>
                           </div>
@@ -1498,11 +1498,11 @@ export function CrmLeadDetail({
                 <h4 className="font-semibold text-slate-900 text-sm">Property Interest</h4>
                 {lead.property ? (
                   <>
-                    <p className="text-sm font-semibold text-gold-dark">{lead.property.symbol}</p>
+                    <p className="text-sm font-semibold text-brand-hover">{lead.property.symbol}</p>
                     <p className="text-xs text-slate-600 font-medium">{lead.property.title}</p>
                     <Link
                       href={`/properties/${lead.property.slug}`}
-                      className="text-xs text-slate-400 hover:text-gold-dark flex items-center gap-1 mt-1 underline"
+                      className="text-xs text-slate-400 hover:text-brand-hover flex items-center gap-1 mt-1 underline"
                     >
                       View property listing <ExternalLink className="h-3 w-3" />
                     </Link>
@@ -1518,7 +1518,7 @@ export function CrmLeadDetail({
             <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
               <div>
                 <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-gold-dark animate-pulse" />
+                  <Sparkles className="h-5 w-5 text-brand-hover animate-pulse" />
                   Lead Score: {lead.score} / 100
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">

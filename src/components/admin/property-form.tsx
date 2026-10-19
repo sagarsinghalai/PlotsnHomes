@@ -333,7 +333,7 @@ function safeParseCustomFields(raw: any): Array<{ id: string; section: string; l
                 type="button"
                 onClick={() => saveCustomField(sectionKey)}
                 disabled={!newFieldLabel.trim()}
-                className="rounded-lg bg-gold-dark hover:bg-gold px-3 py-1.5 font-semibold text-white disabled:opacity-50"
+                className="rounded-lg bg-brand-hover hover:bg-brand px-3 py-1.5 font-semibold text-white disabled:opacity-50"
               >
                 Add Field
               </button>
@@ -780,7 +780,7 @@ function safeParseCustomFields(raw: any): Array<{ id: string; section: string; l
                   placeholder="e.g. 6000"
                   value={form.softLaunchRate}
                   onChange={(e) => set("softLaunchRate", e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white px-3 py-1.5 text-sm focus:border-gold focus:ring-1 focus:ring-gold"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white px-3 py-1.5 text-sm focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </label>
 
@@ -792,7 +792,7 @@ function safeParseCustomFields(raw: any): Array<{ id: string; section: string; l
                   placeholder="e.g. 6500"
                   value={form.preLaunchRate}
                   onChange={(e) => set("preLaunchRate", e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white px-3 py-1.5 text-sm focus:border-gold focus:ring-1 focus:ring-gold"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white px-3 py-1.5 text-sm focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </label>
 
@@ -804,7 +804,7 @@ function safeParseCustomFields(raw: any): Array<{ id: string; section: string; l
                   placeholder="e.g. 7000"
                   value={form.launchRate}
                   onChange={(e) => set("launchRate", e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white px-3 py-1.5 text-sm focus:border-gold focus:ring-1 focus:ring-gold"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white px-3 py-1.5 text-sm focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </label>
 
@@ -828,7 +828,7 @@ function safeParseCustomFields(raw: any): Array<{ id: string; section: string; l
                       };
                     });
                   }}
-                  className="w-full rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/40 px-3 py-1.5 text-sm font-bold text-emerald-950 dark:text-emerald-200 focus:border-gold focus:ring-1 focus:ring-gold"
+                  className="w-full rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/40 px-3 py-1.5 text-sm font-bold text-emerald-950 dark:text-emerald-200 focus:border-brand focus:ring-1 focus:ring-brand"
                 />
               </label>
             </div>
@@ -864,7 +864,7 @@ function safeParseCustomFields(raw: any): Array<{ id: string; section: string; l
                         <th className="pb-2">Stage / Parameter</th>
                         <th className="pb-2 text-emerald-700 dark:text-emerald-400">rate/sqft</th>
                         <th className="pb-2 text-slate-700 dark:text-slate-300">Area (sqft)</th>
-                        <th className="pb-2 text-gold-dark dark:text-gold">Total Price</th>
+                        <th className="pb-2 text-brand-hover dark:text-brand">Total Price</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
@@ -1155,7 +1155,7 @@ function safeParseCustomFields(raw: any): Array<{ id: string; section: string; l
           </div>
           {pdfs.map((pdf, i) => (
             <div key={i} className="flex items-center justify-between rounded border px-3 py-2 text-xs">
-              <a href={pdf.url} target="_blank" rel="noreferrer" className="truncate text-gold-dark underline">{pdf.name}</a>
+              <a href={pdf.url} target="_blank" rel="noreferrer" className="truncate text-brand-hover underline">{pdf.name}</a>
               <button type="button" onClick={() => setPdfs((p) => p.filter((_, j) => j !== i))} className="text-red-600">Remove</button>
             </div>
           ))}
@@ -1598,7 +1598,7 @@ function safeParseCustomFields(raw: any): Array<{ id: string; section: string; l
                     parseGoogleMapsLink(val);
                   }
                 }}
-                className="flex-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold"
+                className="flex-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand"
               />
               <Button
                 type="button"

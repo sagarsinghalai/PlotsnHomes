@@ -145,18 +145,18 @@ export default async function DashboardPage() {
       {/* Summary Stat Cards */}
       <div className="grid gap-6 sm:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs">
-          <Receipt className="h-8 w-8 text-gold-dark" />
+          <Receipt className="h-8 w-8 text-brand-hover" />
           <p className="mt-4 text-2xl font-black text-slate-900">{transactions.length}</p>
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">Recent Transactions</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs">
-          <Heart className="h-8 w-8 text-gold-dark" />
+          <Heart className="h-8 w-8 text-brand-hover" />
           <p className="mt-4 text-2xl font-black text-slate-900">{favorites}</p>
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">Saved Properties</p>
         </div>
         {userRole === "AGENT" && (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs">
-            <Home className="h-8 w-8 text-gold-dark" />
+            <Home className="h-8 w-8 text-brand-hover" />
             <p className="mt-4 text-2xl font-black text-slate-900">{myProperties}</p>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">Your Listings</p>
           </div>
@@ -175,15 +175,15 @@ export default async function DashboardPage() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 text-xs font-extrabold text-slate-900 shadow-2xs hover:border-gold hover:bg-amber-50/60 transition"
+                className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 text-xs font-extrabold text-slate-900 shadow-2xs hover:border-brand hover:bg-amber-50/60 transition"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-gold/15 flex items-center justify-center text-gold-dark shrink-0 group-hover:scale-105 transition">
+                  <div className="h-9 w-9 rounded-xl bg-brand/15 flex items-center justify-center text-brand-hover shrink-0 group-hover:scale-105 transition">
                     <Icon className="h-4.5 w-4.5" />
                   </div>
                   <span>{link.label}</span>
                 </div>
-                <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-gold-dark transition" />
+                <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-brand-hover transition" />
               </Link>
             );
           })}
@@ -194,7 +194,7 @@ export default async function DashboardPage() {
       <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
         <div className="border-b border-slate-100 px-6 py-4 flex justify-between items-center bg-slate-50/50">
           <h2 className="font-extrabold text-xs uppercase tracking-wider text-slate-700">Recent Transactions</h2>
-          <Link href="/dashboard/transactions" className="text-xs font-bold text-gold-dark hover:underline">
+          <Link href="/dashboard/transactions" className="text-xs font-bold text-brand-hover hover:underline">
             View all
           </Link>
         </div>
@@ -230,7 +230,7 @@ export default async function DashboardPage() {
               <tr>
                 <td colSpan={4} className="px-6 py-8 text-center text-slate-500 font-medium">
                   No transactions yet. Browse{" "}
-                  <Link href="/properties" className="text-gold-dark font-bold underline">properties</Link>.
+                  <Link href="/properties" className="text-brand-hover font-bold underline">properties</Link>.
                 </td>
               </tr>
             )}

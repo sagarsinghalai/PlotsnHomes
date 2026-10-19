@@ -202,7 +202,7 @@ export function MeetingSchedulePage({ meeting }: { meeting: MeetingData }) {
           href={meeting.customUrl}
           target="_blank"
           rel="noreferrer"
-          className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-gold px-6 py-4 font-semibold text-slate-900 hover:bg-gold-dark"
+          className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-brand px-6 py-4 font-semibold text-white hover:bg-brand-hover"
         >
           <Video className="h-5 w-5" />
           Join meeting link

@@ -82,14 +82,14 @@ export function ExportHub() {
               <a
                 key={c.href}
                 href={c.href}
-                className="rounded-2xl border bg-white p-6 hover:border-gold block"
+                className="rounded-2xl border bg-white p-6 hover:border-brand block"
               >
                 {inner}
               </a>
             );
           }
           return (
-            <Link key={c.href} href={c.href} className="rounded-2xl border bg-white p-6 hover:border-gold block">
+            <Link key={c.href} href={c.href} className="rounded-2xl border bg-white p-6 hover:border-brand block">
               {inner}
             </Link>
           );
@@ -97,7 +97,7 @@ export function ExportHub() {
       </div>
       <p className="text-sm text-slate-500">
         Template exports open as CSV download. Configure WhatsApp/SMS templates under{" "}
-        <Link href="/admin/crm/settings" className="text-gold-dark underline">
+        <Link href="/admin/crm/settings" className="text-brand-hover underline">
           CRM settings
         </Link>
         .

@@ -566,7 +566,7 @@ export function MessagesWorkspace({
               placeholder="Search by User ID (e.g. USR-10001), name, or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full text-xs pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-gold transition"
+              className="w-full text-xs pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand transition"
             />
           </div>
         </div>
@@ -599,7 +599,7 @@ export function MessagesWorkspace({
                 key={u.id}
                 onClick={() => setSelectedUserId(u.id)}
                 className={`w-full text-left p-3.5 flex items-center gap-3 transition hover:bg-slate-50 ${
-                  isSelected ? "bg-amber-50/60 hover:bg-amber-50/60 border-l-4 border-gold" : ""
+                  isSelected ? "bg-amber-50/60 hover:bg-amber-50/60 border-l-4 border-brand" : ""
                 }`}
               >
                 <div className="h-10 w-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-xs text-slate-600 flex-shrink-0">
@@ -643,7 +643,7 @@ export function MessagesWorkspace({
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <div className="h-10 w-10 rounded-xl bg-gold/10 flex items-center justify-center font-bold text-gold text-sm border border-gold/20 flex-shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-brand/10 flex items-center justify-center font-bold text-brand text-sm border border-brand/20 flex-shrink-0">
                   <User className="h-5 w-5" />
                 </div>
                 <div>
@@ -1105,7 +1105,7 @@ export function MessagesWorkspace({
           /* Empty State / Global Logs Display */
           <div className="h-full flex flex-col p-6 overflow-y-auto bg-slate-50/20">
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 max-w-md mx-auto">
-              <div className="h-16 w-16 rounded-full bg-gold/10 flex items-center justify-center text-gold border border-gold/20 mb-4 animate-pulse">
+              <div className="h-16 w-16 rounded-full bg-brand/10 flex items-center justify-center text-brand border border-brand/20 mb-4 animate-pulse">
                 <MessageSquare className="h-8 w-8" />
               </div>
               <h3 className="text-base font-bold text-slate-800">Real-time Messaging Workspace</h3>
@@ -1118,7 +1118,7 @@ export function MessagesWorkspace({
             <div className="border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden flex flex-col max-h-[350px] mt-auto">
               <div className="border-b border-slate-100 px-4 py-3 flex items-center justify-between bg-slate-50/50">
                 <span className="font-semibold text-slate-800 text-xs flex items-center gap-1.5">
-                  <ArrowDownCircle className="h-4 w-4 text-gold" />
+                  <ArrowDownCircle className="h-4 w-4 text-brand" />
                   Recent Messages Log
                 </span>
                 <span className="text-[10px] text-slate-400 font-medium">Last 50 messages</span>

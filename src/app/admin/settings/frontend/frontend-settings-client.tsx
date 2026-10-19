@@ -176,7 +176,7 @@ export function FrontendSettingsClient({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 px-5 py-2.5 font-bold shadow-sm transition-all cursor-pointer text-sm disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand hover:bg-brand-hover text-white px-5 py-2.5 font-bold shadow-sm transition-all cursor-pointer text-sm disabled:opacity-50"
           >
             {saving ? (
               <div className="h-4 w-4 rounded-full border-2 border-slate-950 border-t-transparent animate-spin" />
@@ -323,7 +323,7 @@ export function FrontendSettingsClient({
                           prev.map((item, idx) => (idx === index ? { ...item, imageUrl: val } : item))
                         );
                       }}
-                      className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono text-slate-900 dark:text-white focus:border-gold outline-none"
+                      className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono text-slate-900 dark:text-white focus:border-brand outline-none"
                     />
                     <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer shrink-0">
                       {uploadingState[`area_${index}`] ? (
@@ -371,7 +371,7 @@ export function FrontendSettingsClient({
                           prev.map((item, idx) => (idx === index ? { ...item, area: val } : item))
                         );
                       }}
-                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-extrabold text-slate-900 dark:text-white focus:border-gold outline-none"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-extrabold text-slate-900 dark:text-white focus:border-brand outline-none"
                     />
                   </div>
 
@@ -387,7 +387,7 @@ export function FrontendSettingsClient({
                           prev.map((item, idx) => (idx === index ? { ...item, count: val } : item))
                         );
                       }}
-                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-extrabold text-slate-900 dark:text-white focus:border-gold outline-none"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-extrabold text-slate-900 dark:text-white focus:border-brand outline-none"
                     />
                   </div>
                 </div>
@@ -403,7 +403,7 @@ export function FrontendSettingsClient({
           {/* Google Review Link Section */}
           <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-2xs space-y-3">
             <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-sm">
-              <ExternalLink className="h-4 w-4 text-gold-dark dark:text-gold" />
+              <ExternalLink className="h-4 w-4 text-brand-hover dark:text-brand" />
               <h3>Google Review Link (Company Reviews)</h3>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -417,7 +417,7 @@ export function FrontendSettingsClient({
                 const val = e.target.value;
                 setTestimonials((prev) => ({ ...prev, googleReviewUrl: val }));
               }}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2.5 text-xs text-slate-900 dark:text-white focus:border-gold outline-none font-mono"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2.5 text-xs text-slate-900 dark:text-white focus:border-brand outline-none font-mono"
             />
           </div>
 
@@ -496,7 +496,7 @@ export function FrontendSettingsClient({
                           items: prev.items.map((r, idx) => (idx === index ? { ...r, rating: val } : r)),
                         }));
                       }}
-                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:border-gold outline-none"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:border-brand outline-none"
                     >
                       <option value={5}>⭐⭐⭐⭐⭐ (5 / 5 Stars)</option>
                       <option value={4}>⭐⭐⭐⭐ (4 / 5 Stars)</option>
@@ -521,7 +521,7 @@ export function FrontendSettingsClient({
                           items: prev.items.map((r, idx) => (idx === index ? { ...r, text: val } : r)),
                         }));
                       }}
-                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2.5 text-xs text-slate-900 dark:text-white focus:border-gold outline-none italic"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2.5 text-xs text-slate-900 dark:text-white focus:border-brand outline-none italic"
                     />
                   </div>
 
@@ -545,7 +545,7 @@ export function FrontendSettingsClient({
                               items: prev.items.map((r, idx) => (idx === index ? { ...r, name: val } : r)),
                             }));
                           }}
-                          className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs font-bold text-slate-900 dark:text-white focus:border-gold outline-none"
+                          className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs font-bold text-slate-900 dark:text-white focus:border-brand outline-none"
                         />
                         <input
                           type="text"
@@ -558,7 +558,7 @@ export function FrontendSettingsClient({
                               items: prev.items.map((r, idx) => (idx === index ? { ...r, role: val } : r)),
                             }));
                           }}
-                          className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1 text-[11px] text-slate-500 dark:text-slate-400 focus:border-gold outline-none"
+                          className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1 text-[11px] text-slate-500 dark:text-slate-400 focus:border-brand outline-none"
                         />
                       </div>
                     </div>
@@ -576,7 +576,7 @@ export function FrontendSettingsClient({
                             items: prev.items.map((r, idx) => (idx === index ? { ...r, image: val } : r)),
                           }));
                         }}
-                        className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-[11px] font-mono text-slate-900 dark:text-white focus:border-gold outline-none"
+                        className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-[11px] font-mono text-slate-900 dark:text-white focus:border-brand outline-none"
                       />
                       <label className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer shrink-0">
                         {uploadingState[`rev_${index}`] ? (
@@ -630,7 +630,7 @@ export function FrontendSettingsClient({
                               items: prev.items.map((r, idx) => (idx === index ? { ...r, investmentAmount: val } : r)),
                             }));
                           }}
-                          className="w-full rounded-lg border border-slate-200 dark:border-slate-800 px-2 py-1 text-xs font-bold text-slate-900 dark:text-white focus:border-gold outline-none bg-white dark:bg-slate-900"
+                          className="w-full rounded-lg border border-slate-200 dark:border-slate-800 px-2 py-1 text-xs font-bold text-slate-900 dark:text-white focus:border-brand outline-none bg-white dark:bg-slate-900"
                         />
                       </div>
                       <div>
@@ -646,7 +646,7 @@ export function FrontendSettingsClient({
                               items: prev.items.map((r, idx) => (idx === index ? { ...r, portfolioSize: val } : r)),
                             }));
                           }}
-                          className="w-full rounded-lg border border-slate-200 dark:border-slate-800 px-2 py-1 text-xs font-bold text-slate-900 dark:text-white focus:border-gold outline-none bg-white dark:bg-slate-900"
+                          className="w-full rounded-lg border border-slate-200 dark:border-slate-800 px-2 py-1 text-xs font-bold text-slate-900 dark:text-white focus:border-brand outline-none bg-white dark:bg-slate-900"
                         />
                       </div>
                     </div>
@@ -743,7 +743,7 @@ export function FrontendSettingsClient({
                       className={`w-full rounded-xl border px-3 py-2 text-xs font-bold text-slate-900 dark:text-white outline-none bg-white dark:bg-slate-900 ${
                         errors.name
                           ? "border-rose-500 bg-rose-50/50 dark:bg-rose-950/30"
-                          : "border-slate-200 dark:border-slate-800 focus:border-gold"
+                          : "border-slate-200 dark:border-slate-800 focus:border-brand"
                       }`}
                     />
                     {errors.name && (
@@ -764,7 +764,7 @@ export function FrontendSettingsClient({
                           prev.map((item, idx) => (idx === index ? { ...item, designation: val } : item))
                         );
                       }}
-                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-gold outline-none font-medium"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-brand outline-none font-medium"
                     />
                   </div>
 
@@ -785,7 +785,7 @@ export function FrontendSettingsClient({
                             prev.map((item, idx) => (idx === index ? { ...item, countryCode: val } : item))
                           );
                         }}
-                        className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2 text-xs font-bold text-slate-900 dark:text-white focus:border-gold outline-none shrink-0 max-w-[130px]"
+                        className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2 text-xs font-bold text-slate-900 dark:text-white focus:border-brand outline-none shrink-0 max-w-[130px]"
                       >
                         {WORLD_COUNTRY_CODES.map((c) => (
                           <option key={c.code} value={c.code}>
@@ -806,7 +806,7 @@ export function FrontendSettingsClient({
                         className={`flex-1 rounded-xl border px-3 py-2 text-xs font-bold font-mono text-slate-900 dark:text-white outline-none bg-white dark:bg-slate-900 ${
                           errors.phone
                             ? "border-rose-500 bg-rose-50/50 dark:bg-rose-950/30"
-                            : "border-slate-200 dark:border-slate-800 focus:border-gold"
+                            : "border-slate-200 dark:border-slate-800 focus:border-brand"
                         }`}
                       />
                     </div>

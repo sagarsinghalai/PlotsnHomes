@@ -451,7 +451,7 @@ export function AgentCommissionTracker({
   if (loading) {
     return (
       <div className="p-8 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm my-6">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gold border-t-transparent mb-3" />
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand border-t-transparent mb-3" />
         <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Loading Agent Commission Tracker...</p>
       </div>
     );
@@ -909,7 +909,7 @@ export function AgentCommissionTracker({
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Coins className="h-5 w-5 text-gold" />
+                  <Coins className="h-5 w-5 text-brand" />
                   Manage Commission &amp; Payout
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">{selectedCommission.propertyTitle}</p>
@@ -935,7 +935,7 @@ export function AgentCommissionTracker({
                   max="100"
                   value={editForm.commissionPct}
                   onChange={(e) => setEditForm({ ...editForm, commissionPct: parseFloat(e.target.value) || 0 })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-gold"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-brand"
                 />
                 <p className="text-[11px] text-slate-400 mt-1">
                   Calculated Amount: <span className="font-extrabold text-emerald-600">{formatCurrency((selectedCommission.propertyValue * editForm.commissionPct) / 100)}</span>
@@ -949,7 +949,7 @@ export function AgentCommissionTracker({
                 <select
                   value={editForm.status}
                   onChange={(e) => setEditForm({ ...editForm, status: e.target.value as any })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-gold"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-brand"
                 >
                   <option value="PENDING">PENDING (Unpaid)</option>
                   <option value="PAID">PAID (Settled)</option>
@@ -966,7 +966,7 @@ export function AgentCommissionTracker({
                   placeholder="e.g. TXN-98492042 or Cheque #40294"
                   value={editForm.paymentRef}
                   onChange={(e) => setEditForm({ ...editForm, paymentRef: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-gold"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-brand"
                 />
               </div>
 
@@ -979,14 +979,14 @@ export function AgentCommissionTracker({
                   placeholder="Internal notes regarding this payout..."
                   value={editForm.notes}
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-3 text-xs text-slate-900 dark:text-white outline-none focus:border-gold resize-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-3 text-xs text-slate-900 dark:text-white outline-none focus:border-brand resize-none"
                 />
                 <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                   <span className="flex items-center gap-1 font-mono">
                     <Clock className="h-3 w-3 text-slate-400" />
                     Timestamp: {new Date().toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                   </span>
-                  <span className="text-amber-700 dark:text-gold font-bold">Notes logged with timestamp</span>
+                  <span className="text-amber-700 dark:text-brand font-bold">Notes logged with timestamp</span>
                 </div>
               </div>
             </div>
@@ -1002,7 +1002,7 @@ export function AgentCommissionTracker({
               <button
                 type="button"
                 onClick={handleSaveCommissionEdit}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 px-4 py-2 text-xs font-black transition shadow-sm"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-brand hover:bg-brand-hover text-white px-4 py-2 text-xs font-black transition shadow-sm"
               >
                 <Save className="h-3.5 w-3.5" />
                 Save Note &amp; Payout
@@ -1018,7 +1018,7 @@ export function AgentCommissionTracker({
           <div className="w-full max-w-lg rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Plus className="h-5 w-5 text-gold" />
+                <Plus className="h-5 w-5 text-brand" />
                 Add Manual Commission Entry
               </h3>
               <button
@@ -1040,7 +1040,7 @@ export function AgentCommissionTracker({
                   placeholder="e.g. Luxury Apartment 4B, Sector 62"
                   value={addForm.propertyTitle}
                   onChange={(e) => setAddForm({ ...addForm, propertyTitle: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-gold"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-brand"
                 />
               </div>
 
@@ -1055,7 +1055,7 @@ export function AgentCommissionTracker({
                     placeholder="15000000"
                     value={addForm.propertyValue || ""}
                     onChange={(e) => setAddForm({ ...addForm, propertyValue: parseFloat(e.target.value) || 0 })}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-gold"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-brand"
                   />
                 </div>
 
@@ -1070,7 +1070,7 @@ export function AgentCommissionTracker({
                     max="100"
                     value={addForm.commissionPct}
                     onChange={(e) => setAddForm({ ...addForm, commissionPct: parseFloat(e.target.value) || 0 })}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-gold"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-brand"
                   />
                 </div>
               </div>
@@ -1088,7 +1088,7 @@ export function AgentCommissionTracker({
                 <select
                   value={addForm.status}
                   onChange={(e) => setAddForm({ ...addForm, status: e.target.value as any })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-gold"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-brand"
                 >
                   <option value="PENDING">PENDING</option>
                   <option value="PAID">PAID</option>
@@ -1104,7 +1104,7 @@ export function AgentCommissionTracker({
                   placeholder="Optional reference code or notes"
                   value={addForm.paymentRef}
                   onChange={(e) => setAddForm({ ...addForm, paymentRef: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-gold"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-2 text-sm text-slate-900 dark:text-white outline-none focus:border-brand"
                 />
               </div>
             </div>
@@ -1120,7 +1120,7 @@ export function AgentCommissionTracker({
               <button
                 type="button"
                 onClick={handleCreateCommission}
-                className="rounded-xl bg-gold hover:bg-gold-dark text-slate-950 px-4 py-2 text-xs font-bold transition shadow-sm"
+                className="rounded-xl bg-brand hover:bg-brand-hover text-white px-4 py-2 text-xs font-bold transition shadow-sm"
               >
                 Create Entry
               </button>

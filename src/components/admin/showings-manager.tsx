@@ -53,10 +53,10 @@ export function ShowingsManager({ showings }: { showings: Showing[] }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4 text-sm">
-        <Link href="/admin/crm" className="text-gold-dark hover:underline font-medium">
+        <Link href="/admin/crm" className="text-brand-hover hover:underline font-medium">
           ← CRM pipeline
         </Link>
-        <Link href="/admin/reports" className="text-gold-dark hover:underline font-medium">
+        <Link href="/admin/reports" className="text-brand-hover hover:underline font-medium">
           Reports →
         </Link>
       </div>
@@ -67,7 +67,7 @@ export function ShowingsManager({ showings }: { showings: Showing[] }) {
           className="rounded-2xl border border-slate-200 bg-white p-6 flex flex-col lg:flex-row lg:justify-between gap-4"
         >
           <div>
-            <p className="font-mono text-sm text-gold-dark font-bold">{s.property.symbol}</p>
+            <p className="font-mono text-sm text-brand-hover font-bold">{s.property.symbol}</p>
             <Link href={`/properties/${s.property.slug}`} className="font-medium text-slate-900 hover:underline">
               {s.property.title}
             </Link>

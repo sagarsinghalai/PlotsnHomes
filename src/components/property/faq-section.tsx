@@ -42,11 +42,11 @@ export function FaqSection() {
     <section className="relative bg-slate-50 py-20 border-t border-slate-200/50 overflow-hidden">
       {/* Decorative Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000003_1px,transparent_1px),linear-gradient(to_bottom,#00000003_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand/5 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 z-10">
         <div className="text-center max-w-2xl mx-auto mb-14">
-          <p className="text-xs font-bold text-gold-dark tracking-widest uppercase mb-2">COMMON QUESTIONS</p>
+          <p className="text-xs font-bold text-brand-hover tracking-widest uppercase mb-2">COMMON QUESTIONS</p>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 leading-tight">
             Frequently Asked Questions
           </h2>
@@ -61,21 +61,21 @@ export function FaqSection() {
             return (
               <div
                 key={idx}
-                className="group rounded-2xl border border-slate-200/80 bg-white transition-all duration-300 shadow-sm hover:border-gold/30 hover:shadow-md overflow-hidden"
+                className="group rounded-2xl border border-slate-200/80 bg-white transition-all duration-300 shadow-sm hover:border-brand/30 hover:shadow-md overflow-hidden"
               >
                 <button
                   onClick={() => toggle(idx)}
                   className="flex items-center justify-between w-full px-6 py-5 text-left cursor-pointer transition-colors"
                 >
                   <div className="flex items-center gap-3.5 pr-4">
-                    <HelpCircle className={`h-5 w-5 shrink-0 transition-colors duration-300 ${isOpen ? "text-gold" : "text-slate-400 group-hover:text-slate-600"}`} />
-                    <span className="font-bold text-slate-800 text-sm sm:text-base transition-colors group-hover:text-gold-dark">
+                    <HelpCircle className={`h-5 w-5 shrink-0 transition-colors duration-300 ${isOpen ? "text-brand" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <span className="font-bold text-slate-800 text-sm sm:text-base transition-colors group-hover:text-brand-hover">
                       {faq.question}
                     </span>
                   </div>
                   <ChevronDown
                     className={`h-5 w-5 text-slate-400 shrink-0 transition-transform duration-300 ${
-                      isOpen ? "rotate-180 text-gold" : "group-hover:text-slate-600"
+                      isOpen ? "rotate-180 text-brand" : "group-hover:text-slate-600"
                     }`}
                   />
                 </button>

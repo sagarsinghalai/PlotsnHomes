@@ -196,7 +196,7 @@ export function DropdownSettingsClient({
       {/* Sleek & Readable Header bar with save button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4 px-6 rounded-xl border border-slate-200 text-slate-900 shadow-2xs">
         <div>
-          <div className="flex items-center gap-1.5 text-gold-dark text-xs font-bold uppercase tracking-widest">
+          <div className="flex items-center gap-1.5 text-brand-hover text-xs font-bold uppercase tracking-widest">
             <Sparkles className="h-4 w-4" />
             <span>Website Customization</span>
           </div>
@@ -210,7 +210,7 @@ export function DropdownSettingsClient({
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold hover:bg-gold-dark px-5 py-2.5 text-xs font-bold text-slate-950 shadow-2xs transition-all cursor-pointer shrink-0"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand hover:bg-brand-hover px-5 py-2.5 text-xs font-bold text-white shadow-2xs transition-all cursor-pointer shrink-0"
         >
           {saving ? (
             <div className="h-4 w-4 rounded-full border-2 border-slate-950 border-t-transparent animate-spin" />
@@ -248,7 +248,7 @@ export function DropdownSettingsClient({
                 onClick={() => setActiveSectionKey(sec.sectionKey)}
                 className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                   isActive
-                    ? "bg-gold text-slate-950 shadow-2xs font-extrabold"
+                    ? "bg-brand text-white shadow-2xs font-extrabold"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                 }`}
               >
@@ -269,7 +269,7 @@ export function DropdownSettingsClient({
             placeholder="Search dropdown fields..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-gold outline-none shadow-2xs"
+            className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-brand outline-none shadow-2xs"
           />
         </div>
       )}
@@ -294,7 +294,7 @@ export function DropdownSettingsClient({
                 {/* Field Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-3.5">
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-gold/15 flex items-center justify-center text-gold-dark shrink-0">
+                    <div className="h-9 w-9 rounded-xl bg-brand/15 flex items-center justify-center text-brand-hover shrink-0">
                       <Icon className="h-4.5 w-4.5" />
                     </div>
                     <div>
@@ -331,13 +331,13 @@ export function DropdownSettingsClient({
                         handleQuickAddOption(field.key);
                       }
                     }}
-                    className="flex-1 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-gold outline-none shadow-2xs"
+                    className="flex-1 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-brand outline-none shadow-2xs"
                   />
 
                   <button
                     type="button"
                     onClick={() => handleQuickAddOption(field.key)}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 px-4 py-2 text-xs font-bold shadow-2xs transition cursor-pointer shrink-0"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand hover:bg-brand-hover text-white px-4 py-2 text-xs font-bold shadow-2xs transition cursor-pointer shrink-0"
                   >
                     <Plus className="h-4 w-4 stroke-[3]" />
                     <span>Add {field.name}</span>

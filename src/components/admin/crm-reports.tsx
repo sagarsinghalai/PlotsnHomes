@@ -33,16 +33,16 @@ export function CrmReports({ data }: { data: ReportData }) {
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap gap-4">
-        <Link href="/admin/crm/reports/funnel" className="text-sm text-gold-dark hover:underline font-medium">
+        <Link href="/admin/crm/reports/funnel" className="text-sm text-brand-hover hover:underline font-medium">
           Lead funnel →
         </Link>
-        <Link href="/admin/crm" className="text-sm text-gold-dark hover:underline font-medium">
+        <Link href="/admin/crm" className="text-sm text-brand-hover hover:underline font-medium">
           ← Pipeline
         </Link>
-        <Link href="/admin/inquiries" className="text-sm text-gold-dark hover:underline font-medium">
+        <Link href="/admin/inquiries" className="text-sm text-brand-hover hover:underline font-medium">
           Inquiries ({data.inquiriesPending})
         </Link>
-        <Link href="/admin/showings" className="text-sm text-gold-dark hover:underline font-medium">
+        <Link href="/admin/showings" className="text-sm text-brand-hover hover:underline font-medium">
           Site visits ({data.showingsPending})
         </Link>
       </div>
@@ -131,7 +131,7 @@ function ReportTable({
               </span>
             </div>
             <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-              <div className="h-full bg-gold rounded-full" style={{ width: `${r.pct}%` }} />
+              <div className="h-full bg-brand rounded-full" style={{ width: `${r.pct}%` }} />
             </div>
           </div>
         ))}

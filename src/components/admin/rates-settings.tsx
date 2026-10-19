@@ -60,7 +60,7 @@ export function RatesSettings({
           required
           value={interest}
           onChange={(e) => setInterest(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-gold"
+          className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-brand"
         />
       </label>
       <label className="block text-sm">
@@ -71,7 +71,7 @@ export function RatesSettings({
           required
           value={yieldR}
           onChange={(e) => setYieldR(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-gold"
+          className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-brand"
         />
       </label>
       <label className="block text-sm">
@@ -82,11 +82,11 @@ export function RatesSettings({
           required
           value={cap}
           onChange={(e) => setCap(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-gold"
+          className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-brand"
         />
       </label>
       <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
-        <input type="checkbox" checked={applyAll} onChange={(e) => setApplyAll(e.target.checked)} className="rounded text-gold focus:ring-gold" />
+        <input type="checkbox" checked={applyAll} onChange={(e) => setApplyAll(e.target.checked)} className="rounded text-brand focus:ring-brand" />
         Apply to all existing properties now
       </label>
       {error && <p className="text-sm text-red-600 font-medium">{error}</p>}

@@ -32,7 +32,7 @@ export default async function MarketsPage() {
       <BodyThemeSync theme="dark" />
       <div className="border-b border-slate-800 bg-slate-900/80">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gold">PlotsnHomes Exchange</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-brand">PlotsnHomes Exchange</p>
           <h1 className="mt-2 font-display text-4xl font-bold">Markets</h1>
           <p className="mt-2 text-slate-400">Real-time property rates, yields, and performance — like a stock board</p>
 
@@ -65,7 +65,7 @@ export default async function MarketsPage() {
               {gainers.map((p) => (
                 <li key={p.id}>
                   <Link href={`/properties/${p.slug}`} className="flex items-center justify-between px-4 py-3 hover:bg-slate-800/50">
-                    <span className="font-mono text-gold text-sm">{p.symbol}</span>
+                    <span className="font-mono text-brand text-sm">{p.symbol}</span>
                     <RateBadge value={p.changeYtd} />
                   </Link>
                 </li>
@@ -81,7 +81,7 @@ export default async function MarketsPage() {
               {losers.map((p) => (
                 <li key={p.id}>
                   <Link href={`/properties/${p.slug}`} className="flex items-center justify-between px-4 py-3 hover:bg-slate-800/50">
-                    <span className="font-mono text-gold text-sm">{p.symbol}</span>
+                    <span className="font-mono text-brand text-sm">{p.symbol}</span>
                     <RateBadge value={p.changeYtd} />
                   </Link>
                 </li>
@@ -111,7 +111,7 @@ export default async function MarketsPage() {
                 {properties.map((p) => (
                   <tr key={p.id} className="border-b border-slate-800/80 hover:bg-slate-900/60">
                     <td className="px-4 py-3">
-                      <Link href={`/properties/${p.slug}`} className="font-mono font-bold text-gold hover:underline">
+                      <Link href={`/properties/${p.slug}`} className="font-mono font-bold text-brand hover:underline">
                         {p.symbol}
                       </Link>
                     </td>
@@ -132,7 +132,7 @@ export default async function MarketsPage() {
         </div>
 
         <p className="mt-6 text-center text-sm text-slate-500">
-          <Link href="/properties" className="text-gold hover:underline">Browse all {stats._count} listings with filters →</Link>
+          <Link href="/properties" className="text-brand hover:underline">Browse all {stats._count} listings with filters →</Link>
         </p>
       </div>
     </div>

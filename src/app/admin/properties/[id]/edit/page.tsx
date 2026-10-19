@@ -39,7 +39,7 @@ export default async function EditPropertyPage({
   return (
     <div>
       <h1 className="font-display text-3xl font-bold text-slate-900">Edit property</h1>
-      <p className="mt-1 text-slate-600 mb-8 font-mono text-gold-dark">{property.symbol}</p>
+      <p className="mt-1 text-slate-600 mb-8 font-mono text-brand-hover">{property.symbol}</p>
       <PropertyForm
         agents={agents}
         property={property}

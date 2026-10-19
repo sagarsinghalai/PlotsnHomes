@@ -313,8 +313,8 @@ export function WebpageEditorClient({
     <div className="min-h-screen space-y-6 font-sans select-none" onClick={closeContextMenu}>
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-3 shadow-2xl text-xs font-semibold border border-gold/40 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <CheckCircle2 className="h-4 w-4 text-gold" />
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-3 shadow-2xl text-xs font-semibold border border-brand/40 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <CheckCircle2 className="h-4 w-4 text-brand" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -323,7 +323,7 @@ export function WebpageEditorClient({
       <div className="sticky top-0 z-40 flex items-center justify-between gap-4 rounded-2xl bg-slate-950 p-4 text-white shadow-2xl border border-slate-800">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-gold" />
+            <Sparkles className="h-5 w-5 text-brand" />
             <span className="font-extrabold text-sm tracking-wide text-white">
               ELEMENTOR VISUAL THEME EDITOR
             </span>
@@ -336,7 +336,7 @@ export function WebpageEditorClient({
             <button
               onClick={() => setActiveTab("builder")}
               className={`px-3 py-1.5 rounded-lg font-bold transition ${
-                activeTab === "builder" ? "bg-gold text-slate-950 shadow-sm" : "text-slate-400 hover:text-white"
+                activeTab === "builder" ? "bg-brand text-white shadow-sm" : "text-slate-400 hover:text-white"
               }`}
             >
               🎨 Visual Builder Preview
@@ -344,7 +344,7 @@ export function WebpageEditorClient({
             <button
               onClick={() => setActiveTab("pages")}
               className={`px-3 py-1.5 rounded-lg font-bold transition ${
-                activeTab === "pages" ? "bg-gold text-slate-950 shadow-sm" : "text-slate-400 hover:text-white"
+                activeTab === "pages" ? "bg-brand text-white shadow-sm" : "text-slate-400 hover:text-white"
               }`}
             >
               📄 Manage Pages ({pages.length})
@@ -352,7 +352,7 @@ export function WebpageEditorClient({
             <button
               onClick={() => setActiveTab("nav")}
               className={`px-3 py-1.5 rounded-lg font-bold transition ${
-                activeTab === "nav" ? "bg-gold text-slate-950 shadow-sm" : "text-slate-400 hover:text-white"
+                activeTab === "nav" ? "bg-brand text-white shadow-sm" : "text-slate-400 hover:text-white"
               }`}
             >
               🔗 Header Navigation Links
@@ -384,7 +384,7 @@ export function WebpageEditorClient({
                 <button
                   onClick={() => setBuilderDevice("desktop")}
                   className={`p-1.5 rounded-lg transition ${
-                    builderDevice === "desktop" ? "bg-slate-800 text-gold" : "text-slate-400 hover:text-white"
+                    builderDevice === "desktop" ? "bg-slate-800 text-brand" : "text-slate-400 hover:text-white"
                   }`}
                   title="Desktop Preview"
                 >
@@ -393,7 +393,7 @@ export function WebpageEditorClient({
                 <button
                   onClick={() => setBuilderDevice("tablet")}
                   className={`p-1.5 rounded-lg transition ${
-                    builderDevice === "tablet" ? "bg-slate-800 text-gold" : "text-slate-400 hover:text-white"
+                    builderDevice === "tablet" ? "bg-slate-800 text-brand" : "text-slate-400 hover:text-white"
                   }`}
                   title="Tablet Preview"
                 >
@@ -402,7 +402,7 @@ export function WebpageEditorClient({
                 <button
                   onClick={() => setBuilderDevice("mobile")}
                   className={`p-1.5 rounded-lg transition ${
-                    builderDevice === "mobile" ? "bg-slate-800 text-gold" : "text-slate-400 hover:text-white"
+                    builderDevice === "mobile" ? "bg-slate-800 text-brand" : "text-slate-400 hover:text-white"
                   }`}
                   title="Mobile Preview"
                 >
@@ -425,7 +425,7 @@ export function WebpageEditorClient({
           <button
             onClick={activeTab === "nav" ? handleSaveNav : handleSaveActivePage}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 text-xs font-extrabold shadow-lg transition cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold shadow-lg transition cursor-pointer disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             <span>Save &amp; Publish Real-Time</span>
@@ -451,13 +451,13 @@ export function WebpageEditorClient({
               {/* TOP FRONTEND HEADER NAVBAR PREVIEW */}
               <div className="bg-slate-950 border-b border-slate-800/80 px-6 py-4 flex items-center justify-between text-white">
                 <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-bold text-white">
-                  <Building2 className="h-6 w-6 text-gold" />
+                  <Building2 className="h-6 w-6 text-brand" />
                   <span>PlotsnHomes</span>
                 </Link>
 
                 <div className="hidden md:flex items-center gap-5 text-xs font-semibold text-slate-300">
                   {nav.headerLinks.map((link) => (
-                    <span key={link.id} className="hover:text-gold cursor-pointer transition">
+                    <span key={link.id} className="hover:text-brand cursor-pointer transition">
                       {link.label}
                     </span>
                   ))}
@@ -465,7 +465,7 @@ export function WebpageEditorClient({
 
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-slate-400 font-medium hidden sm:inline">Sign in</span>
-                  <span className="px-4 py-2 rounded-xl bg-gold text-slate-950 text-xs font-extrabold">
+                  <span className="px-4 py-2 rounded-xl bg-brand text-white text-xs font-extrabold">
                     Sign out
                   </span>
                 </div>
@@ -485,13 +485,13 @@ export function WebpageEditorClient({
                       }}
                       className={`group relative rounded-3xl transition-all duration-200 cursor-pointer ${
                         isSelected
-                          ? "ring-2 ring-gold shadow-2xl scale-[1.005]"
-                          : "hover:ring-2 hover:ring-gold/50"
+                          ? "ring-2 ring-brand shadow-2xl scale-[1.005]"
+                          : "hover:ring-2 hover:ring-brand/50"
                       }`}
                     >
                       {/* Elementor Floating Action Bar Overlay */}
-                      <div className="absolute -top-3.5 left-6 z-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 bg-slate-900 border border-gold/40 text-white rounded-full px-3 py-1 text-[10px] font-extrabold shadow-xl">
-                        <span className="text-gold uppercase tracking-wider">{section.type}</span>
+                      <div className="absolute -top-3.5 left-6 z-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 bg-slate-900 border border-brand/40 text-white rounded-full px-3 py-1 text-[10px] font-extrabold shadow-xl">
+                        <span className="text-brand uppercase tracking-wider">{section.type}</span>
                         <span className="text-slate-600">|</span>
                         <button
                           type="button"
@@ -500,7 +500,7 @@ export function WebpageEditorClient({
                             setSelectedSectionId(section.id);
                             setIsInspectorOpen(true);
                           }}
-                          className="hover:text-gold flex items-center gap-1"
+                          className="hover:text-brand flex items-center gap-1"
                         >
                           ✏️ Edit
                         </button>
@@ -511,7 +511,7 @@ export function WebpageEditorClient({
                             moveSection(index, "up");
                           }}
                           disabled={index === 0}
-                          className="hover:text-gold disabled:opacity-30"
+                          className="hover:text-brand disabled:opacity-30"
                         >
                           <MoveUp className="h-3 w-3" />
                         </button>
@@ -522,7 +522,7 @@ export function WebpageEditorClient({
                             moveSection(index, "down");
                           }}
                           disabled={index === activePage.sections.length - 1}
-                          className="hover:text-gold disabled:opacity-30"
+                          className="hover:text-brand disabled:opacity-30"
                         >
                           <MoveDown className="h-3 w-3" />
                         </button>
@@ -549,7 +549,7 @@ export function WebpageEditorClient({
                   <button
                     type="button"
                     onClick={() => addSection("cta")}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-dashed border-slate-700 hover:border-gold text-slate-400 hover:text-gold font-bold text-xs transition cursor-pointer"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-dashed border-slate-700 hover:border-brand text-slate-400 hover:text-brand font-bold text-xs transition cursor-pointer"
                   >
                     <Plus className="h-4 w-4" />
                     <span>Add New Frontend Section</span>
@@ -565,7 +565,7 @@ export function WebpageEditorClient({
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div>
                   <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <SlidersHorizontal className="h-4 w-4 text-gold-dark" />
+                    <SlidersHorizontal className="h-4 w-4 text-brand-hover" />
                     Elementor Inspector
                   </h3>
                   <p className="text-[11px] text-slate-500">Editing {selectedSection.type} section</p>
@@ -583,7 +583,7 @@ export function WebpageEditorClient({
                 <button
                   onClick={() => setInspectorTab("content")}
                   className={`flex-1 py-1.5 rounded-lg font-bold transition ${
-                    inspectorTab === "content" ? "bg-white dark:bg-slate-900 text-gold-dark dark:text-gold shadow-xs" : "text-slate-500"
+                    inspectorTab === "content" ? "bg-white dark:bg-slate-900 text-brand-hover dark:text-brand shadow-xs" : "text-slate-500"
                   }`}
                 >
                   📝 Content
@@ -591,7 +591,7 @@ export function WebpageEditorClient({
                 <button
                   onClick={() => setInspectorTab("style")}
                   className={`flex-1 py-1.5 rounded-lg font-bold transition ${
-                    inspectorTab === "style" ? "bg-white dark:bg-slate-900 text-gold-dark dark:text-gold shadow-xs" : "text-slate-500"
+                    inspectorTab === "style" ? "bg-white dark:bg-slate-900 text-brand-hover dark:text-brand shadow-xs" : "text-slate-500"
                   }`}
                 >
                   🎨 Typography &amp; Style
@@ -609,7 +609,7 @@ export function WebpageEditorClient({
                       type="text"
                       value={selectedSection.title || ""}
                       onChange={(e) => updateSection(selectedSection.id, { title: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-bold outline-none focus:border-gold"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-bold outline-none focus:border-brand"
                     />
                   </div>
 
@@ -621,7 +621,7 @@ export function WebpageEditorClient({
                       rows={2}
                       value={selectedSection.subtitle || ""}
                       onChange={(e) => updateSection(selectedSection.id, { subtitle: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 text-xs outline-none focus:border-gold"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 text-xs outline-none focus:border-brand"
                     />
                   </div>
 
@@ -635,7 +635,7 @@ export function WebpageEditorClient({
                           type="text"
                           value={selectedSection.ctaText || ""}
                           onChange={(e) => updateSection(selectedSection.id, { ctaText: e.target.value })}
-                          className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-semibold outline-none focus:border-gold"
+                          className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-semibold outline-none focus:border-brand"
                         />
                       </div>
                       <div>
@@ -646,7 +646,7 @@ export function WebpageEditorClient({
                           type="text"
                           value={selectedSection.ctaLink || ""}
                           onChange={(e) => updateSection(selectedSection.id, { ctaLink: e.target.value })}
-                          className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-mono outline-none focus:border-gold"
+                          className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-mono outline-none focus:border-brand"
                         />
                       </div>
                     </>
@@ -686,7 +686,7 @@ export function WebpageEditorClient({
                           onClick={() => updateSection(selectedSection.id, { alignment: align })}
                           className={`flex-1 py-1.5 rounded-lg text-xs font-extrabold capitalize border ${
                             selectedSection.alignment === align
-                              ? "bg-gold text-slate-950 border-gold"
+                              ? "bg-brand text-white border-brand"
                               : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
                           }`}
                         >
@@ -726,7 +726,7 @@ export function WebpageEditorClient({
                       value={selectedSection.bgImage || ""}
                       onChange={(e) => updateSection(selectedSection.id, { bgImage: e.target.value })}
                       placeholder="https://images.unsplash.com/..."
-                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-mono outline-none focus:border-gold"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-mono outline-none focus:border-brand"
                     />
                   </div>
                 </div>
@@ -756,7 +756,7 @@ export function WebpageEditorClient({
             </div>
             <button
               onClick={() => setIsNewPageOpen(true)}
-              className="px-4 py-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 text-xs font-extrabold flex items-center gap-1.5 cursor-pointer shadow-sm"
+              className="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
               <Plus className="h-4 w-4" /> Create New Page
             </button>
@@ -776,7 +776,7 @@ export function WebpageEditorClient({
                         {p.status}
                       </span>
                     </div>
-                    <p className="font-mono text-xs text-gold-dark dark:text-gold mt-1">
+                    <p className="font-mono text-xs text-brand-hover dark:text-brand mt-1">
                       {p.slug === "/" ? "Homepage (/)" : `/p/${p.slug}`}
                     </p>
                   </div>
@@ -787,7 +787,7 @@ export function WebpageEditorClient({
                         setActivePageId(p.id);
                         setActiveTab("builder");
                       }}
-                      className="px-3 py-1 rounded-lg bg-gold hover:bg-gold-dark text-slate-950 text-xs font-extrabold cursor-pointer"
+                      className="px-3 py-1 rounded-lg bg-brand hover:bg-brand-hover text-white text-xs font-extrabold cursor-pointer"
                     >
                       Visual Edit
                     </button>
@@ -823,7 +823,7 @@ export function WebpageEditorClient({
             </div>
             <button
               onClick={addHeaderLink}
-              className="px-3.5 py-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 text-xs font-extrabold flex items-center gap-1 cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold flex items-center gap-1 cursor-pointer"
             >
               <Plus className="h-4 w-4" /> Add Link
             </button>
@@ -876,11 +876,11 @@ export function WebpageEditorClient({
       {/* ─── ELEMENTOR RIGHT-CLICK CONTEXT MENU POPUP ──────────────────────────── */}
       {contextMenu && (
         <div
-          className="fixed z-50 w-56 rounded-2xl bg-slate-900 border border-gold/40 text-white shadow-2xl p-1.5 text-xs font-bold space-y-1 animate-in fade-in zoom-in-95 duration-100"
+          className="fixed z-50 w-56 rounded-2xl bg-slate-900 border border-brand/40 text-white shadow-2xl p-1.5 text-xs font-bold space-y-1 animate-in fade-in zoom-in-95 duration-100"
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase text-gold tracking-widest border-b border-slate-800">
+          <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase text-brand tracking-widest border-b border-slate-800">
             Elementor Actions
           </div>
           <button
@@ -890,7 +890,7 @@ export function WebpageEditorClient({
               setInspectorTab("content");
               closeContextMenu();
             }}
-            className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-gold flex items-center gap-2 cursor-pointer"
+            className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-brand flex items-center gap-2 cursor-pointer"
           >
             ✏️ Edit Section Content
           </button>
@@ -901,7 +901,7 @@ export function WebpageEditorClient({
               setInspectorTab("style");
               closeContextMenu();
             }}
-            className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-gold flex items-center gap-2 cursor-pointer"
+            className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-brand flex items-center gap-2 cursor-pointer"
           >
             🎨 Typography &amp; Style Customizer
           </button>
@@ -910,7 +910,7 @@ export function WebpageEditorClient({
               addSection("cta", activePage.sections.findIndex((s) => s.id === contextMenu.sectionId));
               closeContextMenu();
             }}
-            className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-gold flex items-center gap-2 cursor-pointer"
+            className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-brand flex items-center gap-2 cursor-pointer"
           >
             ➕ Add Section Above
           </button>
@@ -919,7 +919,7 @@ export function WebpageEditorClient({
               addSection("cta", activePage.sections.findIndex((s) => s.id === contextMenu.sectionId) + 1);
               closeContextMenu();
             }}
-            className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-gold flex items-center gap-2 cursor-pointer"
+            className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-brand flex items-center gap-2 cursor-pointer"
           >
             ➕ Add Section Below
           </button>
@@ -960,7 +960,7 @@ export function WebpageEditorClient({
                   value={newPageData.title}
                   onChange={(e) => setNewPageData({ ...newPageData, title: e.target.value })}
                   placeholder="e.g. Investor Guide"
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-gold"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-brand"
                 />
               </div>
 
@@ -974,7 +974,7 @@ export function WebpageEditorClient({
                   value={newPageData.slug}
                   onChange={(e) => setNewPageData({ ...newPageData, slug: e.target.value })}
                   placeholder="e.g. investor-guide"
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3.5 py-2.5 text-xs font-mono outline-none focus:border-gold"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3.5 py-2.5 text-xs font-mono outline-none focus:border-brand"
                 />
               </div>
 
@@ -989,7 +989,7 @@ export function WebpageEditorClient({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 text-xs font-extrabold cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold cursor-pointer"
                 >
                   {saving ? "Creating..." : "Create Page"}
                 </button>

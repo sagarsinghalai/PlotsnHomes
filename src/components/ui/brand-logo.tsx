@@ -20,10 +20,10 @@ export function BrandLogo({
   const content = (
     <div className={cn("inline-flex shrink-0 items-center gap-2.5 select-none", className)}>
       <span className={cn(
-        "flex h-10 w-10 min-w-[2.5rem] min-h-[2.5rem] shrink-0 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-gold shadow-sm transition-transform hover:scale-105",
+        "flex h-10 w-10 min-w-[2.5rem] min-h-[2.5rem] shrink-0 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-brand shadow-sm transition-transform hover:scale-105",
         iconClassName
       )}>
-        <Building2 className="h-5 w-5 shrink-0 block text-gold stroke-[2.2]" />
+        <Building2 className="h-5 w-5 shrink-0 block text-brand stroke-[2.2]" />
       </span>
       {showText && (
         <span className={cn(

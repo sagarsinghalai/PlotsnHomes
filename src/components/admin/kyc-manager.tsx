@@ -58,15 +58,15 @@ export function KycManager({ profiles }: { profiles: Kyc[] }) {
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 href={`/admin/users/${p.user.id}`}
-                className="text-xs font-medium text-gold-dark underline"
+                className="text-xs font-medium text-brand-hover underline"
               >
                 Full profile →
               </Link>
               {p.idDocumentUrl && (
-                <a href={p.idDocumentUrl} target="_blank" rel="noreferrer" className="text-xs text-gold-dark underline">ID doc</a>
+                <a href={p.idDocumentUrl} target="_blank" rel="noreferrer" className="text-xs text-brand-hover underline">ID doc</a>
               )}
               {p.addressProofUrl && (
-                <a href={p.addressProofUrl} target="_blank" rel="noreferrer" className="text-xs text-gold-dark underline">Address proof</a>
+                <a href={p.addressProofUrl} target="_blank" rel="noreferrer" className="text-xs text-brand-hover underline">Address proof</a>
               )}
               {p.status === "PENDING" && (
                 <>

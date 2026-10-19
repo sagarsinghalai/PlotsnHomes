@@ -176,7 +176,7 @@ export default async function PropertyDetailPage({
                 </span>
               )}
               {property.featured && (
-                <span className="rounded bg-gold px-2 py-0.5 text-xs font-bold">Featured</span>
+                <span className="rounded bg-brand px-2 py-0.5 text-xs font-bold">Featured</span>
               )}
             </div>
             <h1 className="font-display text-3xl font-bold text-slate-900">{property.title}</h1>
@@ -258,14 +258,14 @@ export default async function PropertyDetailPage({
                 </div>
                 <Link
                   href="/dashboard/loans"
-                  className="block text-center rounded-xl border border-gold bg-amber-50 py-3 text-sm font-semibold text-gold-dark hover:bg-amber-100"
+                  className="block text-center rounded-xl border border-brand bg-amber-50 py-3 text-sm font-semibold text-brand-hover hover:bg-amber-100"
                 >
                   Apply for a loan on this property
                 </Link>
               </>
             ) : (
               <p className="text-sm text-center text-slate-600">
-                <Link href="/login" className="text-gold-dark underline">Log in</Link> to invest or apply for a loan
+                <Link href="/login" className="text-brand-hover underline">Log in</Link> to invest or apply for a loan
               </p>
             )}
             <LeadCaptureForm

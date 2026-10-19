@@ -35,13 +35,13 @@ export function PublicFooter({ footer }: { footer: FooterSettings }) {
         {/* Brand & Boilerplate */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 font-bold text-white text-lg">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold text-slate-950 font-black">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-white font-black">
               P
             </div>
             <span className="font-extrabold tracking-tight">{footer.brandName || "PlotsnHomes"}</span>
           </div>
           {footer.brandTagline && (
-            <p className="text-xs font-semibold text-gold">{footer.brandTagline}</p>
+            <p className="text-xs font-semibold text-brand">{footer.brandTagline}</p>
           )}
           <p className="text-xs text-slate-400 leading-relaxed">{footer.boilerplateText}</p>
 
@@ -56,7 +56,7 @@ export function PublicFooter({ footer }: { footer: FooterSettings }) {
                     href={s.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="p-2 rounded-lg bg-slate-800 hover:bg-gold hover:text-slate-950 text-slate-300 transition"
+                    className="p-2 rounded-lg bg-slate-800 hover:bg-brand hover:text-white text-slate-300 transition"
                     title={s.platform}
                   >
                     <IconComp className="h-4 w-4" />
@@ -70,7 +70,7 @@ export function PublicFooter({ footer }: { footer: FooterSettings }) {
         {/* Dynamic Columns */}
         {footer.columns.map((col) => (
           <div key={col.id} className="space-y-3">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-gold">{col.columnTitle}</h4>
+            <h4 className="font-bold text-xs uppercase tracking-wider text-brand">{col.columnTitle}</h4>
             <ul className="space-y-2 text-xs text-slate-400 font-medium">
               {col.links.map((link: NavItemLink) => (
                 <li key={link.id}>
@@ -86,7 +86,7 @@ export function PublicFooter({ footer }: { footer: FooterSettings }) {
         {/* Custom Buttons */}
         {footer.customButtons && footer.customButtons.length > 0 && (
           <div className="space-y-3">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-gold">Actions</h4>
+            <h4 className="font-bold text-xs uppercase tracking-wider text-brand">Actions</h4>
             <div className="space-y-2.5">
               {footer.customButtons.map((btn) => {
                 const IconComp = (btn.icon && ICON_MAP[btn.icon]) || ArrowRight;

@@ -146,7 +146,7 @@ export default function BecomeWhiteLabelPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-gold selection:text-slate-950">
+    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-brand selection:text-white">
       {/* HERO SECTION */}
       <section className="relative py-24 lg:py-32 overflow-hidden bg-slate-950 border-b border-slate-900">
         {/* Background Image with Dark Overlay */}
@@ -158,10 +158,10 @@ export default function BecomeWhiteLabelPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/50 to-slate-950 pointer-events-none" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b0a_1px,transparent_1px),linear-gradient(to_bottom,#1e293b0a_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold/10 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand/10 rounded-full blur-[140px] pointer-events-none" />
 
         <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gold/10 border border-gold/30 text-gold text-xs font-extrabold uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand/10 border border-brand/30 text-brand text-xs font-extrabold uppercase tracking-widest mb-6">
             <Crown className="h-4 w-4" />
             <span>White Label Partner Program</span>
           </div>
@@ -180,10 +180,10 @@ export default function BecomeWhiteLabelPage() {
 
           <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto text-left">
             {[
-              { icon: <Globe className="h-5 w-5 text-gold" />, title: "Custom Website URL", desc: "Your own domain & branding" },
-              { icon: <ShieldCheck className="h-5 w-5 text-gold" />, title: "Full SPV Legal Structure", desc: "SEBI/RERA compliant setup" },
-              { icon: <Users className="h-5 w-5 text-gold" />, title: "Multi-Tier Hierarchy", desc: "Franchises, Brokers & Agents" },
-              { icon: <Wallet className="h-5 w-5 text-gold" />, title: "Integrated Gateway", desc: "UPI, SWIFT, Cards & Escrow" },
+              { icon: <Globe className="h-5 w-5 text-brand" />, title: "Custom Website URL", desc: "Your own domain & branding" },
+              { icon: <ShieldCheck className="h-5 w-5 text-brand" />, title: "Full SPV Legal Structure", desc: "SEBI/RERA compliant setup" },
+              { icon: <Users className="h-5 w-5 text-brand" />, title: "Multi-Tier Hierarchy", desc: "Franchises, Brokers & Agents" },
+              { icon: <Wallet className="h-5 w-5 text-brand" />, title: "Integrated Gateway", desc: "UPI, SWIFT, Cards & Escrow" },
             ].map((card, i) => (
               <div key={i} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 backdrop-blur-xs">
                 <div className="mb-2">{card.icon}</div>
@@ -200,7 +200,7 @@ export default function BecomeWhiteLabelPage() {
         <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-6 sm:p-10 shadow-2xl space-y-8 backdrop-blur-md">
           <div>
             <h2 className="text-2xl font-extrabold text-white flex items-center gap-2">
-              <Sparkles className="h-6 w-6 text-gold" /> Partner Registration &amp; Portfolio Application
+              <Sparkles className="h-6 w-6 text-brand" /> Partner Registration &amp; Portfolio Application
             </h2>
             <p className="text-xs text-slate-400 mt-1">
               Complete the essential partner details below. Our onboarding team will set up your dedicated White Label instance.
@@ -217,7 +217,7 @@ export default function BecomeWhiteLabelPage() {
           <form onSubmit={handleSubmit} className="space-y-6 text-xs">
             {/* STEP 1: USER & COMPANY DETAILS */}
             <div className="space-y-4 pt-2">
-              <h3 className="text-sm font-extrabold uppercase tracking-wider text-gold border-b border-slate-800 pb-2">
+              <h3 className="text-sm font-extrabold uppercase tracking-wider text-brand border-b border-slate-800 pb-2">
                 1. User Registration &amp; Company Details
               </h3>
 
@@ -230,7 +230,7 @@ export default function BecomeWhiteLabelPage() {
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="Sagar Singhal"
-                    className={`w-full rounded-xl border bg-slate-950 px-4 py-3 text-white outline-none focus:border-gold font-medium ${
+                    className={`w-full rounded-xl border bg-slate-950 px-4 py-3 text-white outline-none focus:border-brand font-medium ${
                       errors.name ? "border-rose-500 focus:border-rose-500" : "border-slate-800"
                     }`}
                   />
@@ -249,7 +249,7 @@ export default function BecomeWhiteLabelPage() {
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="sagar@company.com"
-                    className={`w-full rounded-xl border bg-slate-950 px-4 py-3 text-white outline-none focus:border-gold font-medium ${
+                    className={`w-full rounded-xl border bg-slate-950 px-4 py-3 text-white outline-none focus:border-brand font-medium ${
                       errors.email ? "border-rose-500 focus:border-rose-500" : "border-slate-800"
                     }`}
                   />
@@ -266,7 +266,7 @@ export default function BecomeWhiteLabelPage() {
                     <select
                       value={countryCode}
                       onChange={(e) => setCountryCode(e.target.value)}
-                      className="rounded-xl border border-slate-800 bg-slate-950 px-2 py-3 text-white outline-none focus:border-gold font-medium cursor-pointer w-[110px] shrink-0 text-xs"
+                      className="rounded-xl border border-slate-800 bg-slate-950 px-2 py-3 text-white outline-none focus:border-brand font-medium cursor-pointer w-[110px] shrink-0 text-xs"
                     >
                       {COUNTRIES.map((c) => (
                         <option key={`${c.code}-${c.dial}`} value={c.dial}>
@@ -280,7 +280,7 @@ export default function BecomeWhiteLabelPage() {
                       value={phoneDigits}
                       onChange={(e) => setPhoneDigits(e.target.value.replace(/\D/g, "").slice(0, 10))}
                       placeholder="98201 34567"
-                      className={`flex-1 rounded-xl border bg-slate-950 px-4 py-3 text-white outline-none focus:border-gold font-medium ${
+                      className={`flex-1 rounded-xl border bg-slate-950 px-4 py-3 text-white outline-none focus:border-brand font-medium ${
                         errors.phone ? "border-rose-500 focus:border-rose-500" : "border-slate-800"
                       }`}
                     />
@@ -300,7 +300,7 @@ export default function BecomeWhiteLabelPage() {
                     value={form.companyName}
                     onChange={(e) => setForm({ ...form, companyName: e.target.value })}
                     placeholder="Apex Premier Developers Pvt. Ltd."
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-white outline-none focus:border-gold font-medium"
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-white outline-none focus:border-brand font-medium"
                   />
                 </div>
 
@@ -309,7 +309,7 @@ export default function BecomeWhiteLabelPage() {
                   <select
                     value={form.businessType}
                     onChange={(e) => setForm({ ...form, businessType: e.target.value })}
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-white outline-none focus:border-gold font-medium cursor-pointer"
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-white outline-none focus:border-brand font-medium cursor-pointer"
                   >
                     <option value="Real Estate Developer">Real Estate Developer / Builder</option>
                     <option value="Property Brokerage Agency">Property Brokerage Agency</option>
@@ -326,7 +326,7 @@ export default function BecomeWhiteLabelPage() {
                     value={form.operatingRegion}
                     onChange={(e) => setForm({ ...form, operatingRegion: e.target.value })}
                     placeholder="Indore, Mumbai, NCR, SW Florida"
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-white outline-none focus:border-gold font-medium"
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-white outline-none focus:border-brand font-medium"
                   />
                 </div>
               </div>
@@ -334,7 +334,7 @@ export default function BecomeWhiteLabelPage() {
 
             {/* STEP 2: WHITE LABEL DOMAIN & PLATFORM PREFERENCES */}
             <div className="space-y-4 pt-4">
-              <h3 className="text-sm font-extrabold uppercase tracking-wider text-gold border-b border-slate-800 pb-2">
+              <h3 className="text-sm font-extrabold uppercase tracking-wider text-brand border-b border-slate-800 pb-2">
                 2. Custom Domain &amp; Platform Setup Details
               </h3>
 
@@ -346,7 +346,7 @@ export default function BecomeWhiteLabelPage() {
                     value={form.customDomain}
                     onChange={(e) => setForm({ ...form, customDomain: e.target.value })}
                     placeholder="invest.yourcompany.com"
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-white outline-none focus:border-gold font-mono"
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-white outline-none focus:border-brand font-mono"
                   />
                 </div>
 
@@ -355,7 +355,7 @@ export default function BecomeWhiteLabelPage() {
                   <select
                     value={form.expectedVolume}
                     onChange={(e) => setForm({ ...form, expectedVolume: e.target.value })}
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-white outline-none focus:border-gold font-medium cursor-pointer"
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-white outline-none focus:border-brand font-medium cursor-pointer"
                   >
                     <option value="< ₹10 Cr">Under ₹10 Crore</option>
                     <option value="₹10 Cr - ₹50 Cr">₹10 Crore - ₹50 Crore</option>
@@ -384,7 +384,7 @@ export default function BecomeWhiteLabelPage() {
                         onClick={() => toggleModule(mod)}
                         className={`px-3.5 py-2 rounded-xl text-xs font-semibold border transition ${
                           isSelected
-                            ? "bg-gold text-slate-950 border-gold font-extrabold"
+                            ? "bg-brand text-white border-brand font-extrabold"
                             : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
                         }`}
                       >
@@ -398,7 +398,7 @@ export default function BecomeWhiteLabelPage() {
 
             {/* STEP 3: PROPERTY PORTFOLIO DETAILS */}
             <div className="space-y-4 pt-4">
-              <h3 className="text-sm font-extrabold uppercase tracking-wider text-gold border-b border-slate-800 pb-2">
+              <h3 className="text-sm font-extrabold uppercase tracking-wider text-brand border-b border-slate-800 pb-2">
                 3. Property Portfolio &amp; Inventory Details
               </h3>
 
@@ -438,7 +438,7 @@ export default function BecomeWhiteLabelPage() {
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   placeholder="Mention any custom integrations, API requirements, or specific SPV structures you require..."
-                  className="w-full rounded-xl border border-slate-800 bg-slate-950 p-4 text-white outline-none focus:border-gold font-medium leading-relaxed"
+                  className="w-full rounded-xl border border-slate-800 bg-slate-950 p-4 text-white outline-none focus:border-brand font-medium leading-relaxed"
                 />
               </div>
             </div>
@@ -447,7 +447,7 @@ export default function BecomeWhiteLabelPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-2xl bg-gold hover:bg-gold-dark text-slate-950 font-extrabold text-sm shadow-xl shadow-gold/20 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover text-white font-extrabold text-sm shadow-xl shadow-brand/20 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? (
                 <>

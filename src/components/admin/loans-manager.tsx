@@ -383,7 +383,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                       required
                       value={loanAmount}
                       onChange={(e) => setLoanAmount(Number(e.target.value))}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand"
                     />
                   </label>
                   <label className="block text-sm">
@@ -393,7 +393,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                       required
                       value={termYears}
                       onChange={(e) => setTermYears(Number(e.target.value))}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand"
                     />
                   </label>
                 </div>
@@ -415,7 +415,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                           if (item) setLoanType(`Home Loan - ${item.bank} (${item.rate.toFixed(2)}% p.a.)`);
                         }
                       }}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none bg-white focus:border-gold"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none bg-white focus:border-brand"
                     >
                       <option value="custom">Custom Bank / Rate</option>
                       {bankRates.map((item) => (
@@ -433,7 +433,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                       value={loanType}
                       onChange={(e) => setLoanType(e.target.value)}
                       placeholder="e.g. Home Loan - HDFC Bank (8.7%)"
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand"
                     />
                   </label>
                 </div>
@@ -450,7 +450,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                       value={employmentStatus}
                       onChange={(e) => setEmploymentStatus(e.target.value)}
                       placeholder="Salaried / Self-Employed"
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand"
                     />
                   </label>
                   <label className="block text-sm">
@@ -459,7 +459,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                       type="number"
                       value={annualIncome}
                       onChange={(e) => setAnnualIncome(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand"
                     />
                   </label>
                   <label className="block text-sm">
@@ -468,7 +468,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                       type="number"
                       value={downPayment}
                       onChange={(e) => setDownPayment(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand"
                     />
                   </label>
                 </div>
@@ -480,7 +480,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                       type="number"
                       value={creditScore}
                       onChange={(e) => setCreditScore(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand"
                     />
                   </label>
                   <label className="block text-sm">
@@ -489,7 +489,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                       type="number"
                       value={existingEmi}
                       onChange={(e) => setExistingEmi(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand"
                     />
                   </label>
                 </div>
@@ -506,7 +506,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                       value={coApplicantName}
                       onChange={(e) => setCoApplicantName(e.target.value)}
                       placeholder="Name"
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand"
                     />
                   </label>
                   <label className="block text-sm">
@@ -515,7 +515,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                       type="number"
                       value={coApplicantIncome}
                       onChange={(e) => setCoApplicantIncome(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-gold"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand"
                     />
                   </label>
                 </div>
@@ -530,7 +530,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                     <select
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm bg-white outline-none focus:border-gold"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm bg-white outline-none focus:border-brand"
                     >
                       {["PENDING", "UNDER_REVIEW", "APPROVED", "REJECTED", "FUNDED"].map((s) => (
                         <option key={s} value={s}>{s}</option>
@@ -557,7 +557,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                       value={newNoteText}
                       onChange={(e) => setNewNoteText(e.target.value)}
                       placeholder="Type a new review note, reference check status, or approval details..."
-                      className="w-full rounded-lg border border-slate-200 bg-white p-3 text-sm outline-none focus:border-gold resize-none"
+                      className="w-full rounded-lg border border-slate-200 bg-white p-3 text-sm outline-none focus:border-brand resize-none"
                     />
                     <div className="flex items-center justify-between">
                       <p className="text-[11px] text-slate-500 font-medium">
@@ -567,7 +567,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                         type="button"
                         disabled={!newNoteText.trim()}
                         onClick={handleAddNote}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-950 bg-gold hover:bg-gold-dark disabled:opacity-50 px-4 py-2 rounded-lg transition shadow-xs cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand hover:bg-brand-hover disabled:opacity-50 px-4 py-2 rounded-lg transition shadow-xs cursor-pointer"
                       >
                         <Save className="h-3.5 w-3.5" />
                         Save Note
@@ -635,7 +635,7 @@ export function LoansManager({ loans, bankRates = [] }: { loans: Loan[]; bankRat
                 type="button"
                 onClick={handleSave}
                 disabled={!!busy}
-                className="flex items-center gap-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 px-5 py-2 text-sm font-semibold transition"
+                className="flex items-center gap-2 rounded-xl bg-brand hover:bg-brand-hover text-white px-5 py-2 text-sm font-semibold transition"
               >
                 {busy && <Loader2 className="h-4 w-4 animate-spin" />}
                 Save Changes

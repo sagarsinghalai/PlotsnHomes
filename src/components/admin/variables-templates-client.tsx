@@ -299,8 +299,8 @@ export function VariablesTemplatesClient({
     <div className="space-y-6 font-sans text-slate-900 dark:text-white pb-16">
       {/* Toast Banner */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-3 shadow-2xl text-xs font-semibold border border-gold/40 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <CheckCircle2 className="h-4 w-4 text-gold" />
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-3 shadow-2xl text-xs font-semibold border border-brand/40 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <CheckCircle2 className="h-4 w-4 text-brand" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -329,7 +329,7 @@ export function VariablesTemplatesClient({
             onClick={() => setMainTab("variables")}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
               mainTab === "variables"
-                ? "bg-gold text-slate-950 shadow-md font-extrabold"
+                ? "bg-brand text-white shadow-md font-extrabold"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -340,7 +340,7 @@ export function VariablesTemplatesClient({
             onClick={() => setMainTab("templates")}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
               mainTab === "templates"
-                ? "bg-gold text-slate-950 shadow-md font-extrabold"
+                ? "bg-brand text-white shadow-md font-extrabold"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -363,7 +363,7 @@ export function VariablesTemplatesClient({
                   : "bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-400 hover:bg-slate-200"
               }`}
             >
-              <Sparkles className="h-3.5 w-3.5 text-gold" />
+              <Sparkles className="h-3.5 w-3.5 text-brand" />
               <span>Section 1: System Variables</span>
             </button>
 
@@ -375,7 +375,7 @@ export function VariablesTemplatesClient({
                   : "bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-400 hover:bg-slate-200"
               }`}
             >
-              <Globe className="h-3.5 w-3.5 text-gold" />
+              <Globe className="h-3.5 w-3.5 text-brand" />
               <span>Section 2: Global Custom Variables</span>
             </button>
           </div>
@@ -387,7 +387,7 @@ export function VariablesTemplatesClient({
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">System Variables</h2>
-                    <Sparkles className="h-4 w-4 text-gold" />
+                    <Sparkles className="h-4 w-4 text-brand" />
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Click any variable to copy to clipboard, then paste it in your template body text.
@@ -396,7 +396,7 @@ export function VariablesTemplatesClient({
 
                 <button
                   onClick={() => setIsAddSystemVarOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 text-xs font-extrabold shadow transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold shadow transition cursor-pointer"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Map New Field</span>
@@ -409,10 +409,10 @@ export function VariablesTemplatesClient({
                   <div
                     key={v.key}
                     onClick={() => handleCopy(v.key)}
-                    className="group relative flex items-center justify-between rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/60 p-4 hover:border-gold/50 hover:bg-white dark:hover:bg-slate-900 transition-all cursor-pointer shadow-xs"
+                    className="group relative flex items-center justify-between rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/60 p-4 hover:border-brand/50 hover:bg-white dark:hover:bg-slate-900 transition-all cursor-pointer shadow-xs"
                   >
                     <div>
-                      <div className="font-mono text-sm font-bold text-slate-900 dark:text-white group-hover:text-gold transition-colors">
+                      <div className="font-mono text-sm font-bold text-slate-900 dark:text-white group-hover:text-brand transition-colors">
                         {v.key}
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
@@ -420,7 +420,7 @@ export function VariablesTemplatesClient({
                       </div>
                       {v.mappedField && (
                         <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1">
-                          <span className="font-semibold text-gold">Mapped to:</span> {v.mappedField}
+                          <span className="font-semibold text-brand">Mapped to:</span> {v.mappedField}
                         </div>
                       )}
                     </div>
@@ -466,7 +466,7 @@ export function VariablesTemplatesClient({
 
               {/* SEARCH BAR */}
               <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
-                <div className="text-sm font-extrabold text-gold font-mono tracking-wide">
+                <div className="text-sm font-extrabold text-brand font-mono tracking-wide">
                   General
                 </div>
 
@@ -477,7 +477,7 @@ export function VariablesTemplatesClient({
                     value={globalSearch}
                     onChange={(e) => setGlobalSearch(e.target.value)}
                     placeholder="Search values or keys..."
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 pl-10 pr-4 py-2 text-xs outline-none focus:border-gold font-medium"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 pl-10 pr-4 py-2 text-xs outline-none focus:border-brand font-medium"
                   />
                 </div>
               </div>
@@ -523,7 +523,7 @@ export function VariablesTemplatesClient({
                                 <button
                                   type="button"
                                   onClick={() => handleCopy(row.key)}
-                                  className="p-1 text-slate-400 hover:text-gold"
+                                  className="p-1 text-slate-400 hover:text-brand"
                                   title="Copy key"
                                 >
                                   <Copy className="h-3 w-3" />
@@ -618,7 +618,7 @@ export function VariablesTemplatesClient({
                       value={waForm.name}
                       onChange={(e) => setWaForm({ ...waForm, name: e.target.value })}
                       placeholder="Welcome — new lead"
-                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-xs outline-none focus:border-gold font-medium"
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-xs outline-none focus:border-brand font-medium"
                     />
                   </div>
 
@@ -629,7 +629,7 @@ export function VariablesTemplatesClient({
                     <select
                       value={waForm.templateType}
                       onChange={(e) => setWaForm({ ...waForm, templateType: e.target.value })}
-                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-xs outline-none focus:border-gold font-medium cursor-pointer"
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-xs outline-none focus:border-brand font-medium cursor-pointer"
                     >
                       <option value="Text Template">Text Template</option>
                       <option value="Header + Media Template">Header + Media Template</option>
@@ -657,7 +657,7 @@ export function VariablesTemplatesClient({
                               key={v.key}
                               type="button"
                               onClick={() => setWaForm({ ...waForm, body: `${waForm.body} ${v.key}` })}
-                              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900 text-[10px] font-mono text-gold border border-gold/30 hover:bg-gold/15 transition cursor-pointer"
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900 text-[10px] font-mono text-brand border border-brand/30 hover:bg-brand/15 transition cursor-pointer"
                             >
                               + {v.key}
                             </button>
@@ -691,7 +691,7 @@ export function VariablesTemplatesClient({
                       value={waForm.body}
                       onChange={(e) => setWaForm({ ...waForm, body: e.target.value })}
                       placeholder="Hi {{name}}, thanks for your interest in {{property}}. I'm your BrickVest advisor — when is a good time for a quick call?"
-                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 text-xs outline-none focus:border-gold font-medium leading-relaxed"
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 text-xs outline-none focus:border-brand font-medium leading-relaxed"
                     />
                   </div>
 
@@ -716,7 +716,7 @@ export function VariablesTemplatesClient({
                   {waTemplates.map((t) => (
                     <div
                       key={t.id}
-                      className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-4 space-y-2 hover:border-gold/50 transition shadow-xs"
+                      className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-4 space-y-2 hover:border-brand/50 transition shadow-xs"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -735,7 +735,7 @@ export function VariablesTemplatesClient({
                                 body: t.body,
                               })
                             }
-                            className="text-xs text-gold font-bold hover:underline"
+                            className="text-xs text-brand font-bold hover:underline"
                           >
                             Edit
                           </button>
@@ -777,7 +777,7 @@ export function VariablesTemplatesClient({
                       value={emailForm.name}
                       onChange={(e) => setEmailForm({ ...emailForm, name: e.target.value })}
                       placeholder="Property Brochure & Investment Details"
-                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-xs outline-none focus:border-gold font-medium"
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-xs outline-none focus:border-brand font-medium"
                     />
                   </div>
 
@@ -790,7 +790,7 @@ export function VariablesTemplatesClient({
                       value={emailForm.subject}
                       onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
                       placeholder="Exclusive Opportunity: {{property}} for {{name}}"
-                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-xs outline-none focus:border-gold font-medium"
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-xs outline-none focus:border-brand font-medium"
                     />
                   </div>
 
@@ -814,7 +814,7 @@ export function VariablesTemplatesClient({
                               key={v.key}
                               type="button"
                               onClick={() => setEmailForm({ ...emailForm, body: `${emailForm.body} ${v.key}` })}
-                              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900 text-[10px] font-mono text-gold border border-gold/30 hover:bg-gold/15 transition cursor-pointer"
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-900 text-[10px] font-mono text-brand border border-brand/30 hover:bg-brand/15 transition cursor-pointer"
                             >
                               + {v.key}
                             </button>
@@ -848,14 +848,14 @@ export function VariablesTemplatesClient({
                       value={emailForm.body}
                       onChange={(e) => setEmailForm({ ...emailForm, body: e.target.value })}
                       placeholder={"Hi {{name}},\n\nThank you for exploring {{property}}. Attached is the project prospectus and ROI layout details.\n\nBest regards,\nPlotsnHomes Team"}
-                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 text-xs outline-none focus:border-gold font-medium leading-relaxed"
+                      className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 text-xs outline-none focus:border-brand font-medium leading-relaxed"
                     />
                   </div>
 
                   <button
                     onClick={handleSaveEmailTemplate}
                     disabled={saving}
-                    className="w-full py-3.5 rounded-2xl bg-gold hover:bg-gold-dark text-slate-950 font-extrabold text-sm shadow-lg shadow-gold/20 transition cursor-pointer disabled:opacity-50"
+                    className="w-full py-3.5 rounded-2xl bg-brand hover:bg-brand-hover text-white font-extrabold text-sm shadow-lg shadow-brand/20 transition cursor-pointer disabled:opacity-50"
                   >
                     {saving ? "Saving Email Template..." : "Save Email Template"}
                   </button>
@@ -872,7 +872,7 @@ export function VariablesTemplatesClient({
                   {emailTemplates.map((t) => (
                     <div
                       key={t.id}
-                      className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-4 space-y-2 hover:border-gold/50 transition shadow-xs"
+                      className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-4 space-y-2 hover:border-brand/50 transition shadow-xs"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -891,7 +891,7 @@ export function VariablesTemplatesClient({
                                 body: t.body,
                               })
                             }
-                            className="text-xs text-gold font-bold hover:underline"
+                            className="text-xs text-brand font-bold hover:underline"
                           >
                             Edit
                           </button>
@@ -941,7 +941,7 @@ export function VariablesTemplatesClient({
                   value={newSystemVar.key}
                   onChange={(e) => setNewSystemVar({ ...newSystemVar, key: e.target.value })}
                   placeholder="{{user_role}}"
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-gold font-mono text-slate-900 dark:text-white"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-brand font-mono text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -952,7 +952,7 @@ export function VariablesTemplatesClient({
                   value={newSystemVar.label}
                   onChange={(e) => setNewSystemVar({ ...newSystemVar, label: e.target.value })}
                   placeholder="User Role"
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-gold text-slate-900 dark:text-white font-medium"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-brand text-slate-900 dark:text-white font-medium"
                 />
               </div>
 
@@ -961,7 +961,7 @@ export function VariablesTemplatesClient({
                 <select
                   value={newSystemVar.mappedField}
                   onChange={(e) => setNewSystemVar({ ...newSystemVar, mappedField: e.target.value })}
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-gold font-medium cursor-pointer text-slate-900 dark:text-white"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-brand font-medium cursor-pointer text-slate-900 dark:text-white"
                 >
                   <option value="">-- Select Field --</option>
                   <option value="User.name">User.name (Account Name)</option>
@@ -982,7 +982,7 @@ export function VariablesTemplatesClient({
                   value={newSystemVar.description}
                   onChange={(e) => setNewSystemVar({ ...newSystemVar, description: e.target.value })}
                   placeholder="Optional explanatory note"
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-gold text-slate-900 dark:text-white font-medium"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-brand text-slate-900 dark:text-white font-medium"
                 />
               </div>
             </div>
@@ -1026,7 +1026,7 @@ export function VariablesTemplatesClient({
                   value={globalVarForm.name}
                   onChange={(e) => setGlobalVarForm({ ...globalVarForm, name: e.target.value })}
                   placeholder="Office Working Hours"
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-gold text-slate-900 dark:text-white font-medium"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-brand text-slate-900 dark:text-white font-medium"
                 />
               </div>
 
@@ -1037,7 +1037,7 @@ export function VariablesTemplatesClient({
                   value={globalVarForm.folder}
                   onChange={(e) => setGlobalVarForm({ ...globalVarForm, folder: e.target.value })}
                   placeholder="General"
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-gold text-slate-900 dark:text-white font-medium"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-brand text-slate-900 dark:text-white font-medium"
                 />
               </div>
 
@@ -1050,7 +1050,7 @@ export function VariablesTemplatesClient({
                   value={globalVarForm.key}
                   onChange={(e) => setGlobalVarForm({ ...globalVarForm, key: e.target.value })}
                   placeholder="{{custom_values.office_working_hours}}"
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-gold font-mono text-slate-900 dark:text-white"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-4 py-3 outline-none focus:border-brand font-mono text-slate-900 dark:text-white"
                 />
               </div>
 
@@ -1061,7 +1061,7 @@ export function VariablesTemplatesClient({
                   value={globalVarForm.value}
                   onChange={(e) => setGlobalVarForm({ ...globalVarForm, value: e.target.value })}
                   placeholder="9:30 AM - 6:30 PM (Mon-Sat)"
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 outline-none focus:border-gold text-slate-900 dark:text-white font-medium leading-relaxed"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4 outline-none focus:border-brand text-slate-900 dark:text-white font-medium leading-relaxed"
                 />
               </div>
             </div>

@@ -303,10 +303,10 @@ export function UsersDirectory({
                 onClick={() => setRoleFilter(p.value)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                   active
-                    ? "bg-gold text-slate-950 shadow-sm"
+                    ? "bg-brand text-white shadow-sm"
                     : empty
                       ? "bg-transparent text-slate-400 dark:text-slate-600 hover:bg-white dark:hover:bg-slate-800"
-                      : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-gold/60 hover:text-slate-900 dark:hover:text-white"
+                      : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-brand/60 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
                 {p.label}
@@ -368,7 +368,7 @@ export function UsersDirectory({
               placeholder="Search by User ID (e.g. USR-4TYQ…), name, email, or phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-gold shadow-2xs"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-brand shadow-2xs"
             />
           </div>
           <div className="flex gap-2.5">
@@ -627,7 +627,7 @@ export function UsersDirectory({
                           href={`/admin/users/${u.id}`}
                           onClick={(e) => e.stopPropagation()}
                           title={canEdit ? "Edit profile" : "View profile"}
-                          className="inline-flex items-center gap-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2.5 py-1 text-xs font-extrabold text-amber-950 dark:text-amber-200 hover:bg-gold hover:text-slate-900 shadow-2xs transition"
+                          className="inline-flex items-center gap-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2.5 py-1 text-xs font-extrabold text-amber-950 dark:text-amber-200 hover:bg-brand hover:text-white shadow-2xs transition"
                         >
                           <Pencil className="h-3 w-3" />
                           {canEdit ? "Edit" : "View"}
@@ -683,7 +683,7 @@ export function UsersDirectory({
               onClick={() => setCurrentPage(pg)}
               className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${
                 currentPage === pg
-                  ? "bg-slate-900 text-white dark:bg-gold dark:text-slate-950 shadow-md"
+                  ? "bg-slate-900 text-white dark:bg-brand dark:text-white shadow-md"
                   : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100"
               }`}
             >

@@ -644,7 +644,7 @@ export function RolesSettingsClient({
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="inline-flex items-center gap-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 px-6 py-2.5 text-xs font-bold shadow-md shadow-gold/20 transition cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl bg-brand hover:bg-brand-hover text-white px-6 py-2.5 text-xs font-bold shadow-md shadow-brand/20 transition cursor-pointer"
             >
               {saving ? (
                 <div className="h-4 w-4 rounded-full border-2 border-slate-950 border-t-transparent animate-spin" />

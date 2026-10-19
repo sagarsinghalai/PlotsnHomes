@@ -83,7 +83,7 @@ export function CrmKpiStrip({
         const inner = (
           <div
             className={`rounded-2xl border p-4 h-full transition group ${
-              item.href ? "cursor-pointer hover:shadow-md hover:border-gold/50" : ""
+              item.href ? "cursor-pointer hover:shadow-md hover:border-brand/50" : ""
             } ${item.alert ? "border-red-200 bg-red-50" : "border-slate-200 bg-white"}`}
           >
             <div className="flex items-start justify-between gap-2">
@@ -92,13 +92,13 @@ export function CrmKpiStrip({
                 <p className="mt-1 text-2xl font-bold text-slate-900">{item.value}</p>
                 {item.sub && <p className="text-[11px] text-slate-500 mt-0.5">{item.sub}</p>}
                 {item.href && (
-                  <p className="mt-2 text-[11px] font-medium text-gold-dark opacity-0 group-hover:opacity-100 transition">
+                  <p className="mt-2 text-[11px] font-medium text-brand-hover opacity-0 group-hover:opacity-100 transition">
                     View {item.value} leads →
                   </p>
                 )}
               </div>
               <div className={`rounded-lg p-2 ${item.alert ? "bg-red-100" : "bg-slate-100"}`}>
-                <Icon className={`h-4 w-4 ${item.alert ? "text-red-600" : "text-gold-dark"}`} />
+                <Icon className={`h-4 w-4 ${item.alert ? "text-red-600" : "text-brand-hover"}`} />
               </div>
             </div>
           </div>

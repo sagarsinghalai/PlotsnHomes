@@ -101,7 +101,7 @@ export default function RegisterPage() {
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto space-y-2">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 border border-amber-200 px-3 py-1 text-xs font-bold text-amber-900">
-          <Sparkles className="h-3.5 w-3.5 text-gold-dark" /> Select Account Type
+          <Sparkles className="h-3.5 w-3.5 text-brand-hover" /> Select Account Type
         </span>
         <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-slate-900">
           Join PlotsnHomes
@@ -124,7 +124,7 @@ export default function RegisterPage() {
               onClick={() => setSelectedRole(opt.key)}
               className={`relative flex flex-col justify-between text-left rounded-2xl p-5 border transition-all duration-200 shadow-sm cursor-pointer ${
                 isSelected
-                  ? "border-gold bg-amber-50/70 ring-2 ring-gold/40 shadow-md"
+                  ? "border-brand bg-amber-50/70 ring-2 ring-brand/40 shadow-md"
                   : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60"
               }`}
             >
@@ -132,14 +132,14 @@ export default function RegisterPage() {
               <div className="flex items-center justify-between">
                 <span
                   className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
-                    isSelected ? "bg-gold text-slate-950" : "bg-slate-100 text-slate-600"
+                    isSelected ? "bg-brand text-white" : "bg-slate-100 text-slate-600"
                   }`}
                 >
                   <Icon className="h-5 w-5" />
                 </span>
 
                 {isSelected ? (
-                  <CheckCircle2 className="h-5 w-5 text-gold-dark" />
+                  <CheckCircle2 className="h-5 w-5 text-brand-hover" />
                 ) : (
                   <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                     {opt.badge}
@@ -160,14 +160,14 @@ export default function RegisterPage() {
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                 <span
                   className={`text-xs font-bold ${
-                    isSelected ? "text-gold-dark" : "text-slate-500"
+                    isSelected ? "text-brand-hover" : "text-slate-500"
                   }`}
                 >
                   {isSelected ? "Selected" : "Select Role"}
                 </span>
                 <span
                   className={`h-2 w-2 rounded-full ${
-                    isSelected ? "bg-gold animate-pulse" : "bg-slate-200"
+                    isSelected ? "bg-brand animate-pulse" : "bg-slate-200"
                   }`}
                 />
               </div>
@@ -186,7 +186,7 @@ export default function RegisterPage() {
           <div className="flex items-center justify-between rounded-xl bg-amber-50 border border-amber-200/80 px-4 py-3 text-xs">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-slate-700">Role:</span>
-              <span className="font-bold text-gold-dark text-sm">{currentRoleInfo.title}</span>
+              <span className="font-bold text-brand-hover text-sm">{currentRoleInfo.title}</span>
             </div>
             <span className="text-slate-500 font-medium">({currentRoleInfo.subtitle})</span>
           </div>
@@ -197,7 +197,7 @@ export default function RegisterPage() {
               name="name"
               placeholder="e.g. John Doe"
               required
-              className="mt-1 rounded-xl border-slate-200 focus:border-gold focus:ring-1 focus:ring-gold"
+              className="mt-1 rounded-xl border-slate-200 focus:border-brand focus:ring-1 focus:ring-brand"
             />
           </div>
 
@@ -208,7 +208,7 @@ export default function RegisterPage() {
               type="email"
               placeholder="name@example.com"
               required
-              className="mt-1 rounded-xl border-slate-200 focus:border-gold focus:ring-1 focus:ring-gold"
+              className="mt-1 rounded-xl border-slate-200 focus:border-brand focus:ring-1 focus:ring-brand"
             />
           </div>
 
@@ -220,7 +220,7 @@ export default function RegisterPage() {
               placeholder="••••••••"
               required
               minLength={8}
-              className="mt-1 rounded-xl border-slate-200 focus:border-gold focus:ring-1 focus:ring-gold"
+              className="mt-1 rounded-xl border-slate-200 focus:border-brand focus:ring-1 focus:ring-brand"
             />
           </div>
 
@@ -238,7 +238,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-slate-600">
           Already have an account?{" "}
-          <Link href="/login" className="font-bold text-gold-dark hover:underline">
+          <Link href="/login" className="font-bold text-brand-hover hover:underline">
             Log in
           </Link>
         </p>

@@ -191,7 +191,7 @@ export function BulkImportUsersModal({
             <select
               value={role}
               onChange={(e) => { setRole(e.target.value as Role); setResult(null); setError(""); }}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-gold"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-brand"
             >
               {ROLE_ORDER.map((r) => (
                 <option key={r} value={r}>{roleLabel(r)}</option>

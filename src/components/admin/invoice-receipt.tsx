@@ -124,9 +124,9 @@ export function InvoiceReceipt({
         id="invoice-receipt-print"
         className="rounded-2xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm print:shadow-none print:border-0 print:rounded-none"
       >
-        <div className="header flex flex-wrap justify-between gap-6 border-b-2 border-gold pb-6 mb-8">
+        <div className="header flex flex-wrap justify-between gap-6 border-b-2 border-brand pb-6 mb-8">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-gold-dark">BrickVest</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand-hover">BrickVest</p>
             <h1 className="font-display text-2xl font-bold text-slate-900 mt-1">
               {party === "buyer" ? "Payment Receipt" : "Brokerage Invoice"}
             </h1>
@@ -180,7 +180,7 @@ export function InvoiceReceipt({
             {invoice.propertySymbol && (
               <p>
                 <span className="text-slate-500">Property:</span>{" "}
-                <span className="font-mono font-medium text-gold-dark">{invoice.propertySymbol}</span>
+                <span className="font-mono font-medium text-brand-hover">{invoice.propertySymbol}</span>
               </p>
             )}
             {invoice.propertyTitle && (

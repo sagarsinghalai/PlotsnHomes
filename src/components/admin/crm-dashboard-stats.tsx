@@ -51,9 +51,9 @@ function Stat({
 }) {
   return (
     <div
-      className={`rounded-2xl border p-4 ${alert ? "border-red-200 bg-red-50" : "bg-white"} ${href ? "hover:border-gold transition" : ""}`}
+      className={`rounded-2xl border p-4 ${alert ? "border-red-200 bg-red-50" : "bg-white"} ${href ? "hover:border-brand transition" : ""}`}
     >
-      <Icon className={`h-5 w-5 ${alert ? "text-red-600" : "text-gold-dark"}`} />
+      <Icon className={`h-5 w-5 ${alert ? "text-red-600" : "text-brand-hover"}`} />
       <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
       <p className="text-xs text-slate-500">{label}</p>
       {sub && <p className="text-[10px] text-slate-400 mt-0.5">{sub}</p>}

@@ -20,14 +20,14 @@ export function SettingsCardGrid({
           <Link
             key={c.href}
             href={c.href}
-            className="relative rounded-2xl border border-slate-200 bg-white p-6 hover:border-gold hover:shadow-md transition group"
+            className="relative rounded-2xl border border-slate-200 bg-white p-6 hover:border-brand hover:shadow-md transition group"
           >
             {c.badge && (
               <span className="absolute top-3 right-3 rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-bold text-white">
                 {c.badge}
               </span>
             )}
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-50 text-sky-600 group-hover:bg-gold/10 group-hover:text-gold-dark">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-50 text-sky-600 group-hover:bg-brand/10 group-hover:text-brand-hover">
               <Icon className="h-6 w-6" />
             </div>
             <h3 className="mt-4 font-semibold text-slate-900">{c.title}</h3>

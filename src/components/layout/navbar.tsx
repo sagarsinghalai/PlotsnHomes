@@ -96,7 +96,7 @@ export function Navbar() {
                   ? "/admin"
                   : "/dashboard"
               }
-              className="text-xs xl:text-sm font-semibold whitespace-nowrap text-gold hover:text-gold-dark border border-gold/40 rounded-xl px-3 py-1.5 bg-gold/10 hover:bg-gold/20 transition shadow-sm"
+              className="text-xs xl:text-sm font-semibold whitespace-nowrap text-brand hover:text-brand-hover border border-brand/40 rounded-xl px-3 py-1.5 bg-brand/10 hover:bg-brand/20 transition shadow-sm"
             >
               {getRoleLabel(session.user.role)}
             </Link>
@@ -159,7 +159,7 @@ export function Navbar() {
           {(session?.user?.role === "SUPERADMIN" || session?.user?.role === "EMPLOYEE") && (
             <Link
               href="/admin"
-              className="block py-2 font-semibold text-gold"
+              className="block py-2 font-semibold text-brand"
               onClick={() => setOpen(false)}
             >
               Admin Panel

@@ -138,7 +138,7 @@ export default function ClientMessagesPage() {
       <div className="border border-slate-200 rounded-3xl bg-white shadow-sm overflow-hidden flex flex-col h-[600px]">
         {/* Chat Header */}
         <div className="p-4 border-b bg-slate-50/50 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gold/10 flex items-center justify-center font-bold text-gold border border-gold/20">
+          <div className="h-10 w-10 rounded-xl bg-brand/10 flex items-center justify-center font-bold text-brand border border-brand/20">
             <User className="h-5 w-5" />
           </div>
           <div>
@@ -180,7 +180,7 @@ export default function ClientMessagesPage() {
                   className={`flex ${clientSent ? "justify-end" : "justify-start"} items-end gap-2`}
                 >
                   {!clientSent && (
-                    <div className="h-6 w-6 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center font-bold text-[9px] text-gold flex-shrink-0">
+                    <div className="h-6 w-6 rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center font-bold text-[9px] text-brand flex-shrink-0">
                       {agentName[0]}
                     </div>
                   )}
@@ -233,7 +233,7 @@ export default function ClientMessagesPage() {
             <button
               onClick={handleSendMessage}
               disabled={loading || !body.trim()}
-              className="absolute right-3.5 bottom-3 text-gold hover:text-gold-dark disabled:text-slate-300 transition"
+              className="absolute right-3.5 bottom-3 text-brand hover:text-brand-hover disabled:text-slate-300 transition"
             >
               <Send className="h-4 w-4" />
             </button>

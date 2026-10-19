@@ -20,10 +20,10 @@ export default function AreaValueCalculatorPage() {
             <ChevronRight className="h-3 w-3" />
             <Link href="/calculators" className="hover:text-white transition">Calculators</Link>
             <ChevronRight className="h-3 w-3" />
-            <span className="text-gold font-semibold">Area Value Calculator</span>
+            <span className="text-brand font-semibold">Area Value Calculator</span>
           </nav>
 
-          <p className="text-xs font-semibold uppercase tracking-widest text-gold">PlotsnHomes Tools</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-brand">PlotsnHomes Tools</p>
           <h1 className="mt-2 font-display text-3xl font-bold sm:text-4xl">
             Area Value Calculator & Unit Converter
           </h1>

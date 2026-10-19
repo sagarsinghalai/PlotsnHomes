@@ -45,7 +45,7 @@ export function PropertyGallery({ images, title }: { images: string[]; title: st
               type="button"
               onClick={() => setIdx(i)}
               className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 ${
-                i === idx ? "border-gold" : "border-transparent"
+                i === idx ? "border-brand" : "border-transparent"
               }`}
             >
               <Image src={src} alt="" fill className="object-cover" />

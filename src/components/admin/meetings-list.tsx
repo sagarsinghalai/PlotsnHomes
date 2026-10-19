@@ -27,7 +27,7 @@ export function MeetingsList({ meetings }: { meetings: Meeting[] }) {
         >
           <div>
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-gold-dark" />
+              <Calendar className="h-4 w-4 text-brand-hover" />
               <h3 className="font-semibold text-slate-900">{m.title}</h3>
               <span
                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -64,7 +64,7 @@ export function MeetingsList({ meetings }: { meetings: Meeting[] }) {
             <Link
               href={`/meetings/${m.token}`}
               target="_blank"
-              className="inline-flex items-center gap-1 text-sm text-gold-dark hover:underline"
+              className="inline-flex items-center gap-1 text-sm text-brand-hover hover:underline"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               Client schedule page

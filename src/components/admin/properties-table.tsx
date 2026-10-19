@@ -147,7 +147,7 @@ export function PropertiesTable({ properties }: { properties: Row[] }) {
             placeholder="Search by Symbol (e.g. LON-001), Title, City..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-gold"
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-brand"
           />
         </div>
 
@@ -359,7 +359,7 @@ export function PropertiesTable({ properties }: { properties: Row[] }) {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filtered.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
-                  {isColumnVisible("symbol") && <td className="px-4 py-3 font-mono font-bold text-gold-dark dark:text-gold">{p.symbol}</td>}
+                  {isColumnVisible("symbol") && <td className="px-4 py-3 font-mono font-bold text-brand-hover dark:text-brand">{p.symbol}</td>}
                   {isColumnVisible("title") && <td className="px-4 py-3 max-w-[200px] truncate font-medium text-slate-900 dark:text-white">{p.title}</td>}
                   {isColumnVisible("price") && <td className="px-4 py-3" suppressHydrationWarning>{formatCurrency(p.price)}</td>}
                   {isColumnVisible("yield") && <td className="px-4 py-3 font-mono font-bold text-emerald-600 dark:text-emerald-400">{p.yieldRate.toFixed(2)}%</td>}
@@ -400,7 +400,7 @@ export function PropertiesTable({ properties }: { properties: Row[] }) {
                         {canEdit && (
                           <Link
                             href={`/admin/properties/${p.id}/edit`}
-                            className="inline-flex items-center gap-1 text-gold-dark dark:text-gold hover:underline text-xs font-bold"
+                            className="inline-flex items-center gap-1 text-brand-hover dark:text-brand hover:underline text-xs font-bold"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                             Edit

@@ -43,12 +43,12 @@ const CATEGORIES = [...PROPERTY_CATEGORIES];
 const pillBase =
   "rounded-full border px-3 py-1 text-xs font-semibold transition-all duration-150 cursor-pointer";
 const pillActive =
-  "border-gold bg-gold text-slate-900 shadow-sm";
+  "border-brand bg-brand text-white shadow-sm";
 const pillInactive =
-  "border-slate-200 bg-white text-slate-600 hover:border-gold/50 hover:bg-gold/10";
+  "border-slate-200 bg-white text-slate-600 hover:border-brand/50 hover:bg-brand/10";
 
 const selectClass =
-  "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all";
+  "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all";
 
 export function PropertyFilters({ priceMin, priceMax, cities, areas = [], total }: Props) {
   const router = useRouter();
@@ -311,7 +311,7 @@ export function PropertyFilters({ priceMin, priceMax, cities, areas = [], total 
                   name={item.name}
                   value="1"
                   defaultChecked={get(item.name) === "1"}
-                  className="h-4 w-4 rounded border-slate-300 text-gold focus:ring-gold/30"
+                  className="h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand/30"
                 />
                 {item.label}
               </label>

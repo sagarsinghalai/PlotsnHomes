@@ -60,7 +60,7 @@ export function AdminExtendedAnalytics({ range, fromDate, toDate }: ExtendedAnal
   if (loading) {
     return (
       <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl p-12 text-center flex flex-col items-center justify-center my-6 shadow-sm">
-        <Loader2 className="h-8 w-8 text-gold animate-spin mb-3" />
+        <Loader2 className="h-8 w-8 text-brand animate-spin mb-3" />
         <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Updating Analytics Engine...</p>
         <p className="text-xs text-slate-500 mt-1">Filtering live database metrics for period: {range.toUpperCase()}</p>
       </div>

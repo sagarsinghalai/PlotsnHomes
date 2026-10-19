@@ -296,7 +296,7 @@ export function PaymentOptions({
                 key={plan.id}
                 className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${
                   selected
-                    ? "border-gold bg-amber-50/80 ring-1 ring-gold/40"
+                    ? "border-brand bg-amber-50/80 ring-1 ring-brand/40"
                     : "border-slate-200 hover:border-slate-300 bg-white"
                 }`}
               >
@@ -310,7 +310,7 @@ export function PaymentOptions({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-semibold text-slate-900">{plan.label}</span>
-                    <span className="font-mono text-sm font-bold text-gold-dark shrink-0">
+                    <span className="font-mono text-sm font-bold text-brand-hover shrink-0">
                       {formatCurrency(amt)}
                     </span>
                   </div>
@@ -464,7 +464,7 @@ export function PaymentOptions({
             preferredMethod={selectedMethod?.razorpayMethod}
             onError={(err) => setError(err)}
             onDismiss={() => setCheckout(null)}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-gold py-3 px-4 font-semibold text-white shadow-sm hover:bg-gold-dark transition-colors disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand py-3 px-4 font-semibold text-white shadow-sm hover:bg-brand-hover transition-colors disabled:opacity-60"
           >
             <Sparkles className="h-4 w-4" />
             Pay {formatCurrency(amount)} via Razorpay

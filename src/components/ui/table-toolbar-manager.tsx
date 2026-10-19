@@ -262,7 +262,7 @@ export function TableToolbarManager({
             checked={isChecked || isLocked}
             disabled={isLocked}
             onChange={() => !isLocked && onToggleColumn(col.id)}
-            className={`rounded border-slate-300 text-gold focus:ring-gold ${isLocked ? "opacity-60 cursor-not-allowed" : ""}`}
+            className={`rounded border-slate-300 text-brand focus:ring-brand ${isLocked ? "opacity-60 cursor-not-allowed" : ""}`}
           />
           <span>{col.label}</span>
           {isLocked && (
@@ -271,7 +271,7 @@ export function TableToolbarManager({
             </span>
           )}
           {col.isCustom && (
-            <span className="text-[10px] bg-gold/15 text-amber-800 dark:text-gold px-1.5 py-0.2 rounded font-mono">
+            <span className="text-[10px] bg-brand/15 text-amber-800 dark:text-brand px-1.5 py-0.2 rounded font-mono">
               {col.fieldType ? col.fieldType.toUpperCase() : "CUSTOM"}
             </span>
           )}
@@ -389,7 +389,7 @@ export function TableToolbarManager({
           <div className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <Plus className="h-5 w-5 text-gold" />
+                <Plus className="h-5 w-5 text-brand" />
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Add Custom Field Column
                 </h3>
@@ -440,7 +440,7 @@ export function TableToolbarManager({
                         placeholder="Filter field types..."
                         value={fieldTypeSearch}
                         onChange={(e) => setFieldTypeSearch(e.target.value)}
-                        className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 pl-8 pr-2 py-1 text-xs outline-none focus:border-gold"
+                        className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 pl-8 pr-2 py-1 text-xs outline-none focus:border-brand"
                       />
                     </div>
 
@@ -527,7 +527,7 @@ export function TableToolbarManager({
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <SlidersHorizontal className="h-5 w-5 text-gold" />
+                <SlidersHorizontal className="h-5 w-5 text-brand" />
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Manage Table Columns & Fields
                 </h3>
@@ -549,7 +549,7 @@ export function TableToolbarManager({
                 placeholder="Search columns..."
                 value={columnSearch}
                 onChange={(e) => setColumnSearch(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-white outline-none focus:border-gold"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-white outline-none focus:border-brand"
               />
             </div>
 
@@ -588,7 +588,7 @@ export function TableToolbarManager({
                               });
                             }
                           }}
-                          className="rounded border-slate-300 text-gold focus:ring-gold"
+                          className="rounded border-slate-300 text-brand focus:ring-brand"
                         />
                         <span>{catName}</span>
                         <span className="text-[10px] font-mono font-bold text-amber-800 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">

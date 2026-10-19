@@ -130,7 +130,7 @@ export default function BecomeSellerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-gold selection:text-slate-950">
+    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-brand selection:text-white">
       {/* HERO SECTION */}
       <section className="relative py-24 lg:py-32 overflow-hidden bg-slate-950 border-b border-slate-900">
         {/* Background Image with Dark Overlay */}

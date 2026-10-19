@@ -244,7 +244,7 @@ export function SubscriptionsTable({
                 <tr key={s.id} className="border-t border-slate-100 hover:bg-slate-50/80">
                   {isColumnVisible("subscriber") && (
                     <td className="px-5 py-4">
-                      <Link href={`/admin/users/${s.user.id}`} className="font-semibold hover:text-gold-dark">
+                      <Link href={`/admin/users/${s.user.id}`} className="font-semibold hover:text-brand-hover">
                         {s.user.name}
                       </Link>
                       <p className="text-xs text-slate-500">{s.user.email}</p>
@@ -311,7 +311,7 @@ export function SubscriptionsTable({
                     <td className="px-5 py-4">
                       <Link
                         href={`/admin/users/${s.user.id}`}
-                        className="text-xs text-gold-dark font-bold hover:underline"
+                        className="text-xs text-brand-hover font-bold hover:underline"
                       >
                         View user
                       </Link>

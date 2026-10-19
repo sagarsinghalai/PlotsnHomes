@@ -28,7 +28,7 @@ const variants: Record<Variant, string> = {
   danger:
     "bg-white text-slate-700 border border-slate-200 hover:text-red-600 hover:bg-red-50/80 hover:border-red-200 shadow-2xs",
   gold:
-    "bg-gold text-slate-900 hover:bg-gold-dark font-semibold shadow-lg shadow-gold/30",
+    "bg-brand text-white hover:bg-brand-hover font-semibold shadow-lg shadow-brand/30",
 };
 
 const sizes: Record<Size, string> = {

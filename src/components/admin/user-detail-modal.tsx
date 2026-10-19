@@ -226,7 +226,7 @@ export function UserDetailModal({
           {tabs.map((t) => (
             <button
               key={t.id}
-              className={`a-um-tab font-bold text-xs tracking-wide transition-all ${activeTab === t.id ? "on text-amber-600 dark:text-gold border-b-2 border-gold" : "text-slate-500 dark:text-slate-400"}`}
+              className={`a-um-tab font-bold text-xs tracking-wide transition-all ${activeTab === t.id ? "on text-amber-600 dark:text-brand border-b-2 border-brand" : "text-slate-500 dark:text-slate-400"}`}
               onClick={() => setActiveTab(t.id)}
             >
               <span className="mr-1.5">{t.icon}</span>{t.label}
@@ -415,7 +415,7 @@ export function UserDetailModal({
                 </div>
               ))}
 
-              <div className="bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-5 flex items-center justify-center cursor-pointer hover:border-gold transition min-h-[150px]">
+              <div className="bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-5 flex items-center justify-center cursor-pointer hover:border-brand transition min-h-[150px]">
                 <div className="text-center">
                   <div className="text-xl font-bold mb-1">+</div>
                   <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Add Bank Account</div>

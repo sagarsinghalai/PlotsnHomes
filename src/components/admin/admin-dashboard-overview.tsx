@@ -238,17 +238,17 @@ export function AdminDashboardOverview({
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-gold"
+              className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-brand"
             />
             <span>→</span>
             <input
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-gold"
+              className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-brand"
             />
           </div>
-          <span className="rounded-lg bg-gold/10 px-3 py-1 text-xs font-bold text-gold-dark dark:text-gold border border-gold/20">
+          <span className="rounded-lg bg-brand/10 px-3 py-1 text-xs font-bold text-brand-hover dark:text-brand border border-brand/20">
             {rangeLabelMap[globalRange]}
           </span>
         </div>
@@ -871,7 +871,7 @@ export function AdminDashboardOverview({
         <div className="lg:col-span-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm flex flex-col justify-between">
           <div>
             <h2 className="font-bold text-slate-900 dark:text-white text-base mb-4 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-gold" /> Quick Actions
+              <Sparkles className="h-4 w-4 text-brand" /> Quick Actions
             </h2>
             <ul className="space-y-2.5">
               {[
@@ -884,7 +884,7 @@ export function AdminDashboardOverview({
                 <li key={l.href}>
                   <Link
                     href={l.href}
-                    className="flex items-center gap-3 rounded-xl border border-slate-100 dark:border-slate-800/80 p-3 hover:border-gold/50 hover:bg-gold/5 transition group"
+                    className="flex items-center gap-3 rounded-xl border border-slate-100 dark:border-slate-800/80 p-3 hover:border-brand/50 hover:bg-brand/5 transition group"
                   >
                     <div className="rounded-lg bg-indigo-50 dark:bg-indigo-950/50 p-2 text-indigo-600 dark:text-indigo-400 group-hover:bg-amber-500/15 group-hover:text-amber-600 dark:group-hover:text-amber-400 border border-indigo-100 dark:border-indigo-800/40 transition shrink-0">
                       <l.icon className="h-4 w-4" />
@@ -902,7 +902,7 @@ export function AdminDashboardOverview({
           {canAddProperty && (
             <Link
               href="/admin/properties/new"
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gold py-3 text-xs font-bold text-slate-950 hover:bg-gold-dark transition shadow-md"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-bold text-white hover:bg-brand-hover transition shadow-md"
             >
               <Plus className="h-4 w-4 stroke-[3]" /> Add New Property
             </Link>
@@ -914,7 +914,7 @@ export function AdminDashboardOverview({
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
             <div className="border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center">
               <h2 className="font-bold text-slate-900 dark:text-white text-base">Top YTD Performing Properties</h2>
-              <Link href="/admin/properties" className="text-xs font-bold text-gold-dark dark:text-gold hover:underline flex items-center gap-1">
+              <Link href="/admin/properties" className="text-xs font-bold text-brand-hover dark:text-brand hover:underline flex items-center gap-1">
                 View all properties <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
             </div>
@@ -932,7 +932,7 @@ export function AdminDashboardOverview({
                   {topMovers.map((p) => (
                     <tr key={p.symbol} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
                       <td className="px-6 py-3.5 font-semibold text-slate-900 dark:text-white">
-                        <span className="font-mono text-gold-dark dark:text-gold font-bold mr-2">[{p.symbol}]</span>
+                        <span className="font-mono text-brand-hover dark:text-brand font-bold mr-2">[{p.symbol}]</span>
                         {p.title}
                       </td>
                       <td className="px-6 py-3.5 font-bold text-slate-900 dark:text-slate-100">{formatAmount(p.price)}</td>
@@ -942,7 +942,7 @@ export function AdminDashboardOverview({
                         </span>
                       </td>
                       <td className="px-6 py-3.5 text-right">
-                        <Link href={`/admin/properties/${p.id}/edit`} className="font-bold text-gold-dark dark:text-gold hover:underline">
+                        <Link href={`/admin/properties/${p.id}/edit`} className="font-bold text-brand-hover dark:text-brand hover:underline">
                           Edit
                         </Link>
                       </td>
@@ -957,7 +957,7 @@ export function AdminDashboardOverview({
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
             <div className="border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center">
               <h2 className="font-bold text-slate-900 dark:text-white text-base">Recent Inquiries & Leads</h2>
-              <Link href="/admin/inquiries" className="text-xs font-bold text-gold-dark dark:text-gold hover:underline flex items-center gap-1">
+              <Link href="/admin/inquiries" className="text-xs font-bold text-brand-hover dark:text-brand hover:underline flex items-center gap-1">
                 View all inquiries <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
             </div>
@@ -973,13 +973,13 @@ export function AdminDashboardOverview({
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {recentInquiries.map((q) => (
                     <tr key={q.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition">
-                      <td className="px-6 py-3.5 font-mono font-bold text-gold-dark dark:text-gold">{q.property.symbol}</td>
+                      <td className="px-6 py-3.5 font-mono font-bold text-brand-hover dark:text-brand">{q.property.symbol}</td>
                       <td className="px-6 py-3.5">
                         <span className="font-bold text-slate-900 dark:text-white">{q.name}</span>
                         <span className="block text-slate-500 text-[11px]">{q.email}</span>
                       </td>
                       <td className="px-6 py-3.5 text-right">
-                        <Link href="/admin/inquiries" className="font-bold text-gold-dark dark:text-gold hover:underline">
+                        <Link href="/admin/inquiries" className="font-bold text-brand-hover dark:text-brand hover:underline">
                           Manage
                         </Link>
                       </td>
@@ -1033,7 +1033,7 @@ export function AdminDashboardOverview({
                   <td className="px-6 py-3.5 text-slate-600 dark:text-slate-300 font-medium">{log.details}</td>
                   <td className="px-6 py-3.5 text-slate-900 dark:text-white font-bold">{log.actor}</td>
                   <td className="px-6 py-3.5">
-                    <span className="rounded-full bg-gold/10 border border-gold/30 px-2.5 py-0.5 text-[10px] text-gold-dark dark:text-gold font-bold tracking-wider uppercase">
+                    <span className="rounded-full bg-brand/10 border border-brand/30 px-2.5 py-0.5 text-[10px] text-brand-hover dark:text-brand font-bold tracking-wider uppercase">
                       {log.role}
                     </span>
                   </td>

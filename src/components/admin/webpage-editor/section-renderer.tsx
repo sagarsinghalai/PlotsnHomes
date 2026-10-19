@@ -71,11 +71,11 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
 
           <div className={`relative z-10 max-w-4xl flex flex-col gap-4 w-full ${alignClass}`}>
             <div className="flex items-center justify-center gap-3">
-              <span className="h-[2px] w-8 bg-gold" />
-              <p className="text-xs font-semibold uppercase tracking-widest text-gold" style={{ color: "#f59e0b" }}>
+              <span className="h-[2px] w-8 bg-brand" />
+              <p className="text-xs font-semibold uppercase tracking-widest text-brand" style={{ color: "#f59e0b" }}>
                 Fractional Real Estate Investment
               </p>
-              <span className="h-[2px] w-8 bg-gold" />
+              <span className="h-[2px] w-8 bg-brand" />
             </div>
 
             <h1
@@ -84,7 +84,7 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
             >
               {section.title.includes("World's Finest") ? (
                 <>
-                  Own a Piece of the <span className="italic font-serif text-gold font-normal" style={{ color: "#f59e0b" }}>World's Finest </span> Properties
+                  Own a Piece of the <span className="italic font-serif text-brand font-normal" style={{ color: "#f59e0b" }}>World's Finest </span> Properties
                 </>
               ) : (
                 section.title || "Own a Piece of the World's Finest Properties"
@@ -101,14 +101,14 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
             <div className="mt-4 w-full rounded-2xl border border-slate-800 bg-slate-950/90 p-4 sm:p-6 text-left shadow-2xl space-y-4">
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
                 <div className="flex gap-2">
-                  <span className="px-4 py-1.5 rounded-lg bg-gold text-slate-950 text-xs font-extrabold shadow-sm">
+                  <span className="px-4 py-1.5 rounded-lg bg-brand text-white text-xs font-extrabold shadow-sm">
                     {section.ctaText || "Buy Properties"}
                   </span>
                   <span className="px-4 py-1.5 rounded-lg bg-slate-900 text-slate-300 text-xs font-bold border border-slate-800">
                     {section.secondaryCtaText || "Rent / Lease"}
                   </span>
                 </div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-gold" style={{ color: "#f59e0b" }}>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-brand" style={{ color: "#f59e0b" }}>
                   PLOTSNHOMES PORTAL
                 </span>
               </div>
@@ -142,14 +142,14 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
 
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                 <div className="flex items-center gap-2">
-                  <button className="px-6 py-2.5 rounded-xl bg-gold text-slate-950 font-extrabold text-xs shadow-md">
+                  <button className="px-6 py-2.5 rounded-xl bg-brand text-white font-extrabold text-xs shadow-md">
                     🔍 Search Properties
                   </button>
                   <button className="px-4 py-2.5 rounded-xl bg-slate-900 text-slate-400 font-bold text-xs border border-slate-800">
                     Clear
                   </button>
                 </div>
-                <span className="text-[11px] font-bold text-gold cursor-pointer" style={{ color: "#f59e0b" }}>
+                <span className="text-[11px] font-bold text-brand cursor-pointer" style={{ color: "#f59e0b" }}>
                   ▼ SHOW ADVANCED FILTERS
                 </span>
               </div>
@@ -198,7 +198,7 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
                 </h2>
               )}
               {section.subtitle && (
-                <p className="text-xs font-bold text-gold tracking-widest uppercase" style={{ color: "#f59e0b" }}>
+                <p className="text-xs font-bold text-brand tracking-widest uppercase" style={{ color: "#f59e0b" }}>
                   {section.subtitle}
                 </p>
               )}
@@ -211,9 +211,9 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
               return (
                 <div
                   key={item.id}
-                  className="p-6 rounded-2xl bg-slate-950 border border-slate-800 shadow-md hover:border-gold/40 transition-all space-y-3"
+                  className="p-6 rounded-2xl bg-slate-950 border border-slate-800 shadow-md hover:border-brand/40 transition-all space-y-3"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-gold">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-brand">
                     <IconComponent className="h-6 w-6" />
                   </div>
                   <h3 className="font-bold text-base" style={{ color: "#ffffff" }}>{item.title}</h3>
@@ -233,7 +233,7 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
         <section className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 my-4 space-y-6">
           <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-gold-dark dark:text-gold flex items-center gap-1.5 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-brand-hover dark:text-brand flex items-center gap-1.5 mb-1">
                 <Building2 className="h-4 w-4" />
                 Featured Listings
               </span>
@@ -243,7 +243,7 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
             </div>
             <Link
               href="/admin/properties"
-              className="text-xs font-bold text-gold-dark hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-brand-hover hover:underline flex items-center gap-1"
             >
               View All Properties <ArrowRight className="h-3.5 w-3.5" />
             </Link>
@@ -284,8 +284,8 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
                 className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 overflow-hidden shadow-sm hover:shadow-md transition"
               >
                 <div className="bg-slate-900 p-4 text-white flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-gold">{p.symbol}</span>
-                  <span className="rounded-md bg-gold/20 px-2 py-0.5 text-[10px] font-bold text-gold border border-gold/30">
+                  <span className="font-mono text-xs font-bold text-brand">{p.symbol}</span>
+                  <span className="rounded-md bg-brand/20 px-2 py-0.5 text-[10px] font-bold text-brand border border-brand/30">
                     {p.badge}
                   </span>
                 </div>
@@ -299,7 +299,7 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
                     <span className="font-mono text-sm font-extrabold text-slate-900 dark:text-white">{p.price}</span>
                     <Link
                       href="/admin/properties"
-                      className="px-3 py-1.5 rounded-lg bg-gold hover:bg-gold-dark text-slate-950 text-xs font-bold transition"
+                      className="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-hover text-white text-xs font-bold transition"
                     >
                       Inquire
                     </Link>
@@ -318,7 +318,7 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
           className="p-8 sm:p-12 rounded-3xl my-4 text-white text-center shadow-xl border border-slate-800 space-y-4"
           style={{ background: section.bgGradient || "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)" }}
         >
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/20 text-gold text-xs font-bold uppercase tracking-wider border border-gold/30">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand/20 text-brand text-xs font-bold uppercase tracking-wider border border-brand/30">
             <Sparkles className="h-3.5 w-3.5" />
             Take Action Today
           </span>
@@ -334,7 +334,7 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
             <div className="pt-2">
               <Link
                 href={section.ctaLink || "#"}
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 text-sm font-extrabold shadow-lg transition-all cursor-pointer"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-extrabold shadow-lg transition-all cursor-pointer"
               >
                 <span>{section.ctaText}</span>
                 <ArrowRight className="h-4 w-4" />
@@ -377,7 +377,7 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
                     <span>{item.title}</span>
                     <ChevronDown
                       className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
-                        isOpen ? "rotate-180 text-gold-dark" : "text-slate-400"
+                        isOpen ? "rotate-180 text-brand-hover" : "text-slate-400"
                       }`}
                     />
                   </button>
@@ -427,8 +427,8 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
         <section className="p-8 sm:p-12 rounded-3xl bg-slate-900 text-white my-4 space-y-6 shadow-xl overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div className="space-y-1">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gold/20 text-gold text-xs font-bold uppercase tracking-wider">
-                <Star className="h-3.5 w-3.5 fill-gold" />
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-brand/20 text-brand text-xs font-bold uppercase tracking-wider">
+                <Star className="h-3.5 w-3.5 fill-brand" />
                 Client Reviews
               </span>
               <h2 className="font-sans text-2xl sm:text-3xl font-bold tracking-tight">
@@ -441,14 +441,14 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
                 <button
                   type="button"
                   onClick={() => setTestimonialSlide((prev) => (prev > 0 ? prev - 1 : maxIdx))}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-white hover:border-gold hover:bg-gold hover:text-slate-950 transition cursor-pointer"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-white hover:border-brand hover:bg-brand hover:text-white transition cursor-pointer"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setTestimonialSlide((prev) => (prev < maxIdx ? prev + 1 : 0))}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-white hover:border-gold hover:bg-gold hover:text-slate-950 transition cursor-pointer"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-white hover:border-brand hover:bg-brand hover:text-white transition cursor-pointer"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
@@ -469,9 +469,9 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
                   className="w-full sm:w-[calc(33.333%-16px)] shrink-0 p-6 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-3 flex flex-col justify-between"
                 >
                   <div>
-                    <div className="flex text-gold gap-1 mb-2">
+                    <div className="flex text-brand gap-1 mb-2">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-gold" />
+                        <Star key={i} className="h-4 w-4 fill-brand" />
                       ))}
                     </div>
                     <p className="text-xs text-slate-300 italic leading-relaxed">"{t.description}"</p>
@@ -494,7 +494,7 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
             {(section.items || []).map((st) => (
               <div key={st.id} className="p-4 space-y-1">
-                <p className="font-mono text-3xl sm:text-4xl font-extrabold text-gold">
+                <p className="font-mono text-3xl sm:text-4xl font-extrabold text-brand">
                   {st.statValue || "100+"}
                 </p>
                 <p className="text-xs font-extrabold uppercase tracking-wider text-slate-300">

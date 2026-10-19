@@ -44,7 +44,7 @@ export default async function AdminPropertiesPage() {
           canAdd ? (
             <Link
               href="/admin/properties/new"
-              className="inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-2.5 text-sm font-semibold text-slate-900 hover:bg-gold-dark shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-hover shadow-sm"
             >
               <Plus className="h-4 w-4" />
               Add property

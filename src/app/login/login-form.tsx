@@ -98,7 +98,7 @@ export function LoginForm() {
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-600">
-          No account? <Link href="/register" className="font-medium text-gold-dark">Register</Link>
+          No account? <Link href="/register" className="font-medium text-brand-hover">Register</Link>
         </p>
       </div>
     </div>

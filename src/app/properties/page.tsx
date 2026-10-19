@@ -68,7 +68,7 @@ export default async function PropertiesPage({
       <div className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-gold-dark">PlotsnHomes</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand-hover">PlotsnHomes</p>
             <h1 className="mt-1 font-display text-2xl font-bold text-slate-900">All Properties</h1>
           </div>
           <p className="text-sm text-slate-500">{total.toLocaleString()} listings · Buy &amp; rent</p>
@@ -96,7 +96,7 @@ export default async function PropertiesPage({
               {total.toLocaleString()} properties
               {filters.listingType ? ` · ${filters.listingType === "RENT" ? "Rentals" : "Sales"}` : ""}
             </p>
-            <Link href="/dashboard/list-property" className="text-sm font-medium text-gold-dark hover:underline">
+            <Link href="/dashboard/list-property" className="text-sm font-medium text-brand-hover hover:underline">
               + List your property
             </Link>
           </div>

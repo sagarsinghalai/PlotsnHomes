@@ -28,7 +28,7 @@ export function changeBg(value: number) {
 
 export function marketRatingColor(rating: string) {
   if (rating.startsWith("A")) return "text-emerald-400";
-  if (rating.startsWith("B")) return "text-gold";
+  if (rating.startsWith("B")) return "text-brand";
   return "text-slate-400";
 }
 

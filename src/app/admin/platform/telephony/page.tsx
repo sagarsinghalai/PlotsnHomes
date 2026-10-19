@@ -47,7 +47,7 @@ export default async function TelephonyPage() {
                   <dd className="font-medium">{company.currency}</dd>
                 </div>
               </dl>
-              <Link href="/admin/platform/company" className="text-sm text-gold-dark underline">
+              <Link href="/admin/platform/company" className="text-sm text-brand-hover underline">
                 Edit company defaults →
               </Link>
             </div>
@@ -57,11 +57,11 @@ export default async function TelephonyPage() {
               <p className="text-sm text-slate-600">
                 Connect Twilio for SMS and voice, WhatsApp Business API or Web mode for chat.
                 Use the QR scanner in{" "}
-                <Link href="/admin/integrations" className="text-gold-dark underline">
+                <Link href="/admin/integrations" className="text-brand-hover underline">
                   Integrations
                 </Link>{" "}
                 or{" "}
-                <Link href="/admin/messages" className="text-gold-dark underline">
+                <Link href="/admin/messages" className="text-brand-hover underline">
                   Messages
                 </Link>{" "}
                 to capture phone numbers.

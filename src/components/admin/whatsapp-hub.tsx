@@ -1253,7 +1253,7 @@ export function WhatsAppHub({
         <button
           onClick={() => setActiveTab("templates")}
           className={`pb-3 px-6 font-semibold text-sm border-b-2 transition ${
-            activeTab === "templates" ? "border-gold-dark text-gold-dark" : "border-transparent text-slate-500 hover:text-slate-800"
+            activeTab === "templates" ? "border-brand-hover text-brand-hover" : "border-transparent text-slate-500 hover:text-slate-800"
           }`}
         >
           <FileText className="h-4 w-4 inline mr-2" />
@@ -1262,7 +1262,7 @@ export function WhatsAppHub({
         <button
           onClick={() => setActiveTab("campaign")}
           className={`pb-3 px-6 font-semibold text-sm border-b-2 transition ${
-            activeTab === "campaign" ? "border-gold-dark text-gold-dark" : "border-transparent text-slate-500 hover:text-slate-800"
+            activeTab === "campaign" ? "border-brand-hover text-brand-hover" : "border-transparent text-slate-500 hover:text-slate-800"
           }`}
         >
           <Send className="h-4 w-4 inline mr-2" />
@@ -1271,7 +1271,7 @@ export function WhatsAppHub({
         <button
           onClick={() => setActiveTab("qr")}
           className={`pb-3 px-6 font-semibold text-sm border-b-2 transition ${
-            activeTab === "qr" ? "border-gold-dark text-gold-dark" : "border-transparent text-slate-500 hover:text-slate-800"
+            activeTab === "qr" ? "border-brand-hover text-brand-hover" : "border-transparent text-slate-500 hover:text-slate-800"
           }`}
         >
           <QrCode className="h-4 w-4 inline mr-2" />
@@ -1286,7 +1286,7 @@ export function WhatsAppHub({
           <section className="rounded-2xl border bg-white p-5 shadow-sm space-y-3">
             <div className="flex items-center justify-between border-b pb-2">
               <h3 className="font-semibold text-slate-900 text-sm">System Variables</h3>
-              <Sparkles className="h-4 w-4 text-gold-dark" />
+              <Sparkles className="h-4 w-4 text-brand-hover" />
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
               Click any variable to copy to clipboard, then paste it in your template body text.
@@ -1299,7 +1299,7 @@ export function WhatsAppHub({
                   className="flex items-center justify-between rounded-xl bg-slate-50 hover:bg-slate-100 p-2.5 text-xs text-left transition border group"
                 >
                   <div>
-                    <span className="font-mono text-gold-dark font-bold">{v.token}</span>
+                    <span className="font-mono text-brand-hover font-bold">{v.token}</span>
                     <span className="block text-[10px] text-slate-500 mt-0.5">{v.label}</span>
                   </div>
                   {copiedToken === v.token ? (
@@ -1329,7 +1329,7 @@ export function WhatsAppHub({
                       key={t.id}
                       className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition ${
                         selectedTemplateId === t.id
-                          ? "bg-gold/10 border-gold/40 text-gold-dark font-medium"
+                          ? "bg-brand/10 border-brand/40 text-brand-hover font-medium"
                           : "bg-white hover:bg-slate-50"
                       }`}
                       onClick={() => setSelectedTemplateId(t.id)}
@@ -1761,7 +1761,7 @@ export function WhatsAppHub({
                         onClick={() => setCampaignRecipientsType(srcType as "leads" | "manual" | "file")}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium border capitalize transition ${
                           campaignRecipientsType === srcType
-                            ? "bg-gold text-slate-900 border-gold"
+                            ? "bg-brand text-white border-brand"
                             : "bg-white text-slate-600 hover:bg-slate-50"
                         }`}
                       >
@@ -2101,7 +2101,7 @@ export function WhatsAppHub({
                     </div>
                   ) : qrState === "connecting" ? (
                     <div className="w-40 h-40 flex flex-col items-center justify-center text-slate-600 font-semibold text-xs animate-pulse">
-                      <QrCode className="h-12 w-12 mb-2 text-gold animate-spin" />
+                      <QrCode className="h-12 w-12 mb-2 text-brand animate-spin" />
                       Syncing session...
                     </div>
                   ) : (
@@ -2383,7 +2383,7 @@ export function WhatsAppHub({
                     <span className="text-slate-400 truncate">{log.log}</span>
                   </div>
                 ))}
-                {campaignRunning && <p className="text-gold animate-pulse mt-1">Sending campaign progress...</p>}
+                {campaignRunning && <p className="text-brand animate-pulse mt-1">Sending campaign progress...</p>}
                 {campaignCompleted && <p className="text-emerald-400 mt-1">Campaign finished successfully!</p>}
               </div>
             )}

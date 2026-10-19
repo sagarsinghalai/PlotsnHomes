@@ -66,7 +66,7 @@ export default async function KycComplianceReportPage() {
       </div>
 
       <div className="mt-8 flex justify-end">
-        <Link href="/admin/kyc" className="text-sm font-medium text-gold-dark hover:underline">
+        <Link href="/admin/kyc" className="text-sm font-medium text-brand-hover hover:underline">
           Open KYC review queue →
         </Link>
       </div>

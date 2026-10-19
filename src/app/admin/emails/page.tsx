@@ -54,7 +54,7 @@ export default async function AdminEmailsPage() {
               </div>
             </div>
             <details className="mt-3">
-              <summary className="cursor-pointer text-sm text-gold-dark">View HTML body</summary>
+              <summary className="cursor-pointer text-sm text-brand-hover">View HTML body</summary>
               <div
                 className="mt-2 rounded-lg bg-slate-50 p-3 text-xs overflow-auto max-h-40 border border-slate-100"
                 dangerouslySetInnerHTML={{ __html: e.html }}

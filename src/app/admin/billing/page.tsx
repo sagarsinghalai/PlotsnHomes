@@ -97,7 +97,7 @@ export default async function BillingOverviewPage() {
             <h2 className="font-semibold text-slate-900">Subscribers by billing cycle</h2>
             <Link
               href="/admin/billing/subscriptions"
-              className="text-xs text-gold-dark hover:underline inline-flex items-center gap-1"
+              className="text-xs text-brand-hover hover:underline inline-flex items-center gap-1"
             >
               View all <ArrowRight className="h-3 w-3" />
             </Link>
@@ -119,7 +119,7 @@ export default async function BillingOverviewPage() {
             <h2 className="font-semibold text-slate-900">Plans catalog</h2>
             <Link
               href="/admin/billing/plans"
-              className="text-xs text-gold-dark hover:underline inline-flex items-center gap-1"
+              className="text-xs text-brand-hover hover:underline inline-flex items-center gap-1"
             >
               Manage plans <ArrowRight className="h-3 w-3" />
             </Link>
@@ -143,7 +143,7 @@ export default async function BillingOverviewPage() {
       <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b flex justify-between items-center">
           <h2 className="font-semibold">Recent subscriptions</h2>
-          <Link href="/admin/billing/subscriptions" className="text-sm text-gold-dark hover:underline">
+          <Link href="/admin/billing/subscriptions" className="text-sm text-brand-hover hover:underline">
             All subscribers
           </Link>
         </div>
@@ -162,7 +162,7 @@ export default async function BillingOverviewPage() {
               {subscriptions.map((s) => (
                 <tr key={s.id} className="border-t border-slate-100">
                   <td className="px-6 py-3">
-                    <Link href={`/admin/users/${s.user.id}`} className="font-medium hover:text-gold-dark">
+                    <Link href={`/admin/users/${s.user.id}`} className="font-medium hover:text-brand-hover">
                       {s.user.name}
                     </Link>
                     <p className="text-xs text-slate-500">{s.user.email}</p>

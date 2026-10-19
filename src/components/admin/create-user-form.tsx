@@ -132,7 +132,7 @@ export function CreateUserForm() {
               <select
                 value={form.countryCode}
                 onChange={(e) => setForm((f) => ({ ...f, countryCode: e.target.value }))}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2 text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-gold shrink-0 max-w-[150px]"
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2 text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-brand shrink-0 max-w-[150px]"
               >
                 {COUNTRY_DIAL_CODES.map((c) => (
                   <option key={`${c.code}-${c.name}`} value={c.code}>{dialCodeLabel(c)}</option>

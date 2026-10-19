@@ -30,7 +30,7 @@ export function AdminThemeToggle({ onThemeChange, initialTheme = "dark" }: Admin
     <button
       type="button"
       onClick={toggleTheme}
-      className={`relative flex h-8 w-14 items-center rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-gold ${
+      className={`relative flex h-8 w-14 items-center rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-brand ${
         theme === "light"
           ? "bg-amber-100 border border-amber-300"
           : "bg-slate-800 border border-slate-700"
@@ -41,14 +41,14 @@ export function AdminThemeToggle({ onThemeChange, initialTheme = "dark" }: Admin
       <div
         className={`flex h-6 w-6 items-center justify-center rounded-full shadow-md transition-transform duration-300 transform ${
           theme === "light"
-            ? "translate-x-6 bg-gold text-slate-950"
-            : "translate-x-0 bg-slate-900 text-gold"
+            ? "translate-x-6 bg-brand text-white"
+            : "translate-x-0 bg-slate-900 text-brand"
         }`}
       >
         {theme === "light" ? (
           <Sun className="h-3.5 w-3.5 text-slate-950 stroke-[2.5]" />
         ) : (
-          <Moon className="h-3.5 w-3.5 text-gold stroke-[2.5]" />
+          <Moon className="h-3.5 w-3.5 text-brand stroke-[2.5]" />
         )}
       </div>
     </button>

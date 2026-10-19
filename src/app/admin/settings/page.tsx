@@ -59,9 +59,9 @@ export default function AdminSettingsPage() {
       </div>
 
       <div className="mt-8 rounded-xl bg-slate-900 text-white p-6 text-sm">
-        <p className="font-semibold text-gold">Test without API keys</p>
+        <p className="font-semibold text-brand">Test without API keys</p>
         <ul className="mt-3 space-y-2 text-slate-300 list-disc list-inside">
-          <li>See <strong className="text-gold">docs/STRIPE-SETUP.md</strong> for real Stripe setup</li>
+          <li>See <strong className="text-brand">docs/STRIPE-SETUP.md</strong> for real Stripe setup</li>
           <li>Test card: 4242 4242 4242 4242 — any future expiry, any CVC</li>
           <li>Submit inquiry → Admin → Emails</li>
           <li>Add Resend key for real inbox delivery</li>

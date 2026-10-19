@@ -129,7 +129,7 @@ export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
                 return (
                   <tr key={inv.id} className="border-t border-slate-100 hover:bg-slate-50/80">
                     {isColumnVisible("number") && (
-                      <td className="px-5 py-4 font-mono text-xs font-semibold text-gold-dark">
+                      <td className="px-5 py-4 font-mono text-xs font-semibold text-brand-hover">
                         {inv.invoiceNumber}
                       </td>
                     )}
@@ -142,7 +142,7 @@ export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
                     {isColumnVisible("buyer") && <td className="px-5 py-4 text-slate-700">{inv.buyerName ?? inv.bookingName}</td>}
                     {isColumnVisible("agent") && <td className="px-5 py-4 text-slate-700">{inv.agentName ?? inv.brokerageName}</td>}
                     {isColumnVisible("property") && (
-                      <td className="px-5 py-4 font-mono text-xs text-gold-dark">
+                      <td className="px-5 py-4 font-mono text-xs text-brand-hover">
                         {inv.propertySymbol ?? "—"}
                       </td>
                     )}

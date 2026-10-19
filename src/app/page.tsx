@@ -125,16 +125,16 @@ export default async function HomePage() {
 
         <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center z-10 w-full">
           <div className="flex items-center justify-center gap-3">
-            <span className="h-[2px] w-8 bg-gold" />
-            <p className="text-xs font-semibold uppercase tracking-widest text-gold">
+            <span className="h-[2px] w-8 bg-brand" />
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand">
               Fractional Real Estate Investment
             </p>
-            <span className="h-[2px] w-8 bg-gold" />
+            <span className="h-[2px] w-8 bg-brand" />
           </div>
           <h1 className="mt-6 font-display text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-white leading-tight max-w-4xl">
             {siteHeroContent?.title1 || "Own a Piece of the"} <br className="hidden sm:inline" />
             {siteHeroContent?.highlightedText && (
-              <span className="italic font-serif text-gold font-normal">{siteHeroContent.highlightedText} </span>
+              <span className="italic font-serif text-brand font-normal">{siteHeroContent.highlightedText} </span>
             )}
             {siteHeroContent?.title2 || "Properties"}
           </h1>
@@ -169,16 +169,16 @@ export default async function HomePage() {
       <section id="featured-listings" className="relative bg-slate-50 py-20 overflow-hidden border-t border-slate-200/40">
         {/* Decorative Grid and Blurs */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000003_1px,transparent_1px),linear-gradient(to_bottom,#00000003_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-brand/5 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-500/5 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 z-10">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-widest text-gold-dark">Exclusive deals</p>
+              <p className="text-sm font-bold uppercase tracking-widest text-brand-hover">Exclusive deals</p>
               <h2 className="mt-2 font-display text-3xl sm:text-4xl font-extrabold text-slate-950">Featured listings</h2>
             </div>
-            <Link href="/properties" className="text-sm font-semibold text-gold-dark hover:underline">
+            <Link href="/properties" className="text-sm font-semibold text-brand-hover hover:underline">
               View all →
             </Link>
           </div>
@@ -196,7 +196,7 @@ export default async function HomePage() {
       <section id="how-it-works" className="relative bg-[#fbfbf9] py-20 border-t border-slate-100 overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="mb-2">
-            <p className="text-xs font-bold text-gold-dark tracking-widest uppercase mb-2">GETTING STARTED</p>
+            <p className="text-xs font-bold text-brand-hover tracking-widest uppercase mb-2">GETTING STARTED</p>
             <h2 className="mt-2 font-display text-3xl sm:text-4xl font-extrabold text-slate-950">How PlotsnHomes Works</h2>
           </div>
 
@@ -229,11 +229,11 @@ export default async function HomePage() {
                   .filter((step) => step.title.toLowerCase().trim() !== "test" && step.desc.toLowerCase().trim() !== "test")
                   .map((step, idx) => (
                     <div key={idx} className="group relative flex gap-5 border-b border-slate-200/60 pt-8 pb-8 first:pt-0 last:pb-0 last:border-b-0 hover:bg-slate-50/50 px-4 -mx-4 rounded-2xl transition-all duration-300">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 font-display text-sm font-bold text-gold border border-gold/20 shrink-0 mt-0.5 shadow-md shadow-gold/5 group-hover:scale-110 group-hover:border-gold/60 group-hover:bg-slate-900 transition-all duration-300">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 font-display text-sm font-bold text-brand border border-brand/20 shrink-0 mt-0.5 shadow-md shadow-brand/5 group-hover:scale-110 group-hover:border-brand/60 group-hover:bg-slate-900 transition-all duration-300">
                         {idx + 1}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-slate-900 text-lg leading-tight group-hover:text-gold-dark transition-colors duration-300">{step.title}</h3>
+                        <h3 className="font-semibold text-slate-900 text-lg leading-tight group-hover:text-brand-hover transition-colors duration-300">{step.title}</h3>
                         <p className="mt-2.5 text-sm text-slate-600 leading-relaxed">{step.desc}</p>
                       </div>
                     </div>
@@ -243,50 +243,50 @@ export default async function HomePage() {
 
             {/* Right Column: Visual Flow Diagram in Navbar Color */}
             <div className="lg:col-span-5 self-start">
-              <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 sm:p-8 shadow-2xl text-white hover:border-gold/20 transition-all duration-500">
-                  <p className="text-[10px] font-bold text-gold tracking-widest uppercase mb-6">
+              <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 sm:p-8 shadow-2xl text-white hover:border-brand/20 transition-all duration-500">
+                  <p className="text-[10px] font-bold text-brand tracking-widest uppercase mb-6">
                     Your Investment Flow
                   </p>
 
                   <div className="space-y-4">
                     {[
                       {
-                        icon: <ShieldCheck className="h-5 w-5 text-gold" />,
+                        icon: <ShieldCheck className="h-5 w-5 text-brand" />,
                         title: "KYC Verification",
                         sub: "Identity verified in ~5 minutes",
                         end: <ArrowRight className="h-4 w-4 text-slate-500 shrink-0 group-hover/row:translate-x-1 transition-transform duration-300" />
                       },
                       {
-                        icon: <CreditCard className="h-5 w-5 text-gold" />,
+                        icon: <CreditCard className="h-5 w-5 text-brand" />,
                         title: "Deposit Funds",
                         sub: "UPI, bank transfer, Net banking",
                         end: <ArrowRight className="h-4 w-4 text-slate-500 shrink-0 group-hover/row:translate-x-1 transition-transform duration-300" />
                       },
                       {
-                        icon: <Home className="h-5 w-5 text-gold" />,
+                        icon: <Home className="h-5 w-5 text-brand" />,
                         title: "Buy Property Shares",
                         sub: "From ₹40,000 · Legal ownership",
                         end: <ArrowRight className="h-4 w-4 text-slate-500 shrink-0 group-hover/row:translate-x-1 transition-transform duration-300" />
                       },
                       {
-                        icon: <Coins className="h-5 w-5 text-gold" />,
+                        icon: <Coins className="h-5 w-5 text-brand" />,
                         title: "Earn Monthly Dividends",
                         sub: "Auto-paid to your wallet",
                         end: <ArrowRight className="h-4 w-4 text-slate-500 shrink-0 group-hover/row:translate-x-1 transition-transform duration-300" />
                       },
                       {
-                        icon: <TrendingUp className="h-5 w-5 text-gold" />,
+                        icon: <TrendingUp className="h-5 w-5 text-brand" />,
                         title: "Sell Shares & Realise Profit",
                         sub: "Trade anytime · Instant settlement",
                         end: <Check className="h-4 w-4 text-emerald-500 shrink-0" />
                       }
                     ].map((flow, i) => (
                       <div key={i} className="flex items-center gap-4 py-1.5 border-b border-slate-900/60 pb-3.5 last:border-0 last:pb-0 group/row hover:bg-white/5 px-3 -mx-3 rounded-xl transition-all duration-200 cursor-pointer">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800/80 text-gold shrink-0 transition-transform duration-300 group-hover/row:scale-105 group-hover/row:border-gold/40">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800/80 text-brand shrink-0 transition-transform duration-300 group-hover/row:scale-105 group-hover/row:border-brand/40">
                           {flow.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-white truncate group-hover/row:text-gold transition-colors duration-200">{flow.title}</p>
+                          <p className="text-sm font-semibold text-white truncate group-hover/row:text-brand transition-colors duration-200">{flow.title}</p>
                           <p className="text-[11px] text-slate-400 mt-0.5 truncate">{flow.sub}</p>
                         </div>
                         {flow.end}
@@ -295,8 +295,8 @@ export default async function HomePage() {
                   </div>
 
                   {/* Localized P&L example box */}
-                  <div className="mt-6 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/5 via-gold/[0.02] to-transparent p-5 text-xs shadow-inner">
-                    <p className="font-bold text-gold tracking-wide uppercase text-[10px] mb-3">
+                  <div className="mt-6 rounded-2xl border border-brand/30 bg-gradient-to-br from-brand/5 via-brand/[0.02] to-transparent p-5 text-xs shadow-inner">
+                    <p className="font-bold text-brand tracking-wide uppercase text-[10px] mb-3">
                       Example: ₹5,00,000 Investment
                     </p>
                     <div className="space-y-2">
@@ -312,9 +312,9 @@ export default async function HomePage() {
                         <span>Capital gain (12 months)</span>
                         <span className="font-semibold text-emerald-400">+₹60,000</span>
                       </div>
-                      <div className="border-t border-gold/30 pt-3.5 mt-3.5 flex justify-between font-bold text-white text-sm">
+                      <div className="border-t border-brand/30 pt-3.5 mt-3.5 flex justify-between font-bold text-white text-sm">
                         <span>Total Return</span>
-                        <span className="text-gold">+₹1,02,000 (20.4%)</span>
+                        <span className="text-brand">+₹1,02,000 (20.4%)</span>
                       </div>
                     </div>
                   </div>
@@ -328,12 +328,12 @@ export default async function HomePage() {
       <section id="payments" className="relative bg-white py-20 border-t border-slate-100 overflow-hidden">
         {/* Background Grid Pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a04_1px,transparent_1px),linear-gradient(to_bottom,#0f172a04_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
-        <div className="absolute -top-32 -left-32 w-80 h-80 bg-gold/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-32 -left-32 w-80 h-80 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="mb-2">
-            <p className="text-xs font-bold text-gold-dark tracking-widest uppercase mb-2">PAYMENT OPTIONS</p>
+            <p className="text-xs font-bold text-brand-hover tracking-widest uppercase mb-2">PAYMENT OPTIONS</p>
             <h2 className="mt-2 font-display text-3xl sm:text-4xl font-extrabold text-slate-950">Global Payment Gateways</h2>
             <p className="mt-4 text-slate-600 max-w-3xl leading-relaxed">
               Deposit and withdraw in your local currency using the payment method you trust most. We support 8+ gateways across 140+ countries.
@@ -476,38 +476,38 @@ export default async function HomePage() {
                 <div className="space-y-4">
                   {[
                     {
-                      icon: <CreditCard className="h-5 w-5 text-gold" />,
+                      icon: <CreditCard className="h-5 w-5 text-brand" />,
                       title: "Debit / Credit Card",
                       desc: "Visa, Mastercard, Amex accepted. Instant deposit. 0.5% processing fee. Max ₹40L/day.",
                       badge: <span className="rounded bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 whitespace-nowrap">Instant</span>
                     },
                     {
-                      icon: <Landmark className="h-5 w-5 text-gold" />,
+                      icon: <Landmark className="h-5 w-5 text-brand" />,
                       title: "Bank Transfer (SWIFT / SEPA / NEFT)",
                       desc: "Zero fee for transfers above ₹4L. Ideal for large deposits. Arrives within 1-3 business days.",
                       badge: <span className="rounded bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[10px] font-semibold text-amber-400 whitespace-nowrap">1-3 days</span>
                     },
                     {
-                      icon: <Smartphone className="h-5 w-5 text-gold" />,
+                      icon: <Smartphone className="h-5 w-5 text-brand" />,
                       title: "UPI / Razorpay (India)",
                       desc: "Instant UPI payments for Indian investors. Zero fee. Supports GPay, PhonePe, Paytm, BHIM.",
                       badge: <span className="rounded bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 whitespace-nowrap">Instant</span>
                     },
                     {
-                      icon: <Coins className="h-5 w-5 text-gold" />,
+                      icon: <Coins className="h-5 w-5 text-brand" />,
                       title: "Cryptocurrency",
                       desc: "BTC, ETH, USDT, USDC accepted. Auto-converted to INR at live market rate. 0.3% fee.",
                       badge: <span className="rounded bg-sky-500/10 border border-sky-500/30 px-2 py-0.5 text-[10px] font-semibold text-sky-400 whitespace-nowrap">~15 min</span>
                     },
                     {
-                      icon: <Zap className="h-5 w-5 text-gold" />,
+                      icon: <Zap className="h-5 w-5 text-brand" />,
                       title: "Withdrawals",
                       desc: "Withdraw profits to your bank account anytime. Processed within 24 hours. 0.2% fee. Min ₹8,000.",
                       badge: <span className="rounded bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[10px] font-semibold text-amber-400 whitespace-nowrap">&lt;24 hrs</span>
                     }
                   ].map((item, i) => (
                     <div key={i} className="flex gap-4 py-1 border-b border-slate-900/60 pb-3 last:border-0 last:pb-0">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800/80 text-gold shrink-0 mt-0.5">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800/80 text-brand shrink-0 mt-0.5">
                         {item.icon}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -530,7 +530,7 @@ export default async function HomePage() {
       <section id="trading" className="bg-slate-950 text-white py-20 border-t border-slate-900">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-2 text-center max-w-3xl mx-auto">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gold">TRADE LIKE A PRO</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand">TRADE LIKE A PRO</p>
             <h2 className="mt-2 font-display text-3xl sm:text-4xl font-bold text-white">How to Trade Properties</h2>
             <p className="mt-4 text-slate-400 text-sm sm:text-base leading-relaxed">
               PlotsnHomes' marketplace lets you buy and sell property shares like stocks — with real-time pricing, instant execution, and transparent P&L tracking.
@@ -541,7 +541,7 @@ export default async function HomePage() {
           <div className="grid gap-8 md:grid-cols-3 mt-16">
             {[
               {
-                icon: <ArrowDownLeft className="h-6 w-6 text-gold" />,
+                icon: <ArrowDownLeft className="h-6 w-6 text-brand" />,
                 title: "Buying Shares",
                 desc: "Purchase fractional ownership in any listed property. Set how many shares you want, review the cost, and confirm with one tap.",
                 steps: [
@@ -553,7 +553,7 @@ export default async function HomePage() {
                 ]
               },
               {
-                icon: <ArrowUpRight className="h-6 w-6 text-gold" />,
+                icon: <ArrowUpRight className="h-6 w-6 text-brand" />,
                 title: "Selling Shares",
                 desc: "Exit any position partially or fully at any time. Our live marketplace matches your sell order with buyers within seconds.",
                 steps: [
@@ -565,7 +565,7 @@ export default async function HomePage() {
                 ]
               },
               {
-                icon: <BarChart3 className="h-6 w-6 text-gold" />,
+                icon: <BarChart3 className="h-6 w-6 text-brand" />,
                 title: "Portfolio Management",
                 desc: "Track your entire property portfolio in real-time. Monitor price movements, dividend income, and overall returns from one dashboard.",
                 steps: [
@@ -577,8 +577,8 @@ export default async function HomePage() {
                 ]
               }
             ].map((col) => (
-              <div key={col.title} className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 sm:p-8 hover:border-gold/40 hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-300 shadow-xl flex flex-col cursor-pointer">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 border border-slate-800 text-gold mb-6 shrink-0 shadow-inner">
+              <div key={col.title} className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 sm:p-8 hover:border-brand/40 hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-300 shadow-xl flex flex-col cursor-pointer">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 border border-slate-800 text-brand mb-6 shrink-0 shadow-inner">
                   {col.icon}
                 </div>
                 <h3 className="text-lg font-semibold text-white">{col.title}</h3>
@@ -587,7 +587,7 @@ export default async function HomePage() {
                 <div className="mt-6 pt-6 border-t border-slate-800/80 space-y-4 flex-1">
                   {col.steps.map((step, idx) => (
                     <div key={idx} className="flex gap-3 text-xs leading-normal">
-                      <span className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 border border-slate-800 text-[10px] font-mono font-bold text-gold shrink-0">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-slate-900 border border-slate-800 text-[10px] font-mono font-bold text-brand shrink-0">
                         {idx + 1}
                       </span>
                       <span className="text-slate-300">{step}</span>
@@ -600,7 +600,7 @@ export default async function HomePage() {
 
           {/* Trade Timeline */}
           <div className="mt-16 rounded-2xl border border-slate-800 bg-slate-900/20 p-6 sm:p-8">
-            <p className="text-center text-sm font-bold text-gold tracking-widest uppercase mb-8">
+            <p className="text-center text-sm font-bold text-brand tracking-widest uppercase mb-8">
               A Typical Trade in Under 60 Seconds
             </p>
 
@@ -617,14 +617,14 @@ export default async function HomePage() {
               ].map((step, idx, arr) => (
                 <div key={idx} className="flex flex-col lg:flex-row items-center w-full lg:w-auto">
                   <div className="flex flex-col items-center text-center">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 border border-gold/40 text-gold shadow-md">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 border border-brand/40 text-brand shadow-md">
                       {step.icon}
                     </div>
                     <p className="text-xs font-semibold text-white mt-2.5">{step.label}</p>
                     <p className="text-[10px] text-slate-500 mt-0.5">{step.sub}</p>
                   </div>
                   {idx < arr.length - 1 && (
-                    <div className="hidden lg:block h-[1px] w-12 sm:w-16 bg-gradient-to-r from-gold/50 to-slate-800 mx-4 shrink-0" />
+                    <div className="hidden lg:block h-[1px] w-12 sm:w-16 bg-gradient-to-r from-brand/50 to-slate-800 mx-4 shrink-0" />
                   )}
                 </div>
               ))}
@@ -646,11 +646,11 @@ export default async function HomePage() {
             <Link
               key={item.href}
               href={item.href}
-              className="group rounded-2xl border border-slate-200/80 bg-white p-8 shadow-sm transition-all duration-300 hover:border-gold/50 hover:shadow-xl hover:-translate-y-1"
+              className="group rounded-2xl border border-slate-200/80 bg-white p-8 shadow-sm transition-all duration-300 hover:border-brand/50 hover:shadow-xl hover:-translate-y-1"
             >
-              <h3 className="text-lg font-semibold text-slate-900 group-hover:text-gold-dark transition-colors">{item.title}</h3>
+              <h3 className="text-lg font-semibold text-slate-900 group-hover:text-brand-hover transition-colors">{item.title}</h3>
               <p className="mt-2 text-slate-600 text-sm leading-relaxed">{item.desc}</p>
-              <span className="mt-4 inline-block text-sm font-medium text-gold-dark group-hover:underline">Get started →</span>
+              <span className="mt-4 inline-block text-sm font-medium text-brand-hover group-hover:underline">Get started →</span>
             </Link>
           ))}
         </div>
@@ -659,7 +659,7 @@ export default async function HomePage() {
       {((siteTeamMembers && siteTeamMembers.length > 0) || agents.length > 0) && (
         <section className="bg-slate-900 py-16 text-white border-t border-slate-800">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <p className="text-sm font-semibold uppercase tracking-widest text-gold">OUR AGENTS</p>
+            <p className="text-sm font-semibold uppercase tracking-widest text-brand">OUR AGENTS</p>
             <h2 className="mt-2 font-display text-3xl font-bold">Meet our team</h2>
             <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {(siteTeamMembers && siteTeamMembers.length > 0
@@ -672,11 +672,11 @@ export default async function HomePage() {
                     phone: a.phone || "9820134567",
                   }))
               ).map((m) => (
-                <div key={m.id} className="rounded-2xl border border-slate-700/80 bg-slate-800/50 p-6 hover:border-gold/30 hover:bg-slate-800 transition-all">
+                <div key={m.id} className="rounded-2xl border border-slate-700/80 bg-slate-800/50 p-6 hover:border-brand/30 hover:bg-slate-800 transition-all">
                   <p className="font-bold text-lg text-white">{m.name}</p>
                   <p className="mt-1 text-sm text-slate-400">{m.designation || "Real estate agent"}</p>
                   {m.phone && (
-                    <p className="mt-3 text-sm font-semibold text-gold tracking-wide">
+                    <p className="mt-3 text-sm font-semibold text-brand tracking-wide">
                       {m.countryCode ? `${m.countryCode} ` : ""}{m.phone}
                     </p>
                   )}
@@ -692,7 +692,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a03_1px,transparent_1px),linear-gradient(to_bottom,#0f172a03_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-60" />
         <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-widest text-gold-dark">Talk to an expert</p>
+            <p className="text-sm font-semibold uppercase tracking-widest text-brand-hover">Talk to an expert</p>
             <h2 className="mt-2 font-display text-3xl font-bold text-slate-900 sm:text-4xl">
               Ready to find your next property?
             </h2>
@@ -701,9 +701,9 @@ export default async function HomePage() {
               understand your requirements — whether you&apos;re buying, renting, or investing.
             </p>
             <ul className="mt-6 space-y-2 text-sm text-slate-600">
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold-dark" /> No spam — one quick, friendly call</li>
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold-dark" /> Personalised property recommendations</li>
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold-dark" /> Guidance on payments, loans &amp; KYC</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-brand-hover" /> No spam — one quick, friendly call</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-brand-hover" /> Personalised property recommendations</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-brand-hover" /> Guidance on payments, loans &amp; KYC</li>
             </ul>
           </div>
           <div className="mx-auto w-full max-w-md">

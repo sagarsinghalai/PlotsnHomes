@@ -136,8 +136,8 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
     <div className="space-y-8 font-sans">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-3 shadow-2xl text-xs font-semibold border border-gold/40 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <CheckCircle2 className="h-4 w-4 text-gold" />
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-3 shadow-2xl text-xs font-semibold border border-brand/40 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <CheckCircle2 className="h-4 w-4 text-brand" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -156,7 +156,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
             type="button"
             onClick={handleSaveFooter}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 text-xs font-extrabold shadow-sm transition cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold shadow-sm transition cursor-pointer disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             <span>Save Footer Changes</span>
@@ -168,7 +168,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-gold-dark" />
+            <Sparkles className="h-3.5 w-3.5 text-brand-hover" />
             REAL-TIME LIVE RENDERED FOOTER PREVIEW
           </span>
           <span className="text-[11px] text-slate-400">Updates live as you edit controls below</span>
@@ -179,7 +179,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
             {/* Brand Column — Left side */}
             <div className="w-full lg:w-[36%] space-y-4 shrink-0">
               <div className="flex items-center gap-2.5 font-display text-xl font-bold" style={{ color: "#ffffff" }}>
-                <Building2 className="h-6 w-6 text-gold" />
+                <Building2 className="h-6 w-6 text-brand" />
                 <span style={{ color: "#ffffff" }}>{footer.brandName || "PlotsnHomes"}</span>
               </div>
 
@@ -196,7 +196,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
                       className="flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/80 px-3 py-1 text-[11px] font-medium"
                       style={{ color: "#e2e8f0" }}
                     >
-                      <span className="text-gold">
+                      <span className="text-brand">
                         {idx === 0 ? <Shield className="h-3.5 w-3.5" /> : idx === 1 ? <TrendingUp className="h-3.5 w-3.5" /> : <Wallet className="h-3.5 w-3.5" />}
                       </span>
                       <span style={{ color: "#e2e8f0" }}>{b.label}</span>
@@ -286,7 +286,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
             onClick={() => setActiveTab("description")}
             className={`pb-3 px-5 font-bold text-xs uppercase tracking-wider border-b-2 whitespace-nowrap transition ${
               activeTab === "description"
-                ? "border-gold-dark text-gold-dark"
+                ? "border-brand-hover text-brand-hover"
                 : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-white"
             }`}
           >
@@ -296,7 +296,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
             onClick={() => setActiveTab("social")}
             className={`pb-3 px-5 font-bold text-xs uppercase tracking-wider border-b-2 whitespace-nowrap transition ${
               activeTab === "social"
-                ? "border-gold-dark text-gold-dark"
+                ? "border-brand-hover text-brand-hover"
                 : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-white"
             }`}
           >
@@ -306,7 +306,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
             onClick={() => setActiveTab("columns")}
             className={`pb-3 px-5 font-bold text-xs uppercase tracking-wider border-b-2 whitespace-nowrap transition ${
               activeTab === "columns"
-                ? "border-gold-dark text-gold-dark"
+                ? "border-brand-hover text-brand-hover"
                 : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-white"
             }`}
           >
@@ -316,7 +316,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
             onClick={() => setActiveTab("copyright")}
             className={`pb-3 px-5 font-bold text-xs uppercase tracking-wider border-b-2 whitespace-nowrap transition ${
               activeTab === "copyright"
-                ? "border-gold-dark text-gold-dark"
+                ? "border-brand-hover text-brand-hover"
                 : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-white"
             }`}
           >
@@ -344,7 +344,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
                 type="text"
                 value={footer.brandName}
                 onChange={(e) => setFooter({ ...footer, brandName: e.target.value })}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-gold"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-bold outline-none focus:border-brand"
               />
             </div>
 
@@ -357,7 +357,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
                 value={footer.boilerplateText}
                 onChange={(e) => setFooter({ ...footer, boilerplateText: e.target.value })}
                 placeholder="India's premium fractional real estate investment platform..."
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 text-xs font-medium outline-none focus:border-gold"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 text-xs font-medium outline-none focus:border-brand"
               />
             </div>
 
@@ -370,7 +370,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
                 <button
                   type="button"
                   onClick={addBadge}
-                  className="px-3 py-1.5 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 text-xs font-extrabold flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold flex items-center gap-1 cursor-pointer"
                 >
                   <Plus className="h-3.5 w-3.5" /> Add Badge
                 </button>
@@ -435,7 +435,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
               <button
                 type="button"
                 onClick={addSocialLink}
-                className="px-4 py-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 text-xs font-extrabold shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0"
+                className="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0"
               >
                 <Plus className="h-4 w-4" /> Add Social Link
               </button>
@@ -502,7 +502,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
               <button
                 type="button"
                 onClick={addColumn}
-                className="px-4 py-2 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 text-xs font-extrabold shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0"
+                className="px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0"
               >
                 <Plus className="h-4 w-4" /> Add Column
               </button>
@@ -524,7 +524,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
                         );
                         setFooter({ ...footer, columns: updated });
                       }}
-                      className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-widest bg-transparent border-b border-dashed border-slate-300 dark:border-slate-700 outline-none focus:border-gold px-1"
+                      className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-widest bg-transparent border-b border-dashed border-slate-300 dark:border-slate-700 outline-none focus:border-brand px-1"
                     />
                     <button
                       type="button"
@@ -588,7 +588,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
                   <button
                     type="button"
                     onClick={() => addLinkToColumn(col.id)}
-                    className="w-full py-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:border-gold hover:text-gold flex items-center justify-center gap-1 cursor-pointer"
+                    className="w-full py-2 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:border-brand hover:text-brand flex items-center justify-center gap-1 cursor-pointer"
                   >
                     <Plus className="h-3.5 w-3.5" /> Add Link
                   </button>
@@ -619,7 +619,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
                 value={footer.copyrightText}
                 onChange={(e) => setFooter({ ...footer, copyrightText: e.target.value })}
                 placeholder="© 2026 PlotsnHomes Pvt. Ltd. · CIN: U70200DL2024PTC000001"
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold outline-none focus:border-gold"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold outline-none focus:border-brand"
               />
             </div>
 
@@ -632,7 +632,7 @@ export function FooterCustomizerClient({ initialFooter }: { initialFooter: Foote
                 value={footer.disclaimerText || ""}
                 onChange={(e) => setFooter({ ...footer, disclaimerText: e.target.value })}
                 placeholder="Investment in real estate is subject to market risks. Read all documents carefully."
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-xs font-medium outline-none focus:border-gold"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-xs font-medium outline-none focus:border-brand"
               />
             </div>
           </div>

@@ -40,7 +40,7 @@ export async function MarketTicker() {
               href={`/properties/${item.slug}`}
               className="inline-flex items-center gap-3 text-sm hover:opacity-80 transition"
             >
-              <span className="font-mono font-bold text-gold">{item.symbol}</span>
+              <span className="font-mono font-bold text-brand">{item.symbol}</span>
               <span className="text-white font-medium">{formatCurrency(Number(item.price))}</span>
               <span className={`font-mono ${changeColor(Number(item.change24h))}`}>
                 {formatChangePercent(Number(item.change24h))}

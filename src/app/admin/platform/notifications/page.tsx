@@ -12,7 +12,7 @@ export default function NotificationsPage() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2 max-w-2xl">
           <Link
             href="/admin/messages"
-            className="rounded-2xl border bg-white p-6 hover:border-gold flex gap-4"
+            className="rounded-2xl border bg-white p-6 hover:border-brand flex gap-4"
           >
             <Bell className="h-10 w-10 text-sky-600" />
             <div>
@@ -22,7 +22,7 @@ export default function NotificationsPage() {
           </Link>
           <Link
             href="/admin/crm/settings"
-            className="rounded-2xl border bg-white p-6 hover:border-gold flex gap-4"
+            className="rounded-2xl border bg-white p-6 hover:border-brand flex gap-4"
           >
             <Bell className="h-10 w-10 text-sky-600" />
             <div>

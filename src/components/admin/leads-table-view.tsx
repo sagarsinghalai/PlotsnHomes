@@ -350,17 +350,17 @@ export function LeadsTableView({
                     onClick={() => selectList(s.id)}
                     className={`w-full text-left rounded-xl px-3 py-2.5 mb-0.5 transition ${
                       active
-                        ? "bg-gold/15 border border-gold/30"
+                        ? "bg-brand/15 border border-brand/30"
                         : "hover:bg-slate-50 border border-transparent"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className={`text-sm font-medium ${active ? "text-gold-dark" : "text-slate-800"}`}>
+                      <span className={`text-sm font-medium ${active ? "text-brand-hover" : "text-slate-800"}`}>
                         {s.label}
                       </span>
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums ${
-                          active ? "bg-gold text-slate-900" : "bg-slate-100 text-slate-600"
+                          active ? "bg-brand text-white" : "bg-slate-100 text-slate-600"
                         }`}
                       >
                         {count}
@@ -376,7 +376,7 @@ export function LeadsTableView({
             <div className="border-t border-slate-100 p-3">
               <Link
                 href="/admin/crm"
-                className="flex items-center justify-between text-sm font-medium text-gold-dark hover:underline"
+                className="flex items-center justify-between text-sm font-medium text-brand-hover hover:underline"
               >
                 Open pipeline board
                 <ChevronRight className="h-4 w-4" />
@@ -525,7 +525,7 @@ export function LeadsTableView({
                             <div>
                               <Link
                                 href={`/admin/crm/leads/${l.id}`}
-                                className="font-semibold text-slate-900 hover:text-gold-dark"
+                                className="font-semibold text-slate-900 hover:text-brand-hover"
                               >
                                 {l.name}
                               </Link>
@@ -543,12 +543,12 @@ export function LeadsTableView({
                         <td className="px-4 py-3">
                           <StageBadge stage={l.stage} labels={stageLabels} />
                         </td>
-                        <td className="px-4 py-3 font-mono text-xs text-gold-dark">{l.property?.symbol ?? "—"}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-brand-hover">{l.property?.symbol ?? "—"}</td>
                         <td className="px-4 py-3 text-slate-600">{l.owner?.name ?? "Unassigned"}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2 min-w-[80px]">
                             <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                              <div className="h-full bg-gold rounded-full" style={{ width: `${l.score}%` }} />
+                              <div className="h-full bg-brand rounded-full" style={{ width: `${l.score}%` }} />
                             </div>
                             <span className="text-xs font-mono text-slate-500">{l.score}</span>
                           </div>
@@ -614,7 +614,7 @@ export function LeadsTableView({
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/15 text-gold-dark dark:text-gold border border-gold/30">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/15 text-brand-hover dark:text-brand border border-brand/30">
                   <Plus className="h-5 w-5" />
                 </div>
                 <div>
@@ -658,7 +658,7 @@ export function LeadsTableView({
                   placeholder="e.g. Rahul Sharma"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-gold outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-brand outline-none"
                 />
               </div>
 
@@ -672,7 +672,7 @@ export function LeadsTableView({
                   placeholder="rahul@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-gold outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-brand outline-none"
                 />
               </div>
 
@@ -685,7 +685,7 @@ export function LeadsTableView({
                   <select
                     value={formData.countryCode}
                     onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
-                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2.5 text-xs font-bold text-slate-900 dark:text-white focus:border-gold outline-none shrink-0 max-w-[110px]"
+                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-2.5 text-xs font-bold text-slate-900 dark:text-white focus:border-brand outline-none shrink-0 max-w-[110px]"
                   >
                     {WORLD_COUNTRY_CODES.map((c) => (
                       <option key={c.code} value={c.code}>
@@ -699,7 +699,7 @@ export function LeadsTableView({
                     placeholder="8319549581"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
-                    className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-mono font-semibold text-slate-900 dark:text-white focus:border-gold outline-none"
+                    className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-mono font-semibold text-slate-900 dark:text-white focus:border-brand outline-none"
                   />
                 </div>
               </div>
@@ -712,7 +712,7 @@ export function LeadsTableView({
                 <select
                   value={formData.ownerId}
                   onChange={(e) => setFormData({ ...formData, ownerId: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-gold outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-brand outline-none"
                 >
                   <option value="">Unassigned</option>
                   {agents.map((a) => (
@@ -731,7 +731,7 @@ export function LeadsTableView({
                 <select
                   value={formData.lifecycleStage}
                   onChange={(e) => setFormData({ ...formData, lifecycleStage: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-gold outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-brand outline-none"
                 >
                   {LIFECYCLE_STAGES.map((s) => (
                     <option key={s} value={s}>
@@ -749,7 +749,7 @@ export function LeadsTableView({
                 <select
                   value={formData.leadStatus}
                   onChange={(e) => setFormData({ ...formData, leadStatus: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-gold outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-brand outline-none"
                 >
                   {LEAD_STATUSES.map((s) => (
                     <option key={s} value={s}>
@@ -767,7 +767,7 @@ export function LeadsTableView({
                 <select
                   value={formData.propertyId}
                   onChange={(e) => setFormData({ ...formData, propertyId: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-gold outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-brand outline-none"
                 >
                   <option value="">Select Property (Optional)</option>
                   {properties.map((p) => (
@@ -791,7 +791,7 @@ export function LeadsTableView({
                     const firstStageKey = pipe?.stages?.[0]?.key || "NEW";
                     setFormData((x) => ({ ...x, pipelineId: pipeId, stage: firstStageKey }));
                   }}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-gold outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-brand outline-none"
                 >
                   {pipelines.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -809,7 +809,7 @@ export function LeadsTableView({
                 <select
                   value={formData.stage}
                   onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-gold outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-brand outline-none"
                 >
                   {selectedPipeline?.stages && selectedPipeline.stages.length > 0
                     ? selectedPipeline.stages.map((stg) => (
@@ -833,7 +833,7 @@ export function LeadsTableView({
                 <select
                   value={formData.source}
                   onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-gold outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:border-brand outline-none"
                 >
                   {LEAD_SOURCES.map((s) => (
                     <option key={s} value={s}>
@@ -853,7 +853,7 @@ export function LeadsTableView({
                   placeholder="e.g. Looking for land parcel or 3BHK under ₹80 Lakhs..."
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-xs font-medium text-slate-900 dark:text-white focus:border-gold outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-xs font-medium text-slate-900 dark:text-white focus:border-brand outline-none"
                 />
               </div>
 
@@ -869,7 +869,7 @@ export function LeadsTableView({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gold hover:bg-gold-dark text-slate-950 text-xs font-extrabold shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer disabled:opacity-50"
                 >
                   {submitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

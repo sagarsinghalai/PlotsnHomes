@@ -60,7 +60,7 @@ export function InvestmentCalculator({ defaultPrice = 450000 }: { defaultPrice?:
               step={f.step}
               value={f.value}
               onChange={(e) => f.set(Number(e.target.value))}
-              className="w-full accent-gold"
+              className="w-full accent-brand"
             />
           </div>
         ))}

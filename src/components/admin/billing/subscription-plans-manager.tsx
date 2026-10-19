@@ -163,7 +163,7 @@ export function SubscriptionPlansManager({ plans: initial }: { plans: Plan[] }) 
           >
             <div className="flex justify-between items-start gap-2">
               <div>
-                <p className="text-xs font-semibold uppercase text-gold-dark">
+                <p className="text-xs font-semibold uppercase text-brand-hover">
                   {INTERVAL_LABELS[p.interval]}
                 </p>
                 <h3 className="text-lg font-bold text-slate-900 mt-1">{p.name}</h3>

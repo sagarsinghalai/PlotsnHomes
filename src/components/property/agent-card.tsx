@@ -45,7 +45,7 @@ export function AgentCard({
           </a>
         )}
       </div>
-      <Link href="/login" className="mt-4 block text-center text-xs text-gold-dark hover:underline">
+      <Link href="/login" className="mt-4 block text-center text-xs text-brand-hover hover:underline">
         Contact Me — schedule a showing
       </Link>
     </div>

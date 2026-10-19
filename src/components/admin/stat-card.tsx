@@ -30,7 +30,7 @@ export function StatCard({
   const inner = (
     <div
       className={cn(
-        "rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-sm transition-all duration-200 hover:border-gold/40 hover:shadow-md flex flex-col justify-between h-full group",
+        "rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-5 shadow-sm transition-all duration-200 hover:border-brand/40 hover:shadow-md flex flex-col justify-between h-full group",
         className
       )}
     >
@@ -39,7 +39,7 @@ export function StatCard({
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             {label}
           </p>
-          <div className="rounded-xl bg-slate-100 dark:bg-slate-800 p-2.5 text-slate-600 dark:text-slate-300 shrink-0 group-hover:bg-gold/10 group-hover:text-gold transition">
+          <div className="rounded-xl bg-slate-100 dark:bg-slate-800 p-2.5 text-slate-600 dark:text-slate-300 shrink-0 group-hover:bg-brand/10 group-hover:text-brand transition">
             <Icon className="h-5 w-5 shrink-0" />
           </div>
         </div>
@@ -86,7 +86,7 @@ export function StatCard({
       )}
 
       {href && (
-        <div className="mt-3 text-[11px] font-bold text-gold-dark dark:text-gold flex items-center gap-1 opacity-90 group-hover:opacity-100">
+        <div className="mt-3 text-[11px] font-bold text-brand-hover dark:text-brand flex items-center gap-1 opacity-90 group-hover:opacity-100">
           View details <span className="transition-transform group-hover:translate-x-0.5">→</span>
         </div>
       )}

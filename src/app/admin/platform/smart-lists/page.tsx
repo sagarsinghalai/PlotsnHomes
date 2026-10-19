@@ -21,7 +21,7 @@ export default async function SmartListsPage() {
         <h1 className="font-display text-3xl font-bold">Search Lists</h1>
         <p className="mt-1 text-slate-600">Smart lists to segment leads (Sell.Do style)</p>
         <p className="mt-4">
-          <Link href="/admin/leads" className="text-gold-dark font-medium hover:underline">
+          <Link href="/admin/leads" className="text-brand-hover font-medium hover:underline">
             Open all leads table →
           </Link>
         </p>

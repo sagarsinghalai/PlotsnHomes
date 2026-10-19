@@ -153,7 +153,7 @@ export function CityLandmarkSlider({
       aria-label="Cities we operate in"
     >
       {/* Top Divider Separator */}
-      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-gold/50 to-transparent z-20" />
+      <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-brand/50 to-transparent z-20" />
 
       {/* Immersive Crossfading Background Image */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
@@ -179,7 +179,7 @@ export function CityLandmarkSlider({
 
       {/* Section heading */}
       <div className="relative z-10 text-center mb-8 px-4">
-        <p className="text-xs font-semibold uppercase tracking-widest text-gold">Our Portfolio</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-brand">Our Portfolio</p>
         <h2 className="mt-2 font-display text-3xl sm:text-4xl font-bold text-white leading-tight">
           Explore Prime Locations
         </h2>
@@ -283,7 +283,7 @@ export function CityLandmarkSlider({
                   opacity: isActive ? 1 : 0.4,
                 }}
               >
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold mb-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand mb-1.5">
                   Our Portfolio
                 </p>
                 <h3 className="font-display text-3xl sm:text-4xl font-bold text-white leading-tight">
@@ -315,7 +315,7 @@ export function CityLandmarkSlider({
           <button
             onClick={prev}
             aria-label="Previous slide"
-            className="absolute left-2 sm:left-8 top-1/2 z-40 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/50 text-white hover:text-slate-950 shadow-lg border border-white/10 backdrop-blur-sm transition-all duration-200 hover:bg-gold hover:scale-115 active:scale-95 cursor-pointer"
+            className="absolute left-2 sm:left-8 top-1/2 z-40 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/50 text-white hover:text-white shadow-lg border border-white/10 backdrop-blur-sm transition-all duration-200 hover:bg-brand hover:scale-115 active:scale-95 cursor-pointer"
             style={{ marginTop: "20px" }}
           >
             <ChevronLeft className="h-5 w-5" />
@@ -323,7 +323,7 @@ export function CityLandmarkSlider({
           <button
             onClick={advance}
             aria-label="Next slide"
-            className="absolute right-2 sm:right-8 top-1/2 z-40 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/50 text-white hover:text-slate-950 shadow-lg border border-white/10 backdrop-blur-sm transition-all duration-200 hover:bg-gold hover:scale-115 active:scale-95 cursor-pointer"
+            className="absolute right-2 sm:right-8 top-1/2 z-40 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/50 text-white hover:text-white shadow-lg border border-white/10 backdrop-blur-sm transition-all duration-200 hover:bg-brand hover:scale-115 active:scale-95 cursor-pointer"
             style={{ marginTop: "20px" }}
           >
             <ChevronRight className="h-5 w-5" />

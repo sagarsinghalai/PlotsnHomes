@@ -145,7 +145,7 @@ export function EmailHubComposer({
       {/* Compose Form */}
       <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900 mb-6 flex items-center gap-2">
-          <Mail className="h-5 w-5 text-gold-dark" /> Compose Message
+          <Mail className="h-5 w-5 text-brand-hover" /> Compose Message
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -168,7 +168,7 @@ export function EmailHubComposer({
                   }
                 }}
                 onFocus={() => setShowSuggestions(true)}
-                className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-gold"
+                className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand"
               />
             </div>
 
@@ -201,7 +201,7 @@ export function EmailHubComposer({
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
               required
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-gold"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand"
             />
           </div>
 
@@ -214,7 +214,7 @@ export function EmailHubComposer({
               <select
                 value={selectedTemplateId}
                 onChange={(e) => handleTemplateSelect(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-gold"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand"
               >
                 <option value="">-- Select a Template --</option>
                 {templates.map((t) => (
@@ -237,7 +237,7 @@ export function EmailHubComposer({
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               required
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-gold"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand"
             />
           </div>
 
@@ -252,7 +252,7 @@ export function EmailHubComposer({
               value={htmlBody}
               onChange={(e) => setHtmlBody(e.target.value)}
               required
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none font-mono transition focus:border-gold"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none font-mono transition focus:border-brand"
             />
           </div>
 
@@ -278,7 +278,7 @@ export function EmailHubComposer({
           <button
             type="submit"
             disabled={sending}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-gold py-3 text-sm font-semibold text-slate-900 hover:bg-gold-dark disabled:opacity-50 transition"
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-50 transition"
           >
             {sending ? (
               <>
@@ -331,7 +331,7 @@ export function EmailHubComposer({
                 type="button"
                 disabled={broadcastBusy}
                 onClick={() => void handleQuickBroadcast()}
-                className="bg-gold hover:bg-gold-dark text-slate-900 font-semibold text-sm px-5 py-2.5 rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2 shrink-0 shadow-sm"
+                className="bg-brand hover:bg-brand-hover text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2 shrink-0 shadow-sm"
               >
                 {broadcastBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Broadcast now"}
               </button>

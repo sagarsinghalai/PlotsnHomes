@@ -228,7 +228,7 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
             onClick={() => setTab(t)}
             className={`whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 transition ${
               tab === t
-                ? "border-gold text-gold-dark"
+                ? "border-brand text-brand-hover"
                 : "border-transparent text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -340,7 +340,7 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
                           <th className="px-4 py-3">Stage / Parameter</th>
                           <th className="px-4 py-3 text-emerald-700">rate/sqft</th>
                           <th className="px-4 py-3 text-slate-700">Area (sqft)</th>
-                          <th className="px-4 py-3 text-gold-dark">Total Price</th>
+                          <th className="px-4 py-3 text-brand-hover">Total Price</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
@@ -603,7 +603,7 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
                       onClick={() => setActiveVideoIndex(index)}
                       className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
                         activeVideoIndex === index
-                          ? "bg-amber-100 text-gold-dark border-gold shadow-sm"
+                          ? "bg-amber-100 text-brand-hover border-brand shadow-sm"
                           : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                       }`}
                     >
@@ -664,7 +664,7 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
             </div>
             <a
               href="/calculators"
-              className="text-gold-dark text-sm font-medium hover:underline"
+              className="text-brand-hover text-sm font-medium hover:underline"
             >
               Open full loan calculator →
             </a>
@@ -785,7 +785,7 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
                   href={p.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-gold-dark hover:underline text-sm"
+                  className="text-brand-hover hover:underline text-sm"
                 >
                   {p.name}
                 </a>

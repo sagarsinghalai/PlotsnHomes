@@ -93,7 +93,7 @@ export function LeadCaptureForm({
   }
 
   const inputClass =
-    "w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition";
+    "w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition";
 
   return (
     <form
@@ -127,7 +127,7 @@ export function LeadCaptureForm({
             value={countryCode}
             onChange={(e) => setCountryCode(e.target.value)}
             aria-label="Country code"
-            className="rounded-xl border border-slate-200 bg-white px-2 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-gold shrink-0 max-w-[100px]"
+            className="rounded-xl border border-slate-200 bg-white px-2 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-brand shrink-0 max-w-[100px]"
           >
             {COUNTRY_DIAL_CODES.map((c) => (
               <option key={`${c.code}-${c.name}`} value={c.code}>
@@ -164,7 +164,7 @@ export function LeadCaptureForm({
         <button
           type="submit"
           disabled={status === "loading"}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gold py-3 text-sm font-bold text-slate-950 shadow-sm transition hover:bg-gold-dark disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-hover disabled:opacity-60"
         >
           {status === "loading" ? (
             <>

@@ -72,7 +72,7 @@ export const REPORT_CATALOG = [
     title: "Revenue analytics",
     description: "Completed payments, monthly trend, and transaction mix",
     category: "Finance",
-    color: "from-gold/20 to-amber-500/10 border-amber-300",
+    color: "from-brand/20 to-amber-500/10 border-amber-300",
   },
   {
     href: "/admin/reports/properties",

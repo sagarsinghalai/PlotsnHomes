@@ -58,10 +58,10 @@ export function InquiriesManager({ inquiries }: { inquiries: Inquiry[] }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4 text-sm mb-2">
-        <Link href="/admin/crm" className="text-gold-dark hover:underline font-medium">
+        <Link href="/admin/crm" className="text-brand-hover hover:underline font-medium">
           ← CRM pipeline
         </Link>
-        <Link href="/admin/reports/inquiries" className="text-gold-dark hover:underline font-medium">
+        <Link href="/admin/reports/inquiries" className="text-brand-hover hover:underline font-medium">
           Reports →
         </Link>
       </div>
@@ -72,7 +72,7 @@ export function InquiriesManager({ inquiries }: { inquiries: Inquiry[] }) {
           className="rounded-2xl border border-slate-200 bg-white p-6 flex flex-col sm:flex-row sm:justify-between gap-4"
         >
           <div>
-            <p className="font-mono text-sm text-gold-dark font-bold">{q.property.symbol}</p>
+            <p className="font-mono text-sm text-brand-hover font-bold">{q.property.symbol}</p>
             <p className="font-medium text-slate-900">{q.property.title}</p>
             <p className="mt-2 text-sm">
               {q.name} · {q.email}

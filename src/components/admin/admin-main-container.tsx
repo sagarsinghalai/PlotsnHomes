@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { AdminThemeToggle } from "@/components/admin/admin-theme-toggle";
 
 export function AdminMainContainer({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
 
   useEffect(() => {
-    const saved = localStorage.getItem("plotsnhomes-admin-dashboard-theme") as "dark" | "light" | null;
-    const activeTheme = saved === "light" || saved === "dark" ? saved : "dark";
+    // v2 key: the redesign defaults the dashboard to light (toggle still available).
+    const saved = localStorage.getItem("plotsnhomes-admin-dashboard-theme-v2") as "dark" | "light" | null;
+    const activeTheme = saved === "light" || saved === "dark" ? saved : "light";
     setTheme(activeTheme);
     
     if (activeTheme === "dark") {
@@ -22,7 +23,7 @@ export function AdminMainContainer({ children }: { children: React.ReactNode }) 
 
   function handleThemeChange(newTheme: "dark" | "light") {
     setTheme(newTheme);
-    localStorage.setItem("plotsnhomes-admin-dashboard-theme", newTheme);
+    localStorage.setItem("plotsnhomes-admin-dashboard-theme-v2", newTheme);
     
     if (newTheme === "dark") {
       document.documentElement.classList.add("dark");
@@ -48,7 +49,7 @@ export function AdminMainContainer({ children }: { children: React.ReactNode }) 
         }`}
       >
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-gold">
+          <span className="text-xs font-bold uppercase tracking-wider text-brand">
             Dashboard View
           </span>
         </div>

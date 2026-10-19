@@ -23,11 +23,11 @@ export function DashboardSearch() {
           placeholder="Search verified properties by location, name, or symbol..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 pr-16 text-sm text-slate-900 shadow-sm outline-none transition focus:border-gold focus:ring-1 focus:ring-gold"
+          className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 pr-16 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand focus:ring-1 focus:ring-brand"
         />
         <button
           type="submit"
-          className="absolute right-2 top-2 bottom-2 rounded-xl bg-gold hover:bg-gold-dark px-4 text-white transition flex items-center justify-center"
+          className="absolute right-2 top-2 bottom-2 rounded-xl bg-brand hover:bg-brand-hover px-4 text-white transition flex items-center justify-center"
           aria-label="Search properties"
         >
           <Search className="h-4 w-4" />

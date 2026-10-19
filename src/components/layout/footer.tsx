@@ -25,7 +25,7 @@ export function Footer() {
           {/* Brand column — Left side */}
           <div className="w-full lg:w-[36%] space-y-4 shrink-0">
             <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-bold text-white">
-              <Building2 className="h-6 w-6 text-gold" />
+              <Building2 className="h-6 w-6 text-brand" />
               {footer.brandName || "PlotsnHomes"}
             </Link>
             
@@ -42,9 +42,9 @@ export function Footer() {
                   <Link
                     key={b.id || idx}
                     href={b.url || "#"}
-                    className="flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition-all duration-300 hover:border-gold/40 hover:bg-slate-800/80 hover:text-gold"
+                    className="flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition-all duration-300 hover:border-brand/40 hover:bg-slate-800/80 hover:text-brand"
                   >
-                    <span className="text-gold">
+                    <span className="text-brand">
                       {idx === 0 ? <Shield className="h-3.5 w-3.5" /> : idx === 1 ? <TrendingUp className="h-3.5 w-3.5" /> : <Wallet className="h-3.5 w-3.5" />}
                     </span>
                     {b.label}
@@ -64,7 +64,7 @@ export function Footer() {
                       href={s.url || "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 bg-slate-900/60 text-slate-400 transition-all duration-300 hover:border-gold hover:text-gold hover:scale-110"
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 bg-slate-900/60 text-slate-400 transition-all duration-300 hover:border-brand hover:text-brand hover:scale-110"
                       aria-label={s.platform}
                     >
                       {platformLower.includes("twitter") || platformLower.includes("x") ? (
@@ -105,7 +105,7 @@ export function Footer() {
             >
               {footer.columns.map((col) => (
                 <div key={col.id} className="min-w-0 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-gold mb-4 truncate">{col.columnTitle}</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-brand mb-4 truncate">{col.columnTitle}</h4>
                   <ul className="space-y-2.5 text-sm">
                     {col.links && col.links.map((link) => (
                       <li key={link.id} className="truncate">

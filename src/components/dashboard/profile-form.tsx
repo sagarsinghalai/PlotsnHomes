@@ -91,9 +91,9 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
         <div className="flex items-center justify-between border-b pb-3">
           <h2 className="text-lg font-semibold text-slate-900">Account Profile</h2>
           {user.userId && (
-            <div className="flex items-center gap-1.5 bg-gold/10 border border-gold/30 px-3 py-1 rounded-xl">
+            <div className="flex items-center gap-1.5 bg-brand/10 border border-brand/30 px-3 py-1 rounded-xl">
               <span className="text-xs text-slate-500 font-bold uppercase">User ID:</span>
-              <span className="font-mono text-xs font-black text-gold-dark">{user.userId}</span>
+              <span className="font-mono text-xs font-black text-brand-hover">{user.userId}</span>
             </div>
           )}
         </div>

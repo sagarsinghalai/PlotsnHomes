@@ -38,7 +38,7 @@ export function PlatformSettingsNav() {
           className={cn(
             "block rounded-lg px-3 py-2",
             pathname === l.href || (l.href !== "/admin/platform" && pathname.startsWith(l.href))
-              ? "bg-gold/20 text-gold-dark font-medium"
+              ? "bg-brand/20 text-brand-hover font-medium"
               : "text-slate-600 hover:bg-slate-100"
           )}
         >

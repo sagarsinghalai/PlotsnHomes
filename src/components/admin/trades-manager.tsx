@@ -150,7 +150,7 @@ export function TradesManager({ trades }: { trades: Trade[] }) {
               placeholder="Search user, property, symbol..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 pl-10 pr-3 py-2 text-xs font-medium focus:border-gold focus:outline-none bg-white transition"
+              className="w-full rounded-xl border border-slate-200 pl-10 pr-3 py-2 text-xs font-medium focus:border-brand focus:outline-none bg-white transition"
             />
           </div>
 

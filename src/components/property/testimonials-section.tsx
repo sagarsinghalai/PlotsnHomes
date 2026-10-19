@@ -65,13 +65,13 @@ export function TestimonialsSection({
     <section className="relative bg-white py-20 border-t border-slate-100 overflow-hidden">
       {/* Decorative Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a03_1px,transparent_1px),linear-gradient(to_bottom,#0f172a03_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-gold/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-gold/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="max-w-2xl">
-            <p className="text-xs font-bold text-gold-dark tracking-widest uppercase mb-2">INVESTOR VOICES</p>
+            <p className="text-xs font-bold text-brand-hover tracking-widest uppercase mb-2">INVESTOR VOICES</p>
             <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-slate-950 leading-tight">
               Trusted by 5,00,000+ Smart Investors
             </h2>
@@ -107,7 +107,7 @@ export function TestimonialsSection({
               <button
                 type="button"
                 onClick={prevSlide}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-gold hover:bg-gold hover:text-slate-950 transition-all cursor-pointer active:scale-95"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-brand hover:bg-brand hover:text-white transition-all cursor-pointer active:scale-95"
                 title="Previous Reviews"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -115,7 +115,7 @@ export function TestimonialsSection({
               <button
                 type="button"
                 onClick={nextSlide}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-gold hover:bg-gold hover:text-slate-950 transition-all cursor-pointer active:scale-95"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-brand hover:bg-brand hover:text-white transition-all cursor-pointer active:scale-95"
                 title="Next Reviews"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -135,13 +135,13 @@ export function TestimonialsSection({
             {items.map((t, idx) => (
               <div
                 key={t.id || idx}
-                className="w-full md:w-[calc(33.333%-16px)] shrink-0 group relative bg-white border border-slate-100 hover:border-gold/30 hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-lg shadow-slate-100"
+                className="w-full md:w-[calc(33.333%-16px)] shrink-0 group relative bg-white border border-slate-100 hover:border-brand/30 hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-lg shadow-slate-100"
               >
                 <div>
                   {/* Star rating */}
                   <div className="flex gap-1 mb-4">
                     {[...Array(t.rating || 5)].map((_, i) => (
-                      <Star key={i} className="h-4.5 w-4.5 fill-gold text-gold" />
+                      <Star key={i} className="h-4.5 w-4.5 fill-brand text-brand" />
                     ))}
                   </div>
 
@@ -194,7 +194,7 @@ export function TestimonialsSection({
                 type="button"
                 onClick={() => setCurrentIndex(dotIdx)}
                 className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                  currentIndex === dotIdx ? "w-8 bg-gold" : "w-2.5 bg-slate-200 hover:bg-slate-300"
+                  currentIndex === dotIdx ? "w-8 bg-brand" : "w-2.5 bg-slate-200 hover:bg-slate-300"
                 }`}
                 aria-label={`Go to slide ${dotIdx + 1}`}
               />

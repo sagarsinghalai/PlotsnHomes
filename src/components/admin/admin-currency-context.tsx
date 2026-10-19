@@ -82,7 +82,7 @@ export function AdminCurrencySelector() {
       <select
         value={currency}
         onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
-        className="w-full rounded-lg border border-slate-800 bg-slate-900 px-2.5 py-1.5 text-xs font-mono text-white outline-none transition focus:border-gold cursor-pointer"
+        className="w-full rounded-lg border border-slate-800 bg-slate-900 px-2.5 py-1.5 text-xs font-mono text-white outline-none transition focus:border-brand cursor-pointer"
       >
         {Object.values(CURRENCIES_MAP).map((c) => (
           <option key={c.code} value={c.code} className="bg-slate-900 text-white">
