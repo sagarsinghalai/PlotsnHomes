@@ -24,6 +24,7 @@ import { CRM_STAGES, initials, stageLabel } from "@/lib/crm-ui";
 import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
 import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
 import { TableScrollButtons } from "@/components/ui/table-scroll-buttons";
+import { ViewToggle, useViewMode, viewContainerClass } from "@/components/admin/view-toggle";
 import { COUNTRY_DIAL_CODES } from "@/lib/country-codes";
 
 type LeadRow = {
@@ -110,6 +111,7 @@ export function LeadsTableView({
   const [sourceFilter, setSourceFilter] = useState("");
   const [sortKey, setSortKey] = useState<"createdAt" | "score" | "name">("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [viewMode, setViewMode] = useViewMode("admin-leads", "list");
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -413,11 +415,14 @@ export function LeadsTableView({
                 Filters
               </div>
               <div className="flex items-center gap-2">
-                <TableScrollButtons
-                  canScrollLeft={canScrollLeft}
-                  canScrollRight={canScrollRight}
-                  onScroll={scroll}
-                />
+                {viewMode === "list" && (
+                  <TableScrollButtons
+                    canScrollLeft={canScrollLeft}
+                    canScrollRight={canScrollRight}
+                    onScroll={scroll}
+                  />
+                )}
+                <ViewToggle mode={viewMode} onChange={setViewMode} />
                 <button
                   type="button"
                   onClick={clearAllFilters}
@@ -478,6 +483,69 @@ export function LeadsTableView({
             </div>
           </div>
 
+          {viewMode !== "list" ? (
+            filtered.length === 0 ? (
+              <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white py-16 text-center">
+                <p className="text-slate-500">No leads match this list or your filters.</p>
+                <Button variant="secondary" className="mt-4" onClick={clearAllFilters}>
+                  Clear filters
+                </Button>
+              </div>
+            ) : (
+              <div className={viewContainerClass(viewMode)}>
+                {filtered.map((l) => {
+                  const overdue =
+                    l.nextFollowUpAt &&
+                    new Date(l.nextFollowUpAt) < new Date() &&
+                    l.stage !== "WON" &&
+                    l.stage !== "LOST";
+                  return (
+                    <div
+                      key={l.id}
+                      className={`rounded-2xl border bg-white p-5 shadow-xs hover:shadow-md transition flex flex-col gap-3 ${
+                        overdue ? "border-red-200 bg-red-50/30" : "border-slate-200"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-bold text-white">
+                          {initials(l.name)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <Link href={`/admin/crm/leads/${l.id}`} className="font-bold text-slate-900 hover:text-brand-hover block truncate">
+                            {l.name}
+                          </Link>
+                          <p className="text-xs text-slate-500 truncate">{l.email || "—"}</p>
+                          <p className="text-xs text-slate-500">{l.phone ?? "—"}</p>
+                        </div>
+                        <StageBadge stage={l.stage} labels={stageLabels} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 border-t border-slate-100 pt-3">
+                        <span>Source: <span className="rounded-md bg-slate-100 px-1.5 py-0.5">{l.source}</span></span>
+                        <span>Property: <span className="font-mono text-brand-hover">{l.property?.symbol ?? "—"}</span></span>
+                        <span>Owner: <strong className="text-slate-800">{l.owner?.name ?? "Unassigned"}</strong></span>
+                        <span className="flex items-center gap-1.5">Score:
+                          <span className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden max-w-[48px]">
+                            <span className="block h-full bg-brand rounded-full" style={{ width: `${l.score}%` }} />
+                          </span>
+                          <span className="font-mono text-slate-500">{l.score}</span>
+                        </span>
+                        <span suppressHydrationWarning>Received: {formatDateString(l.createdAt)}</span>
+                        <span suppressHydrationWarning className={overdue ? "text-red-600 font-medium" : ""}>
+                          Follow-up: {l.nextFollowUpAt ? formatDateString(l.nextFollowUpAt) : "—"}{overdue && " · Overdue"}
+                        </span>
+                      </div>
+                      <Link
+                        href={`/admin/crm/leads/${l.id}`}
+                        className="mt-auto inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                      >
+                        View lead <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+            )
+          ) : (
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div ref={tableScrollRef} className="overflow-x-auto">
               <table className="w-full text-sm min-w-[1000px]">
@@ -604,6 +672,7 @@ export function LeadsTableView({
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
 

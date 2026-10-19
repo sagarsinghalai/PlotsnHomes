@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
 import { TableScrollButtons } from "@/components/ui/table-scroll-buttons";
+import { ViewToggle, useViewMode, viewContainerClass } from "@/components/admin/view-toggle";
 import { X } from "lucide-react";
 
 type Trade = {
@@ -29,6 +30,7 @@ export function TradesManager({ trades }: { trades: Trade[] }) {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"" | "BUY" | "SELL">("");
   const [propertyFilter, setPropertyFilter] = useState("");
+  const [viewMode, setViewMode] = useViewMode("admin-trades", "list");
 
   // Unique properties for selection
   const properties = useMemo(() => {
@@ -185,7 +187,10 @@ export function TradesManager({ trades }: { trades: Trade[] }) {
             <span className="text-xs text-slate-400 font-mono">
               {filteredTrades.length} records
             </span>
-            <TableScrollButtons canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} onScroll={scroll} />
+            {viewMode === "list" && (
+              <TableScrollButtons canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} onScroll={scroll} />
+            )}
+            <ViewToggle mode={viewMode} onChange={setViewMode} />
             <button
               type="button"
               onClick={clearAllFilters}
@@ -209,7 +214,55 @@ export function TradesManager({ trades }: { trades: Trade[] }) {
           </div>
         </div>
 
-        {/* Trade History Table */}
+        {/* Trade History — card grid */}
+        {viewMode !== "list" ? (
+          <div className="p-4">
+            {filteredTrades.length === 0 ? (
+              <div className="py-16 text-center text-sm text-slate-400">No trade logs found matching your filters.</div>
+            ) : (
+              <div className={viewContainerClass(viewMode)}>
+                {filteredTrades.map((t, idx) => {
+                  const colors = ["bg-blue-500", "bg-purple-500", "bg-indigo-500", "bg-teal-500", "bg-amber-500"];
+                  const avatarColor = colors[idx % colors.length];
+                  return (
+                    <div key={t.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs hover:shadow-md transition flex flex-col gap-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-8 h-8 rounded-md flex items-center justify-center text-white font-bold text-[10px] shrink-0 ${avatarColor}`}>
+                            {t.userName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="font-semibold text-slate-900 block leading-tight truncate">{t.userName}</span>
+                            <span className="text-[10px] text-slate-400 truncate block">{t.userEmail}</span>
+                          </div>
+                        </div>
+                        <span className={`shrink-0 inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-xs font-bold ${t.type === "BUY" ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700"}`}>
+                          {t.type === "BUY" ? <ArrowUpRight className="h-3 w-3 stroke-[2.5]" /> : <ArrowDownRight className="h-3 w-3 stroke-[2.5]" />}
+                          {t.type}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-600 border-t border-slate-100 pt-2">
+                        <p className="font-semibold text-slate-900 truncate">{t.propertyTitle}</p>
+                        <p className="font-mono text-[10px] text-slate-400">{t.propertySymbol} · {t.id.slice(-8).toUpperCase()}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 border-t border-slate-100 pt-2">
+                        <span>Shares: <strong className="text-slate-900 font-mono">{t.shares}</strong></span>
+                        <span>Price: <strong className="text-slate-900">{formatCurrency(t.pricePerShare)}</strong></span>
+                        <span>Total: <strong className="text-slate-900">{formatCurrency(t.totalValue)}</strong></span>
+                        <span className={`font-bold font-mono ${t.pnl > 0 ? "text-emerald-600" : t.pnl < 0 ? "text-red-600" : "text-slate-400"}`}>
+                          P&L: {t.pnl === 0 ? "—" : (t.pnl > 0 ? "+" : "") + formatCurrency(t.pnl)}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 border-t border-slate-100 pt-2 mt-auto" suppressHydrationWarning>
+                        {new Date(t.createdAt).toLocaleString("en-US")}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
         <div ref={tableScrollRef} className="overflow-x-auto">
           <table className="w-full text-sm min-w-[900px]">
             <thead className="bg-slate-50 text-left text-slate-500 font-medium">
@@ -294,6 +347,7 @@ export function TradesManager({ trades }: { trades: Trade[] }) {
             </tbody>
           </table>
         </div>
+        )}
       </div>
     </div>
   );

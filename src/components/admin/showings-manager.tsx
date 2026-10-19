@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ViewToggle, useViewMode, viewContainerClass } from "@/components/admin/view-toggle";
 
 type Showing = {
   id: string;
@@ -26,6 +27,7 @@ const STATUSES = ["REQUESTED", "CONFIRMED", "COMPLETED", "CANCELLED"] as const;
 export function ShowingsManager({ showings }: { showings: Showing[] }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useViewMode("admin-showings", "list");
 
   async function updateStatus(id: string, status: string) {
     setBusy(id);
@@ -59,8 +61,10 @@ export function ShowingsManager({ showings }: { showings: Showing[] }) {
         <Link href="/admin/reports" className="text-brand-hover hover:underline font-medium">
           Reports →
         </Link>
+        <div className="ml-auto"><ViewToggle mode={viewMode} onChange={setViewMode} /></div>
       </div>
 
+      <div className={viewMode === "list" ? "space-y-4" : viewContainerClass(viewMode)}>
       {showings.map((s) => (
         <div
           key={s.id}
@@ -110,6 +114,7 @@ export function ShowingsManager({ showings }: { showings: Showing[] }) {
           </div>
         </div>
       ))}
+      </div>
       {showings.length === 0 && (
         <p className="text-center text-slate-500 py-12">No site visit requests yet.</p>
       )}

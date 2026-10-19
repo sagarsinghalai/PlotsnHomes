@@ -8,6 +8,7 @@ import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
 import { TableScrollButtons } from "@/components/ui/table-scroll-buttons";
 import { useTableColumns, useCustomCellData } from "@/hooks/use-table-columns";
 import { EditableCell } from "@/components/ui/editable-cell";
+import { ViewToggle, useViewMode, viewContainerClass } from "@/components/admin/view-toggle";
 
 type TxItem = {
   id: string;
@@ -198,6 +199,7 @@ export function TransactionsManager({
   const [maxPrice, setMaxPrice] = useState("");
   const [sortOption, setSortOption] = useState<string>("newest");
   const [selectedTx, setSelectedTx] = useState<TxItem | null>(null);
+  const [viewMode, setViewMode] = useViewMode("admin-transactions", "list");
 
   // Auto-sync processed payout transactions from localStorage and live events
   useEffect(() => {
@@ -496,11 +498,14 @@ export function TransactionsManager({
             <span className="text-xs font-mono text-slate-400">
               {filtered.length} result{filtered.length !== 1 ? "s" : ""}
             </span>
-            <TableScrollButtons
-              canScrollLeft={canScrollLeft}
-              canScrollRight={canScrollRight}
-              onScroll={scroll}
-            />
+            {viewMode === "list" && (
+              <TableScrollButtons
+                canScrollLeft={canScrollLeft}
+                canScrollRight={canScrollRight}
+                onScroll={scroll}
+              />
+            )}
+            <ViewToggle mode={viewMode} onChange={setViewMode} />
             <button
               onClick={clearFilters}
               className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition cursor-pointer"
@@ -616,6 +621,64 @@ export function TransactionsManager({
         onResetColumns={resetColumns}
       />
 
+      {viewMode !== "list" ? (
+        filtered.length === 0 ? (
+          <div className="py-16 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-500">
+            No transactions match your filters.
+          </div>
+        ) : (
+          <div className={viewContainerClass(viewMode)}>
+            {filtered.map((t, idx) => {
+              const isBuy = t.type === "BUY";
+              return (
+                <div key={t.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs hover:shadow-md transition flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-[11px] shrink-0" style={{ background: t.userBg || AVATAR_COLORS[idx % AVATAR_COLORS.length] }}>
+                        {t.userInitials || "US"}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 dark:text-white truncate">{t.userName}</div>
+                        <div className="text-[10px] text-slate-400 font-mono truncate">{t.id} · {t.userId}</div>
+                      </div>
+                    </div>
+                    <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${isBuy ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-sky-500/10 text-sky-600 dark:text-sky-400"}`}>{t.type}</span>
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-2 space-y-1">
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">{t.propertyIcon || "🏰"} {t.propertyTitle}</p>
+                    <p className="font-mono text-[10px] text-slate-400">{t.propertySymbol}</p>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="font-bold text-slate-900 dark:text-white tabular-nums">₹{t.amount.toLocaleString("en-IN")}</span>
+                      <span className="text-slate-500">Fee ₹{t.fee.toLocaleString("en-IN")}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-2">
+                    <span>
+                      {t.status === "completed" && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">completed</span>}
+                      {t.status === "flagged" && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400">⚠ flagged</span>}
+                      {t.status === "pending" && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400">pending</span>}
+                      {t.status === "processing" && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-600 dark:text-sky-400">processing</span>}
+                    </span>
+                    <span className="text-[10px] text-slate-400">{t.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 mt-auto flex-wrap">
+                    <button onClick={() => setSelectedTx(t)} className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 text-xs font-bold transition">View</button>
+                    {t.status === "flagged" && (
+                      <>
+                        <button onClick={() => handleAction(t.id, "clear")} className="inline-flex items-center px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">Clear</button>
+                        <button onClick={() => handleAction(t.id, "reverse")} className="inline-flex items-center px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition">Reverse</button>
+                      </>
+                    )}
+                    {t.status === "pending" && (
+                      <button onClick={() => handleAction(t.id, "approve")} className="inline-flex items-center px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">Approve</button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
+      ) : (
       <div ref={tableScrollRef} className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
         <table className={`w-full ${scaleClass.text}`}>
           <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-left text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -807,6 +870,7 @@ export function TransactionsManager({
           </tbody>
         </table>
       </div>
+      )}
 
       {/* ── TRANSACTION DETAIL RECEIPT MODAL ── */}
       {selectedTx && (

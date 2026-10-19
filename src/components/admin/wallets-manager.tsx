@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
 import { TableScrollButtons } from "@/components/ui/table-scroll-buttons";
+import { ViewToggle, useViewMode } from "@/components/admin/view-toggle";
 
 type WalletUser = {
   id: string;
@@ -31,6 +32,7 @@ type Withdrawal = {
 export function WalletsManager({ users }: { users: WalletUser[] }) {
   // Local state for user balances
   const [walletUsers, setWalletUsers] = useState<WalletUser[]>(users);
+  const [viewMode, setViewMode] = useViewMode("admin-wallets", "grid");
 
   // Initialize mock pending withdrawals matching HTML mockup
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([
@@ -136,8 +138,11 @@ export function WalletsManager({ users }: { users: WalletUser[] }) {
 
       {/* 2. User Wallets Grid */}
       <div>
-        <h2 className="font-display text-xl font-bold text-slate-900 mb-4">User Account Wallets</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display text-xl font-bold text-slate-900">User Account Wallets</h2>
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
+        </div>
+        <div className={viewMode === "list" ? "flex flex-col gap-3" : viewMode === "tile" ? "grid gap-4 sm:grid-cols-2" : "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}>
           {walletUsers.map((u, idx) => {
             const total = u.walletBalance + u.investedBalance;
             const deployedPct = total > 0 ? Math.round((u.investedBalance / total) * 100) : 0;

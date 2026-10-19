@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
 import { TableScrollButtons } from "@/components/ui/table-scroll-buttons";
+import { ViewToggle, useViewMode, viewContainerClass } from "@/components/admin/view-toggle";
 
 export type PayoutProperty = {
   id: string;
@@ -193,6 +194,7 @@ export function PayoutsManager({
   // Commission Search & Status Filter
   const [commSearch, setCommSearch] = useState("");
   const [commStatusFilter, setCommStatusFilter] = useState<"ALL" | "PENDING" | "PARTIALLY_PAID" | "PAID">("ALL");
+  const [viewMode, setViewMode] = useViewMode("admin-payouts", "list");
 
   // Transfer Modal State
   const [selectedComm, setSelectedComm] = useState<AgentCommissionPayout | null>(null);
@@ -613,7 +615,10 @@ export function PayoutsManager({
                 <option value="PAID">Fully Paid</option>
               </select>
 
-              <TableScrollButtons canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} onScroll={scroll} />
+              {viewMode === "list" && (
+                <TableScrollButtons canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} onScroll={scroll} />
+              )}
+              <ViewToggle mode={viewMode} onChange={setViewMode} />
               <button
                 type="button"
                 onClick={clearAllFilters}
@@ -630,7 +635,58 @@ export function PayoutsManager({
             </div>
           </div>
 
-          {/* Commissions Table */}
+          {/* Commissions — card grid */}
+          {viewMode !== "list" ? (
+            filteredCommissions.length === 0 ? (
+              <div className="py-16 text-center text-sm text-slate-400">No eligible agent commissions matching filters.</div>
+            ) : (
+              <div className={viewContainerClass(viewMode)}>
+                {filteredCommissions.map((comm) => (
+                  <div key={comm.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs hover:shadow-md transition flex flex-col gap-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <Link href={`/admin/users/${comm.agentId}`} className="font-bold text-slate-900 dark:text-white hover:text-amber-600 hover:underline block truncate">{comm.agentName}</Link>
+                        <span className="text-[11px] text-slate-500 truncate block">{comm.agentEmail}</span>
+                        <span className="inline-flex mt-1 rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300">{comm.agentRole}</span>
+                      </div>
+                      <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+                        comm.status === "PAID" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                        : comm.status === "PARTIALLY_PAID" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                      }`}>
+                        {comm.status === "PAID" && <CheckCircle2 className="h-3 w-3" />}
+                        {comm.status === "PARTIALLY_PAID" && <Clock className="h-3 w-3" />}
+                        {comm.status === "PENDING" && <AlertCircle className="h-3 w-3" />}
+                        {comm.status === "PARTIALLY_PAID" ? "PARTIAL" : comm.status}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-2">
+                      <p className="font-bold text-slate-900 dark:text-white truncate">{comm.propertyTitle}</p>
+                      <p className="font-mono text-[10px] text-slate-400">{comm.propertySymbol} · Deal {formatCurrency(comm.propertyValue)}</p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs border-t border-slate-100 dark:border-slate-800 pt-2">
+                      <div><span className="block text-[10px] text-slate-400 font-bold uppercase">Total</span><span className="font-black text-slate-900 dark:text-white">{formatCurrency(comm.totalCommission)}</span></div>
+                      <div><span className="block text-[10px] text-slate-400 font-bold uppercase">Paid</span><span className="font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(comm.paidAmount)}</span></div>
+                      <div><span className="block text-[10px] text-slate-400 font-bold uppercase">Pending</span><span className="font-black text-rose-600 dark:text-rose-400">{formatCurrency(comm.remainingBalance)}</span></div>
+                    </div>
+                    <div className="text-[10px] font-mono text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-2">
+                      <span className="font-bold text-slate-700 dark:text-slate-300 block">{comm.bankDetails.bankName}</span>
+                      Acc {comm.bankDetails.accountNo} · IFSC {comm.bankDetails.ifscCode}
+                    </div>
+                    <div className="mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
+                      {comm.status !== "PAID" ? (
+                        <Button variant="gold" size="sm" className="w-full text-xs font-bold gap-1" onClick={() => handleOpenTransferModal(comm)}>
+                          <Send className="h-3 w-3" /> Transfer Payout
+                        </Button>
+                      ) : (
+                        <span className="w-full inline-flex items-center justify-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="h-3.5 w-3.5" /> Credited</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : (
           <div ref={tableScrollRef} className="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-slate-800">
             <table className="w-full text-xs text-left min-w-[950px]">
               <thead className="bg-slate-100/80 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
@@ -771,6 +827,7 @@ export function PayoutsManager({
               </tbody>
             </table>
           </div>
+          )}
         </div>
       )}
 

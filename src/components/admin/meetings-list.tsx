@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Calendar, ExternalLink } from "lucide-react";
+import { ViewToggle, useViewMode, viewContainerClass } from "@/components/admin/view-toggle";
 
 type Meeting = {
   id: string;
@@ -18,8 +19,13 @@ type Meeting = {
 };
 
 export function MeetingsList({ meetings }: { meetings: Meeting[] }) {
+  const [viewMode, setViewMode] = useViewMode("admin-meetings", "list");
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <ViewToggle mode={viewMode} onChange={setViewMode} />
+      </div>
+      <div className={viewMode === "list" ? "space-y-4" : viewContainerClass(viewMode)}>
       {meetings.map((m) => (
         <div
           key={m.id}
@@ -82,6 +88,7 @@ export function MeetingsList({ meetings }: { meetings: Meeting[] }) {
           </div>
         </div>
       ))}
+      </div>
       {meetings.length === 0 && (
         <p className="text-center text-slate-500 py-12">
           No meetings yet. Use Send Message → Schedule Meeting &amp; Send.

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ViewToggle, useViewMode, viewContainerClass } from "@/components/admin/view-toggle";
 
 type Kyc = {
   id: string;
@@ -19,6 +20,7 @@ type Kyc = {
 export function KycManager({ profiles }: { profiles: Kyc[] }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useViewMode("admin-kyc", "list");
 
   async function review(id: string, status: "APPROVED" | "REJECTED") {
     setBusy(id);
@@ -43,6 +45,10 @@ export function KycManager({ profiles }: { profiles: Kyc[] }) {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <ViewToggle mode={viewMode} onChange={setViewMode} />
+      </div>
+      <div className={viewMode === "list" ? "space-y-4" : viewContainerClass(viewMode)}>
       {profiles.map((p) => (
         <div key={p.id} className="rounded-2xl border bg-white p-6">
           <div className="flex flex-wrap justify-between gap-4">
@@ -78,6 +84,7 @@ export function KycManager({ profiles }: { profiles: Kyc[] }) {
           </div>
         </div>
       ))}
+      </div>
       {profiles.length === 0 && <p className="text-center text-slate-500 py-12">No KYC submissions yet.</p>}
     </div>
   );

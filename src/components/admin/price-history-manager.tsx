@@ -20,6 +20,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
 import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
 import { TableScrollButtons } from "@/components/ui/table-scroll-buttons";
+import { ViewToggle, useViewMode, viewContainerClass } from "@/components/admin/view-toggle";
 
 export type PriceLogItem = {
   id: string;
@@ -57,6 +58,7 @@ export function PriceHistoryManager({
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [viewMode, setViewMode] = useViewMode("admin-price-history", "list");
 
   // Reset to page 1 when search or timeframe changes
   useEffect(() => {
@@ -311,7 +313,10 @@ export function PriceHistoryManager({
               className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 py-2 text-xs font-semibold text-slate-900 outline-none focus:border-amber-500"
             />
           </div>
-          <TableScrollButtons canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} onScroll={scroll} />
+          {viewMode === "list" && (
+            <TableScrollButtons canScrollLeft={canScrollLeft} canScrollRight={canScrollRight} onScroll={scroll} />
+          )}
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
           <button
             type="button"
             onClick={clearAllFilters}
@@ -330,6 +335,45 @@ export function PriceHistoryManager({
 
       {/* Price Logs Table */}
       <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+        {viewMode !== "list" ? (
+          <div className="p-4">
+            {loading ? (
+              <div className="py-12 text-center text-slate-400 font-medium">Loading price logs...</div>
+            ) : paginatedLogs.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 font-medium">No price changes logged for this query or date range.</div>
+            ) : (
+              <div className={viewContainerClass(viewMode)}>
+                {paginatedLogs.map((log) => {
+                  const isPositive = log.changePct >= 0;
+                  return (
+                    <div key={log.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs hover:shadow-md transition flex flex-col gap-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <span className="rounded-md bg-slate-900 text-white font-mono font-extrabold px-2 py-0.5 text-[10px]">{log.propertySymbol}</span>
+                          <p className="font-bold text-slate-900 truncate mt-1">{log.propertyTitle}</p>
+                        </div>
+                        <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-extrabold text-[11px] ${isPositive ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
+                          {isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                          {isPositive ? `+${log.changePct}%` : `${log.changePct}%`}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs border-t border-slate-100 pt-2">
+                        <span className="font-mono text-slate-500 line-through">{formatCurrency(log.oldPrice)}</span>
+                        <span className="font-mono font-black text-slate-900 text-right">{formatCurrency(log.newPrice)}</span>
+                        <span className="text-slate-500">Rate: ₹{log.ratePerSqft?.toLocaleString("en-IN") || "—"}/sqft</span>
+                        <span className="text-right"><span className="rounded-full bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 font-semibold text-[10px]">{log.stage}</span></span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 border-t border-slate-100 pt-2 mt-auto">
+                        <p>By <strong className="text-slate-800">{log.changedByName}</strong> · <span className="font-mono">{new Date(log.createdAt).toISOString().replace("T", " ").slice(0, 16)}</span></p>
+                        {log.notes && <p className="truncate mt-0.5">{log.notes}</p>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
         <div ref={tableScrollRef} className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
@@ -414,6 +458,7 @@ export function PriceHistoryManager({
             </tbody>
           </table>
         </div>
+        )}
 
         {/* Table Footer with Total Count Summary & Pagination Controls */}
         <div className="border-t border-slate-200 bg-slate-50/80 px-5 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-600">

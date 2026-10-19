@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
+import { ViewToggle, useViewMode, viewContainerClass } from "@/components/admin/view-toggle";
 
 type Inquiry = {
   id: string;
@@ -21,6 +22,7 @@ type Inquiry = {
 export function InquiriesManager({ inquiries }: { inquiries: Inquiry[] }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useViewMode("admin-inquiries", "list");
 
   let hasDeletePermission: ((href?: string) => boolean) | null = null;
   let hasSubPermission: ((permissionKey: string, subKey: string) => boolean) | null = null;
@@ -64,8 +66,10 @@ export function InquiriesManager({ inquiries }: { inquiries: Inquiry[] }) {
         <Link href="/admin/reports/inquiries" className="text-brand-hover hover:underline font-medium">
           Reports →
         </Link>
+        <div className="ml-auto"><ViewToggle mode={viewMode} onChange={setViewMode} /></div>
       </div>
 
+      <div className={viewMode === "list" ? "space-y-4" : viewContainerClass(viewMode)}>
       {inquiries.map((q) => (
         <div
           key={q.id}
@@ -117,6 +121,7 @@ export function InquiriesManager({ inquiries }: { inquiries: Inquiry[] }) {
           </div>
         </div>
       ))}
+      </div>
 
       {inquiries.length === 0 && (
         <p className="text-center text-slate-500 py-12">No inquiries yet.</p>
