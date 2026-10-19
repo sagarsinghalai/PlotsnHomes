@@ -66,6 +66,20 @@ export async function PUT(
     if (dataToUpdate.launchDate) dataToUpdate.launchDate = new Date(dataToUpdate.launchDate);
     if (dataToUpdate.completionDate) dataToUpdate.completionDate = new Date(dataToUpdate.completionDate);
 
+    // Set the developer via the relation (Prisma rejects the raw `developerId`
+    // scalar here). Connect only when the developer exists; empty = disconnect.
+    if ("developerId" in dataToUpdate) {
+      const devId = dataToUpdate.developerId;
+      delete dataToUpdate.developerId;
+      if (devId) {
+        const exists = await prisma.developer.findUnique({ where: { id: devId }, select: { id: true } });
+        if (exists) dataToUpdate.developer = { connect: { id: devId } };
+        // if the developer id is stale/unknown, leave the current link unchanged
+      } else {
+        dataToUpdate.developer = { disconnect: true };
+      }
+    }
+
     const project = await prisma.project.update({
       where: { id: params.id },
       data: dataToUpdate,
