@@ -122,7 +122,7 @@ export function WhiteLabelClient({
         <div>
           <h1
             className="text-3xl sm:text-4xl text-slate-950 dark:text-white tracking-tight leading-tight"
-            style={{ fontFamily: "'Impact', 'Arial Black', sans-serif", fontWeight: 400, textTransform: "none" }}
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 700, textTransform: "none" }}
           >
             White-Label &amp; Subscription Hub
           </h1>

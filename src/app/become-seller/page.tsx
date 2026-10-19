@@ -152,7 +152,7 @@ export default function BecomeSellerPage() {
 
           <h1
             className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight"
-            style={{ fontFamily: "'Impact', 'Arial Black', sans-serif", fontWeight: 400, textTransform: "none" }}
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 700, textTransform: "none" }}
           >
             Become a Seller
           </h1>

@@ -33,8 +33,8 @@ export function AdminPageHeader({
         <h1
           className="text-3xl sm:text-4xl text-slate-950 dark:text-white leading-none"
           style={{
-            fontFamily: "'Impact', 'Arial Black', sans-serif",
-            fontWeight: 400,
+            fontFamily: "Georgia, 'Times New Roman', serif",
+            fontWeight: 700,
             textTransform: "none",
           }}
         >

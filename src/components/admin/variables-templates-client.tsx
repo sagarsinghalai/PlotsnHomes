@@ -311,7 +311,7 @@ export function VariablesTemplatesClient({
           <h1
             className="text-3xl sm:text-4xl text-slate-950 dark:text-white tracking-tight leading-tight"
             style={{
-              fontFamily: "'Impact', 'Arial Black', sans-serif",
+              fontFamily: "Georgia, 'Times New Roman', serif",
               fontWeight: 400,
               textTransform: "none",
             }}
