@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ConditionalFooter } from "@/components/layout/conditional-footer";
 import { ConditionalNavbar } from "@/components/layout/conditional-navbar";
 import { ConditionalMarketTicker } from "@/components/market/conditional-market-ticker";
@@ -8,14 +8,18 @@ import { Providers } from "@/components/providers";
 import { BodyThemeSync } from "@/components/layout/body-theme-sync";
 import "./globals.css";
 
-const sans = DM_Sans({
+// Inter is the primary UI typeface for the redesigned design system.
+const sans = Inter({
   subsets: ["latin"],
   variable: "--font-geist-sans",
+  display: "swap",
 });
 
-const display = DM_Sans({
+const display = Inter({
   subsets: ["latin"],
   variable: "--font-display",
+  display: "swap",
+  weight: ["600", "700"],
 });
 
 export const metadata: Metadata = {

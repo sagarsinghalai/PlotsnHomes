@@ -369,7 +369,7 @@ export function AdminSidebar({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-gold shadow-lg text-slate-900 md:hidden hover:bg-gold-dark transition focus:outline-none"
+        className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-brand shadow-lg text-white md:hidden hover:bg-brand-hover transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         title="Toggle Admin Menu"
       >
         {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -393,13 +393,13 @@ export function AdminSidebar({
       >
         <div className="border-b border-slate-800 p-5 shrink-0 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-gold">PlotsnHomes</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-indigo-300">PlotsnHomes</p>
             <p className="font-display text-lg font-bold mt-0.5 text-white">Admin Console</p>
           </div>
           <button
             type="button"
             onClick={handleResetLayout}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-gold hover:bg-slate-900 transition flex items-center gap-1 text-[10px] font-medium"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-slate-900 transition flex items-center gap-1 text-[10px] font-medium"
             title="Reset menu order"
           >
             <RotateCcw className="h-3.5 w-3.5" />
@@ -412,7 +412,7 @@ export function AdminSidebar({
             placeholder="Search settings..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white placeholder-slate-500 outline-none transition focus:border-gold"
+            className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white placeholder-slate-500 outline-none transition focus:border-brand"
           />
         </div>
 
@@ -431,7 +431,7 @@ export function AdminSidebar({
                 onDrop={(e) => handleDrop(e, group.title)}
                 className={cn(
                   "rounded-xl p-1.5 transition-all duration-150 border border-transparent",
-                  isGroupDragOver && "border-dashed border-gold/80 bg-gold/10 shadow-sm"
+                  isGroupDragOver && "border-dashed border-brand/80 bg-brand/20 shadow-sm"
                 )}
               >
                 <div className="flex items-center justify-between px-2 mb-1.5">
@@ -466,7 +466,7 @@ export function AdminSidebar({
                         className={cn(
                           "group relative transition-all rounded-lg",
                           isDraggingThis && "opacity-40 scale-95 border border-dashed border-amber-500",
-                          isItemDragOver && "ring-2 ring-gold/80 bg-gold/10"
+                          isItemDragOver && "ring-2 ring-brand/80 bg-brand/20"
                         )}
                       >
                         <Link
@@ -475,7 +475,7 @@ export function AdminSidebar({
                           className={cn(
                             "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition cursor-grab active:cursor-grabbing",
                             active
-                              ? "bg-gold text-slate-900"
+                              ? "bg-brand text-white"
                               : "text-slate-400 hover:bg-slate-800 hover:text-white"
                           )}
                         >
@@ -496,7 +496,7 @@ export function AdminSidebar({
           <Link
             href="/dashboard"
             onClick={() => setIsOpen(false)}
-            className="text-xs text-slate-500 hover:text-gold block"
+            className="text-xs text-slate-500 hover:text-indigo-300 block"
           >
             ← Exit admin
           </Link>

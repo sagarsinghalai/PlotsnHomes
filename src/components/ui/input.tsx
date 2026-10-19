@@ -7,7 +7,8 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
       <input
         ref={ref}
         className={cn(
-          "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20",
+          "w-full min-h-11 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 placeholder:text-slate-500",
+          "focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20",
           className
         )}
         {...props}
@@ -19,11 +20,13 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
 export const Label = ({
   children,
   className,
+  htmlFor,
 }: {
   children: React.ReactNode;
   className?: string;
+  htmlFor?: string;
 }) => (
-  <label className={cn("mb-1.5 block text-sm font-medium text-slate-700", className)}>
+  <label htmlFor={htmlFor} className={cn("mb-1.5 block text-sm font-medium text-slate-700", className)}>
     {children}
   </label>
 );
@@ -36,7 +39,8 @@ export const Textarea = forwardRef<
     <textarea
       ref={ref}
       className={cn(
-        "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20 min-h-[120px]",
+        "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 placeholder:text-slate-500",
+        "focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 min-h-[120px]",
         className
       )}
       {...props}
