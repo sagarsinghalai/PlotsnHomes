@@ -11,6 +11,7 @@ import { formatCurrency, parseImages } from "@/lib/utils";
 import { ShieldCheck, CreditCard, Home, Coins, TrendingUp, ArrowRight, Check, ArrowDownLeft, ArrowUpRight, BarChart3, Search, Activity, Landmark, Smartphone, Zap, Sparkles, CheckCircle, Wallet } from "lucide-react";
 import { BodyThemeSync } from "@/components/layout/body-theme-sync";
 import { LeadCaptureForm } from "@/components/public/lead-capture-form";
+import { ProjectsShowcase, type ShowcaseProject } from "@/components/public/projects-showcase";
 
 export default async function HomePage() {
   const [
@@ -77,6 +78,27 @@ export default async function HomePage() {
     getSiteSetting<TestimonialsConfig>(SITE_SETTING_KEYS.TESTIMONIALS),
     getSiteSetting<TeamMemberItem[]>(SITE_SETTING_KEYS.TEAM_MEMBERS),
   ]);
+
+  // Developer projects shown on the public home page (lead-gen showcase).
+  const projectRows = await prisma.project.findMany({
+    where: { showOnWebsite: true },
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    take: 60,
+    select: {
+      id: true, name: true, code: true, slug: true, projectType: true, projectCategory: true,
+      status: true, city: true, area: true, state: true, minPrice: true, maxPrice: true,
+      coverImage: true, bannerImage: true, galleryImagesJson: true, builderName: true,
+      shortDescription: true, isSoldOut: true,
+      developer: { select: { name: true } },
+    },
+  });
+  const showcaseProjects: ShowcaseProject[] = projectRows.map((p) => ({
+    id: p.id, name: p.name, code: p.code, slug: p.slug, projectType: p.projectType,
+    projectCategory: p.projectCategory, status: p.status, city: p.city, area: p.area, state: p.state,
+    minPrice: p.minPrice, maxPrice: p.maxPrice, coverImage: p.coverImage, bannerImage: p.bannerImage,
+    galleryImagesJson: p.galleryImagesJson, developerName: p.developer?.name ?? p.builderName ?? null,
+    shortDescription: p.shortDescription, isSoldOut: p.isSoldOut,
+  }));
 
   const fallback =
     featured.length >= 6
@@ -189,6 +211,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Developer Projects showcase (filterable + lead capture) */}
+      <ProjectsShowcase projects={showcaseProjects} />
 
       <TestimonialsSection testimonialsConfig={siteTestimonials} />
 
