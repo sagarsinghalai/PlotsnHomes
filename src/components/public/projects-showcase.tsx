@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
-  Building2, MapPin, Search, X, Loader2, CheckCircle2, User, Phone, Mail, Sparkles,
+  Building2, MapPin, Search, X, Loader2, CheckCircle2, User, Phone, Mail, Sparkles, ArrowRight,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { COUNTRY_DIAL_CODES } from "@/lib/country-codes";
@@ -161,33 +162,41 @@ export function ProjectsShowcase({ projects }: { projects: ShowcaseProject[] }) 
             {filtered.map((p) => {
               const img = firstImage(p);
               const loc = [p.area, p.city, p.state].filter(Boolean).join(", ");
-              return (
-                <article key={p.id} className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card hover:border-slate-300 transition">
-                  <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
-                    {img ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={img} alt={`${p.name} project`} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
-                        <Building2 className="h-12 w-12 text-slate-300" />
-                      </div>
-                    )}
-                    <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-                      {p.status && (
-                        <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${statusTone(p.status)}`}>{p.status}</span>
-                      )}
-                      {p.isSoldOut && (
-                        <span className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700">Sold out</span>
-                      )}
+              const href = p.slug ? `/projects/${p.slug}` : null;
+              const Media = (
+                <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
+                  {img ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={img} alt={`${p.name} project`} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+                      <Building2 className="h-12 w-12 text-slate-300" />
                     </div>
+                  )}
+                  <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+                    {p.status && (
+                      <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${statusTone(p.status)}`}>{p.status}</span>
+                    )}
+                    {p.isSoldOut && (
+                      <span className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700">Sold out</span>
+                    )}
                   </div>
+                </div>
+              );
+              return (
+                <article key={p.id} className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card hover:border-slate-300 hover:shadow-md transition">
+                  {href ? <Link href={href} aria-label={`View ${p.name}`}>{Media}</Link> : Media}
 
                   <div className="flex flex-1 flex-col p-4">
                     <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500">
                       {p.projectCategory && <span className="rounded bg-slate-100 px-2 py-0.5">{p.projectCategory}</span>}
                       {p.projectType && <span className="rounded bg-slate-100 px-2 py-0.5">{p.projectType}</span>}
                     </div>
-                    <h3 className="mt-2 text-base font-bold text-slate-900 line-clamp-1">{p.name}</h3>
+                    {href ? (
+                      <Link href={href} className="mt-2 text-base font-bold text-slate-900 line-clamp-1 hover:text-brand">{p.name}</Link>
+                    ) : (
+                      <h3 className="mt-2 text-base font-bold text-slate-900 line-clamp-1">{p.name}</h3>
+                    )}
                     {p.developerName && <p className="text-xs font-semibold text-slate-500 mt-0.5">by {p.developerName}</p>}
                     {loc && (
                       <p className="mt-1.5 flex items-center gap-1 text-xs text-slate-600">
@@ -207,6 +216,11 @@ export function ProjectsShowcase({ projects }: { projects: ShowcaseProject[] }) 
                         Show Interest
                       </button>
                     </div>
+                    {href && (
+                      <Link href={href} className="mt-3 inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 py-2 text-xs font-bold text-slate-700 hover:border-brand/40 hover:text-brand transition">
+                        View full details <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    )}
                   </div>
                 </article>
               );
