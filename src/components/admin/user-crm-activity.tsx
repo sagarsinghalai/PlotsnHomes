@@ -592,7 +592,7 @@ export function UserCrmActivity({ contactId, contactName, contactEmail }: { cont
         try {
           const sres = await fetch("/api/admin/crm/send-email", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ to: emailTo, cc: emailCc, bcc: emailBcc, subject: draft.subject, html: draft.body }),
+            body: JSON.stringify({ to: emailTo, cc: emailCc, bcc: emailBcc, subject: draft.subject, html: draft.body, attachments: draftMedia }),
           });
           const sd = await sres.json();
           if (!sres.ok) {

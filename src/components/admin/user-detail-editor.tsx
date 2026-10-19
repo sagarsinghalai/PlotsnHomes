@@ -589,6 +589,12 @@ export function UserDetailEditor({
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+  // Field-level validation: which field is currently in error (for highlight + scroll),
+  // and whether to show the "saved successfully" popup.
+  const [errorField, setErrorField] = useState<string | null>(null);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const fieldRing = (key: string) =>
+    errorField === key ? " ring-2 ring-red-400 ring-offset-2 rounded-lg bg-red-50/40 transition-all" : "";
   const [newKycNote, setNewKycNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
 
@@ -1010,17 +1016,29 @@ export function UserDetailEditor({
     setBusy(true);
     setError("");
     setMsg("");
+    setErrorField(null);
 
-    const showError = (msg: string) => {
+    const showError = (msg: string, field?: string) => {
       setError(msg);
+      setErrorField(field ?? null);
       setBusy(false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Scroll to and focus the offending field (fall back to the top banner).
+      setTimeout(() => {
+        const el = field ? document.getElementById(`fld-${field}`) : null;
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          const focusable = el.querySelector("input, select, textarea") as HTMLElement | null;
+          try { focusable?.focus({ preventScroll: true }); } catch { focusable?.focus(); }
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }, 60);
     };
 
     if (profile.phone.trim()) {
       const parsed = parseStoredPhone(profile.phone);
       if (parsed.national.length !== 10) {
-        return showError("Phone number must contain exactly 10 digits.");
+        return showError("Phone number must contain exactly 10 digits.", "phone");
       }
     }
 
@@ -1034,34 +1052,34 @@ export function UserDetailEditor({
 
     if (profile.address && numericOnly.test(profile.address.trim())) {
       kycValid = false;
-      return showError("Address cannot contain only numbers.");
+      return showError("Address cannot contain only numbers.", "profile-address");
     }
     if (kyc.address && numericOnly.test(kyc.address.trim())) {
       kycValid = false;
-      return showError("KYC Address cannot contain only numbers.");
+      return showError("KYC Address cannot contain only numbers.", "kyc-address");
     }
 
     if (profile.name && !alphaOnly.test(profile.name)) {
       kycValid = false;
-      return showError("Full name must contain only alphabets.");
+      return showError("Full name must contain only alphabets.", "name");
     }
     if (kyc.fullName && !alphaOnly.test(kyc.fullName)) {
       kycValid = false;
-      return showError("KYC Legal Name must contain only alphabets.");
+      return showError("KYC Legal Name must contain only alphabets.", "kyc-fullname");
     }
     if (kyc.nationality && !alphaOnly.test(kyc.nationality)) {
       kycValid = false;
-      return showError("Nationality must contain only alphabets.");
+      return showError("Nationality must contain only alphabets.", "kyc-nationality");
     }
     if (kyc.idNumber) {
       if (kyc.idType === "Aadhaar" && (!numericOnly.test(kyc.idNumber) || kyc.idNumber.length !== 12)) {
         kycValid = false;
-        return showError("Aadhaar must be a 12-digit number.");
+        return showError("Aadhaar must be a 12-digit number.", "kyc-idnumber");
       } else if (kyc.idType === "PAN Card") {
         const panRegex = /^[A-Z]{5}\d{4}[A-Z]{1}$/i;
         if (!panRegex.test(kyc.idNumber)) {
           kycValid = false;
-          return showError("PAN Card must be in the format XXXXX1234X.");
+          return showError("PAN Card must be in the format XXXXX1234X.", "kyc-idnumber");
         }
       }
     }
@@ -1070,33 +1088,33 @@ export function UserDetailEditor({
       const dobCheck = validateUserDobAge(targetDob, user.createdAt);
       if (!dobCheck.valid) {
         kycValid = false;
-        return showError(dobCheck.message!);
+        return showError(dobCheck.message!, profile.dob ? "dob" : "kyc-dob");
       }
     }
 
     if (kyc.address && !addressRegex.test(kyc.address)) {
       kycValid = false;
-      return showError("Street address contains invalid characters.");
+      return showError("Street address contains invalid characters.", "kyc-address");
     }
     if (kyc.city && !alphaOnly.test(kyc.city)) {
       kycValid = false;
-      return showError("City must contain only alphabets.");
+      return showError("City must contain only alphabets.", "kyc-city");
     }
     if (kyc.state && !alphaOnly.test(kyc.state)) {
       kycValid = false;
-      return showError("State must contain only alphabets.");
+      return showError("State must contain only alphabets.", "kyc-state");
     }
     const pinError = validatePostalCode(profile.zip, profile.country);
-    if (pinError) { return showError(pinError); }
+    if (pinError) { return showError(pinError, "zip"); }
 
     const kycPinError = validatePostalCode(kyc.pinCode, kyc.country);
-    if (kycPinError) { return showError(kycPinError); }
+    if (kycPinError) { return showError(kycPinError, "kyc-pin"); }
 
 
 
     if (kyc.country && !alphaOnly.test(kyc.country)) {
       kycValid = false;
-      return showError("Country must contain only alphabets.");
+      return showError("Country must contain only alphabets.", "kyc-country");
     }
 
     if (!kycValid) {
@@ -1105,7 +1123,7 @@ export function UserDetailEditor({
     }
 
     if (kyc.status === "APPROVED" && (!kyc.fullName || !kyc.dateOfBirth || !kyc.nationality || !kyc.idType || !kyc.idNumber || !kyc.address || !kyc.city || !kyc.state || !kyc.pinCode || !kyc.country)) {
-      return showError("Cannot approve KYC: All personal and address fields must be filled correctly.");
+      return showError("Cannot approve KYC: All personal and address fields must be filled correctly.", "kyc-fullname");
     }
 
 
@@ -1153,8 +1171,30 @@ export function UserDetailEditor({
     });
     const data = await res.json();
     setBusy(false);
-    if (!res.ok) { return showError(data.error ?? "Save failed"); }
+    if (!res.ok) {
+      // Best-effort map a server error to the relevant field for scroll/highlight.
+      const em = (data.error ?? "").toLowerCase();
+      const isKyc = /kyc|legal/.test(em);
+      const field =
+        /email/.test(em) ? "email"
+        : /(18\+|age|date of birth|\bdob\b)/.test(em) ? (isKyc ? "kyc-dob" : "dob")
+        : /phone/.test(em) ? "phone"
+        : /nationality/.test(em) ? "kyc-nationality"
+        : /aadhaar|aadhar|\bpan\b|id number/.test(em) ? "kyc-idnumber"
+        : /pin|postal|\bzip\b/.test(em) ? (isKyc ? "kyc-pin" : "zip")
+        : /city/.test(em) ? (isKyc ? "kyc-city" : undefined)
+        : /state/.test(em) ? (isKyc ? "kyc-state" : undefined)
+        : /country/.test(em) ? "kyc-country"
+        : /address/.test(em) ? (isKyc ? "kyc-address" : "profile-address")
+        : /legal name/.test(em) ? "kyc-fullname"
+        : /name/.test(em) ? "name"
+        : undefined;
+      return showError(data.error ?? "Save failed", field);
+    }
+    setError("");
+    setErrorField(null);
     setMsg("All changes saved successfully.");
+    setSuccessOpen(true);
     router.refresh();
   }
 
@@ -1171,8 +1211,27 @@ export function UserDetailEditor({
 
   return (
     <div className="space-y-8">
-      {error && <p className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">{error}</p>}
-      {msg   && <p className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">{msg}</p>}
+      {/* Success popup — confirms all changes were saved without errors */}
+      {successOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setSuccessOpen(false)}>
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
+              <svg className="h-8 w-8 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">Changes saved</h3>
+            <p className="mt-1 text-sm text-slate-500">All changes have been saved successfully, with no errors.</p>
+            <button type="button" onClick={() => setSuccessOpen(false)} className="mt-4 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-700">
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+      {error && (
+        <p className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 flex items-center gap-2">
+          <span className="font-bold">⚠</span> {error}
+        </p>
+      )}
+      {msg && !successOpen && <p className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">{msg}</p>}
 
       {/* Profile Summary KPI Cards (User Account Profile) */}
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -1237,19 +1296,19 @@ export function UserDetailEditor({
       <section className="rounded-2xl border bg-white p-5 space-y-3 max-w-4xl">
         <h2 className="text-base font-bold text-slate-900 border-b pb-2.5">Account &amp; contact</h2>
         <div className="grid gap-3 sm:grid-cols-2 text-xs">
-          <div>
+          <div id="fld-name" className={fieldRing("name")}>
             <Label className="text-[11px] font-bold text-slate-600 mb-1">Full name</Label>
             <Input className="!h-9 !py-1.5 !px-3 text-xs font-medium" value={profile.name} onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} />
           </div>
-          <div>
+          <div id="fld-email" className={fieldRing("email")}>
             <Label className="text-[11px] font-bold text-slate-600 mb-1">Email</Label>
             <Input className="!h-9 !py-1.5 !px-3 text-xs font-medium" type="email" value={profile.email} onChange={(e) => setProfile((p) => ({ ...p, email: e.target.value }))} />
           </div>
-          <div>
+          <div id="fld-dob" className={fieldRing("dob")}>
             <Label className="text-[11px] font-bold text-slate-600 mb-1">Date of birth (Must be 18+ years)</Label>
             <Input className="!h-9 !py-1.5 !px-3 text-xs font-medium" type="date" value={profile.dob} onChange={(e) => updateDob(e.target.value)} placeholder="YYYY-MM-DD" />
           </div>
-          <div className="sm:col-span-2">
+          <div id="fld-phone" className={`sm:col-span-2${fieldRing("phone")}`}>
             <Label className="text-[11px] font-bold text-slate-600 mb-1">Phone (WhatsApp / SMS)</Label>
             <PhoneInput value={profile.phone} onChange={(phone) => setProfile((p) => ({ ...p, phone }))} defaultCountry={profile.country} />
           </div>
@@ -1483,7 +1542,7 @@ export function UserDetailEditor({
       <section className="rounded-2xl border bg-white p-6 space-y-4">
         <h2 className="text-lg font-semibold border-b pb-3">Address</h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
+          <div id="fld-profile-address" className={`sm:col-span-2${fieldRing("profile-address")}`}>
             <Label>Street address</Label>
             <Input value={profile.address} onChange={(e) => setProfile((p) => ({ ...p, address: e.target.value }))} />
           </div>
@@ -1508,7 +1567,7 @@ export function UserDetailEditor({
               onChange={(city) => setProfile((p) => ({ ...p, city }))}
             />
           </div>
-          <div>
+          <div id="fld-zip" className={fieldRing("zip")}>
             <Label>ZIP / Postal Code</Label>
             <GlobalZipSelect
               countryCode={profile.country}
@@ -1549,15 +1608,15 @@ export function UserDetailEditor({
               Personal Information
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
+              <div id="fld-kyc-fullname" className={fieldRing("kyc-fullname")}>
                 <Label>Legal name (KYC)</Label>
                 <Input value={kyc.fullName} onChange={(e) => setKyc((k) => ({ ...k, fullName: e.target.value }))} />
               </div>
-              <div>
+              <div id="fld-kyc-dob" className={fieldRing("kyc-dob")}>
                 <Label>Date of birth (Must be 18+ years)</Label>
                 <Input type="date" value={kyc.dateOfBirth} onChange={(e) => updateDob(e.target.value)} placeholder="YYYY-MM-DD" />
               </div>
-              <div>
+              <div id="fld-kyc-nationality" className={fieldRing("kyc-nationality")}>
                 <Label>Nationality</Label>
                 <Input value={kyc.nationality} onChange={(e) => setKyc((k) => ({ ...k, nationality: e.target.value }))} />
               </div>
@@ -1582,7 +1641,7 @@ export function UserDetailEditor({
                   ))}
                 </select>
               </div>
-              <div>
+              <div id="fld-kyc-idnumber" className={fieldRing("kyc-idnumber")}>
                 <Label>ID number</Label>
                 <Input value={kyc.idNumber} onChange={(e) => setKyc((k) => ({ ...k, idNumber: e.target.value }))} placeholder="Enter ID number" />
               </div>
@@ -1614,15 +1673,15 @@ export function UserDetailEditor({
               KYC Address
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
+              <div id="fld-kyc-address" className={`sm:col-span-2${fieldRing("kyc-address")}`}>
                 <Label>Street address</Label>
                 <Input value={kyc.address} onChange={(e) => setKyc((k) => ({ ...k, address: e.target.value }))} placeholder="Flat / House No., Street, Locality" />
               </div>
-              <div>
+              <div id="fld-kyc-country" className={fieldRing("kyc-country")}>
                 <Label>Country</Label>
                 <CountrySelect value={kyc.country} onChange={(code) => setKyc((k) => ({ ...k, country: code, state: "", stateCode: "", city: "" }))} />
               </div>
-              <div>
+              <div id="fld-kyc-state" className={fieldRing("kyc-state")}>
                 <Label>State</Label>
                 <GlobalStateSelect
                   countryCode={kyc.country}
@@ -1630,7 +1689,7 @@ export function UserDetailEditor({
                   onChange={(code, name) => setKyc((k) => ({ ...k, stateCode: code, state: name, city: "" }))}
                 />
               </div>
-              <div>
+              <div id="fld-kyc-city" className={fieldRing("kyc-city")}>
                 <Label>City</Label>
                 <GlobalCitySelect
                   countryCode={kyc.country}
@@ -1639,7 +1698,7 @@ export function UserDetailEditor({
                   onChange={(city) => setKyc((k) => ({ ...k, city }))}
                 />
               </div>
-              <div>
+              <div id="fld-kyc-pin" className={fieldRing("kyc-pin")}>
                 <Label>{kyc.country === "IN" ? "PIN Code" : "Postal Code"}</Label>
                 <GlobalZipSelect
                   countryCode={kyc.country}

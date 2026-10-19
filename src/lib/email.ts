@@ -10,12 +10,21 @@ function isRealKey(k?: string): boolean {
 
 const envFrom = process.env.EMAIL_FROM ?? "BrickVest <onboarding@resend.dev>";
 
+export type EmailAttachment = {
+  filename: string;
+  content: string;      // base64-encoded content
+  contentType?: string;
+  cid?: string;         // set for inline images referenced via cid: in the HTML
+};
+
 export type SendEmailResult = {
   ok: boolean;
   id: string;
   provider: "resend" | "dev" | "smtp";
   delivered: boolean;
   error?: string;
+  accepted?: string[];
+  rejected?: string[];
 };
 
 /**
@@ -30,6 +39,7 @@ export async function sendEmail({
   html,
   cc,
   bcc,
+  attachments,
   fromSenderId,
 }: {
   to: string | string[];
@@ -37,12 +47,15 @@ export async function sendEmail({
   html: string;
   cc?: string | string[];
   bcc?: string | string[];
+  attachments?: EmailAttachment[];
   fromSenderId?: string;
 }): Promise<SendEmailResult> {
   let provider: "resend" | "dev" | "smtp" = "dev";
   let delivered = false;
   let externalId = "dev";
   let error: string | null = null;
+  let accepted: string[] | undefined;
+  let rejected: string[] | undefined;
 
   // 1) Gmail / SMTP takes priority when configured (Integrations → Gmail / company email).
   try {
@@ -65,8 +78,18 @@ export async function sendEmail({
           ...(bcc && (Array.isArray(bcc) ? bcc.length : bcc) ? { bcc } : {}),
           subject,
           html,
+          ...(attachments && attachments.length ? {
+            attachments: attachments.map((a) => ({
+              filename: a.filename,
+              content: Buffer.from(a.content, "base64"),
+              contentType: a.contentType,
+              ...(a.cid ? { cid: a.cid } : {}),
+            })),
+          } : {}),
         });
         provider = "smtp"; delivered = true; externalId = info?.messageId ?? "smtp";
+        accepted = (info?.accepted ?? []).map((x: any) => (typeof x === "string" ? x : x?.address)).filter(Boolean);
+        rejected = (info?.rejected ?? []).map((x: any) => (typeof x === "string" ? x : x?.address)).filter(Boolean);
       } catch (e) {
         error = e instanceof Error ? e.message : "Gmail SMTP send failed";
         provider = "smtp"; delivered = false;
@@ -75,7 +98,7 @@ export async function sendEmail({
         to: Array.isArray(to) ? to.join(", ") : to,
         subject, html, status: delivered ? "SENT" : "FAILED", provider, error,
       });
-      return { ok: !error, id: externalId, provider, delivered, error: error ?? undefined };
+      return { ok: !error, id: externalId, provider, delivered, error: error ?? undefined, accepted, rejected };
     }
   } catch { /* no SMTP config — continue to Resend */ }
 
@@ -99,7 +122,10 @@ export async function sendEmail({
         html,
         ...(cc && (Array.isArray(cc) ? cc.length : cc) ? { cc } : {}),
         ...(bcc && (Array.isArray(bcc) ? bcc.length : bcc) ? { bcc } : {}),
-      });
+        ...(attachments && attachments.length ? {
+          attachments: attachments.map((a) => ({ filename: a.filename, content: a.content, ...(a.cid ? { content_id: a.cid } : {}) })),
+        } : {}),
+      } as any);
       if (resendError) {
         error = resendError.message;
         const lower = error.toLowerCase();
