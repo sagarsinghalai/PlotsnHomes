@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
-import { PropertyGallery } from "@/components/property/property-gallery";
+import { ProjectGallery } from "@/components/public/project-gallery";
 import { LeadCaptureForm } from "@/components/public/lead-capture-form";
 
 export const dynamic = "force-dynamic";
@@ -95,12 +95,12 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
   const p = project;
   const dev = p.developer;
 
-  // Media
-  const gallery: string[] = [
-    p.coverImage, p.bannerImage,
+  // Media — project photo gallery (cover first, then uploaded gallery, then banner)
+  const gallery: string[] = Array.from(new Set([
+    p.coverImage,
     ...parseArr(p.galleryImagesJson).filter((x) => typeof x === "string"),
-    ...parseArr(p.floorPlansJson).filter((x) => typeof x === "string"),
-  ].filter(Boolean) as string[];
+    p.bannerImage,
+  ].filter(Boolean) as string[]));
   const videoLinks = [p.youtubeUrl, p.walkthroughVideoUrl, p.droneVideoUrl, p.virtualTourUrl, p.tour360Url].filter(Boolean) as string[];
 
   // Sections
@@ -216,7 +216,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             {/* Gallery */}
             {gallery.length > 0 && (
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <PropertyGallery images={gallery} title={p.name} />
+                <ProjectGallery images={gallery} title={p.name} />
               </div>
             )}
 

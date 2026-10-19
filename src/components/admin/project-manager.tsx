@@ -29,6 +29,7 @@ import {
   BarChart3,
   Sliders,
   ChevronRight,
+  ChevronLeft,
   ExternalLink,
   ChevronDown,
   Clock,
@@ -438,6 +439,8 @@ export function ProjectManager({
   const [newCustomFieldValue, setNewCustomFieldValue] = useState("");
 
   // New dynamic lists & section helpers
+  const [galleryList, setGalleryList] = useState<string[]>([]);
+  const [newGalleryUrl, setNewGalleryUrl] = useState("");
   const [assetsList, setAssetsList] = useState<any[]>([]);
   const [pricingExtraList, setPricingExtraList] = useState<any[]>([]);
   const [salesManagersList, setSalesManagersList] = useState<any[]>([]);
@@ -597,6 +600,7 @@ export function ProjectManager({
       crmAssignedId: "",
       salesManagerName: "",
     });
+    setGalleryList([]);
     setAssetsList([]);
     setPricingExtraList([]);
     setSalesManagersList([]);
@@ -640,6 +644,7 @@ export function ProjectManager({
       if (proj.customFieldsJson) setCustomFieldsList(JSON.parse(proj.customFieldsJson));
 
       // New dynamic lists
+      setGalleryList(proj.galleryImagesJson ? (JSON.parse(proj.galleryImagesJson) as any[]).filter((x) => typeof x === "string") : []);
       setAssetsList(proj.assetsJson ? JSON.parse(proj.assetsJson) : []);
       setPricingExtraList(proj.pricingExtraJson ? JSON.parse(proj.pricingExtraJson) : []);
       const parsedManagers = proj.salesManagersJson ? JSON.parse(proj.salesManagersJson) : [];
@@ -728,6 +733,7 @@ export function ProjectManager({
       analyticsJson: JSON.stringify(analyticsObj),
       relationshipsJson: JSON.stringify(relationshipsMap),
       customFieldsJson: JSON.stringify(customFieldsList),
+      galleryImagesJson: JSON.stringify(galleryList),
       assetsJson: JSON.stringify(assetsList),
       pricingExtraJson: JSON.stringify(pricingExtraList),
       salesManagersJson: JSON.stringify(salesManagersList),
@@ -1321,6 +1327,60 @@ export function ProjectManager({
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Drone Video URL</label>
                         <Input value={formData.droneVideoUrl || ""} onChange={(e) => setFormData({ ...formData, droneVideoUrl: e.target.value })} placeholder="https://..." />
+                      </div>
+                    </div>
+
+                    {/* Project gallery images (shown in the public gallery) */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5"><ImageIcon className="h-3.5 w-3.5 text-brand" /> Project Gallery Images</label>
+                          <p className="text-[11px] text-slate-400">Upload multiple photos — they appear in the gallery on the public project page.</p>
+                        </div>
+                        <label className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold cursor-pointer transition ${uploading === "gallery" ? "bg-slate-200 text-slate-500" : "bg-brand text-white hover:bg-brand-hover"}`}>
+                          {uploading === "gallery" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                          {uploading === "gallery" ? "Uploading..." : "Upload Images"}
+                          <input type="file" multiple accept="image/*" className="hidden" disabled={uploading === "gallery"}
+                            onChange={async (e) => {
+                              const files = Array.from(e.target.files || []);
+                              if (!files.length) return;
+                              setUploading("gallery");
+                              for (const f of files) {
+                                const res = await uploadFile(f, "image");
+                                if (res) setGalleryList((prev) => [...prev, res.url]);
+                              }
+                              setUploading(null);
+                              e.target.value = "";
+                            }} />
+                        </label>
+                      </div>
+                      {galleryList.length === 0 ? (
+                        <p className="text-[11px] text-slate-400">No gallery images yet.</p>
+                      ) : (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                          {galleryList.map((url, idx) => {
+                            const isCover = formData.coverImage === url;
+                            return (
+                              <div key={idx} className="relative group aspect-square overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+                                <img src={url} alt={`Gallery ${idx + 1}`} className="h-full w-full object-cover" />
+                                {isCover && <span className="absolute left-1.5 top-1.5 rounded-md bg-brand px-1.5 py-0.5 text-[9px] font-bold text-white">COVER</span>}
+                                <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/40 opacity-0 group-hover:opacity-100 transition">
+                                  {idx > 0 && <button type="button" title="Move left" onClick={() => { const next = [...galleryList]; [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]]; setGalleryList(next); }} className="rounded bg-white/90 p-1 text-slate-700 hover:bg-white"><ChevronLeft className="h-3.5 w-3.5" /></button>}
+                                  {!isCover && <button type="button" title="Make cover" onClick={() => setFormData({ ...formData, coverImage: url })} className="rounded bg-white/90 px-1.5 py-1 text-[9px] font-bold text-slate-700 hover:bg-white">★</button>}
+                                  {idx < galleryList.length - 1 && <button type="button" title="Move right" onClick={() => { const next = [...galleryList]; [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]]; setGalleryList(next); }} className="rounded bg-white/90 p-1 text-slate-700 hover:bg-white"><ChevronRight className="h-3.5 w-3.5" /></button>}
+                                  <button type="button" title="Remove" onClick={() => setGalleryList(galleryList.filter((_, i) => i !== idx))} className="rounded bg-rose-600 p-1 text-white hover:bg-rose-700"><X className="h-3.5 w-3.5" /></button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Input value={newGalleryUrl} onChange={(e) => setNewGalleryUrl(e.target.value)} placeholder="...or paste an image URL" />
+                        <Button type="button" variant="gold" size="sm" className="shrink-0 gap-1" onClick={() => {
+                          const u = newGalleryUrl.trim(); if (!u) return;
+                          setGalleryList([...galleryList, u]); setNewGalleryUrl("");
+                        }}><Plus className="h-3.5 w-3.5" /> Add</Button>
                       </div>
                     </div>
 
