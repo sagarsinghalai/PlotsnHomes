@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdminApi } from "@/lib/admin-api";
 import { hasEditPermissionServer, hasDeletePermissionServer } from "@/lib/permissions";
+
+// Valid Project scalar columns — used to drop any UI-only fields the editor
+// sends that are not actual database columns (e.g. relationshipsJson).
+const PROJECT_SCALARS = new Set(Object.keys(Prisma.ProjectScalarFieldEnum));
 
 export async function GET(
   req: Request,
@@ -78,6 +83,12 @@ export async function PUT(
       } else {
         dataToUpdate.developer = { disconnect: true };
       }
+    }
+
+    // Drop any field the editor sends that isn't a real Project column
+    // (e.g. relationshipsJson) so the update doesn't fail on unknown args.
+    for (const k of Object.keys(dataToUpdate)) {
+      if (k !== "developer" && !PROJECT_SCALARS.has(k)) delete dataToUpdate[k];
     }
 
     const project = await prisma.project.update({
