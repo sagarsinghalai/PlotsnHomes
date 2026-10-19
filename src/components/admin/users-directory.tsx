@@ -395,7 +395,7 @@ export function UsersDirectory({
               title={hasActiveFilters ? "Clear all filters" : "No filters applied"}
               className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed ${
                 hasActiveFilters
-                  ? "bg-amber-500 text-slate-950 hover:bg-amber-600 shadow-sm"
+                  ? "bg-brand text-white hover:bg-amber-600 shadow-sm"
                   : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
               }`}
             >

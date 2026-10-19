@@ -406,7 +406,7 @@ export default function BecomeSellerPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-sm shadow-xl shadow-amber-500/20 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover text-white font-extrabold text-sm shadow-xl shadow-brand/20 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? (
                 <>

@@ -111,7 +111,7 @@ export function WhiteLabelClient({
     <div className="p-4 sm:p-8 space-y-8 max-w-7xl mx-auto font-sans text-slate-900 dark:text-white">
       {/* TOAST ALERT */}
       {toastMsg && (
-        <div className="fixed top-6 right-6 z-50 rounded-2xl bg-amber-500 text-slate-950 px-5 py-3.5 text-xs font-extrabold shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-3">
+        <div className="fixed top-6 right-6 z-50 rounded-2xl bg-brand text-white px-5 py-3.5 text-xs font-extrabold shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-3">
           <Sparkles className="h-4 w-4 shrink-0" />
           <span>{toastMsg}</span>
         </div>
@@ -137,7 +137,7 @@ export function WhiteLabelClient({
             onClick={() => setActiveTab("profile")}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
               activeTab === "profile"
-                ? "bg-amber-500 text-slate-950 shadow-md"
+                ? "bg-brand text-white shadow-md"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -148,7 +148,7 @@ export function WhiteLabelClient({
             onClick={() => setActiveTab("subscriptions")}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all cursor-pointer ${
               activeTab === "subscriptions"
-                ? "bg-amber-500 text-slate-950 shadow-md"
+                ? "bg-brand text-white shadow-md"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -306,7 +306,7 @@ export function WhiteLabelClient({
             <button
               onClick={handleSaveProfile}
               disabled={savingProfile}
-              className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/20 transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-2xl bg-brand hover:bg-brand-hover text-white font-extrabold text-sm shadow-lg shadow-brand/20 transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {savingProfile ? (
                 <>
@@ -435,7 +435,7 @@ export function WhiteLabelClient({
                   onClick={() => setTierFilter(tier)}
                   className={`px-3 py-1.5 rounded-xl transition whitespace-nowrap cursor-pointer ${
                     tierFilter === tier
-                      ? "bg-amber-500 text-slate-950 font-extrabold shadow-sm"
+                      ? "bg-brand text-white font-extrabold shadow-sm"
                       : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
@@ -533,7 +533,7 @@ export function WhiteLabelClient({
                               setEditingSub(sub);
                               setIsModalOpen(true);
                             }}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shadow transition cursor-pointer"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-brand hover:bg-brand-hover text-white font-extrabold text-xs shadow transition cursor-pointer"
                           >
                             <Edit2 className="h-3.5 w-3.5" />
                             <span>Manage Tier</span>
@@ -647,7 +647,7 @@ export function WhiteLabelClient({
               <button
                 onClick={handleSaveSubModal}
                 disabled={savingSub}
-                className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold shadow-md shadow-amber-500/20 transition cursor-pointer disabled:opacity-50"
+                className="px-6 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold shadow-md shadow-brand/20 transition cursor-pointer disabled:opacity-50"
               >
                 {savingSub ? "Saving Changes..." : "Save Subscription Level"}
               </button>

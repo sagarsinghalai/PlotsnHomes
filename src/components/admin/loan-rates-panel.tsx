@@ -182,7 +182,7 @@ export function LoanRatesPanel({
       {/* Header */}
       <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shadow-sm shrink-0">
+          <div className="h-10 w-10 rounded-xl bg-brand text-white flex items-center justify-center shadow-sm shrink-0">
             <Landmark className="h-5 w-5 font-extrabold" />
           </div>
           <div>
@@ -194,7 +194,7 @@ export function LoanRatesPanel({
         </div>
         <button
           onClick={() => { setShowAddForm((v) => !v); setError(""); }}
-          className="flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-4 py-2.5 transition shadow-sm"
+          className="flex items-center gap-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-bold px-4 py-2.5 transition shadow-sm"
         >
           <Plus className="h-4 w-4" />
           Add Bank / Branch

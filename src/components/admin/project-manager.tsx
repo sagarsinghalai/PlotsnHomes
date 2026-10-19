@@ -864,7 +864,7 @@ export function ProjectManager({
                       onClick={() => setActiveTab(tab.id)}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-bold transition ${
                         isActive
-                          ? "bg-amber-500 text-slate-950 shadow-xs"
+                          ? "bg-brand text-white shadow-xs"
                           : "text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800"
                       }`}
                     >

@@ -131,7 +131,7 @@ export function EditableCell({
             <button
               type="button"
               onClick={() => setEditing(false)}
-              className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-xs"
+              className="px-3 py-1 rounded-lg bg-brand hover:bg-brand-hover text-white font-bold text-xs shadow-xs"
             >
               Done
             </button>

@@ -167,7 +167,7 @@ export function AreaValueCalculator() {
         </div>
 
         {/* Live Conversion Banner */}
-        <div className="mt-8 rounded-xl border border-brand/30 bg-gradient-to-r from-slate-950 via-slate-900 to-amber-950/40 p-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="mt-8 rounded-xl border border-brand/30 bg-gradient-to-r from-slate-950 via-slate-900 to-brand-hover/40 p-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Conversion Output</span>
             <div className="mt-1 flex items-baseline gap-2">

@@ -106,7 +106,7 @@ export function BusinessPerformanceSection({ data }: BusinessPerformanceProps) {
   const maxForecast = Math.max(...forecast.map((f: any) => Math.max(f.actual || 0, f.forecast || 0)), 1);
 
   const momGradients = [
-    "from-amber-500 via-orange-500 to-yellow-400 shadow-[0_0_16px_rgba(245,158,11,0.6)]",
+    "from-brand via-orange-500 to-yellow-400 shadow-[0_0_16px_rgba(245,158,11,0.6)]",
     "from-emerald-500 via-teal-500 to-cyan-500 shadow-[0_0_16px_rgba(16,185,129,0.6)]",
     "from-cyan-500 via-blue-500 to-indigo-500 shadow-[0_0_16px_rgba(6,182,212,0.6)]",
   ];
@@ -250,7 +250,7 @@ export function BusinessPerformanceSection({ data }: BusinessPerformanceProps) {
                   {/* Broader 20px Pill Bar */}
                   <div className="h-5 rounded-full bg-slate-100 dark:bg-slate-800/80 p-0.5 shadow-inner relative overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-400 shadow-[0_0_14px_rgba(245,158,11,0.6)] transition-all duration-700 relative overflow-hidden"
+                      className="h-full rounded-full bg-gradient-to-r from-brand via-orange-500 to-yellow-400 shadow-[0_0_14px_rgba(245,158,11,0.6)] transition-all duration-700 relative overflow-hidden"
                       style={{ width: `${achievePct}%` }}
                     >
                       <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent opacity-60 rounded-full" />

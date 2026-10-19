@@ -74,7 +74,7 @@ export function AgentAnalyticsSection({ data }: AgentAnalyticsProps) {
   const agentGradients = [
     "from-indigo-600 via-purple-500 to-pink-500 shadow-[0_0_16px_rgba(168,85,247,0.6)]",
     "from-blue-600 via-cyan-500 to-teal-400 shadow-[0_0_16px_rgba(6,182,212,0.6)]",
-    "from-amber-500 via-orange-500 to-yellow-400 shadow-[0_0_16px_rgba(245,158,11,0.6)]",
+    "from-brand via-orange-500 to-yellow-400 shadow-[0_0_16px_rgba(245,158,11,0.6)]",
     "from-emerald-500 via-teal-500 to-cyan-500 shadow-[0_0_16px_rgba(16,185,129,0.6)]",
     "from-purple-600 via-violet-500 to-indigo-500 shadow-[0_0_16px_rgba(139,92,246,0.6)]",
   ];
@@ -168,7 +168,7 @@ export function AgentAnalyticsSection({ data }: AgentAnalyticsProps) {
               <div className="h-full rounded-l-full bg-gradient-to-r from-emerald-600 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.6)] transition-all duration-500 relative" style={{ width: `${commission.paidPct}%` }} title={`Paid: ${commission.paidPct}%`}>
                 <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent opacity-60 rounded-l-full" />
               </div>
-              <div className="h-full rounded-r-full bg-gradient-to-r from-amber-400 to-yellow-500 shadow-[0_0_12px_rgba(245,158,11,0.6)] transition-all duration-500 relative" style={{ width: `${100 - commission.paidPct}%` }} title={`Pending: ${100 - commission.paidPct}%`}>
+              <div className="h-full rounded-r-full bg-gradient-to-r from-brand to-yellow-500 shadow-[0_0_12px_rgba(245,158,11,0.6)] transition-all duration-500 relative" style={{ width: `${100 - commission.paidPct}%` }} title={`Pending: ${100 - commission.paidPct}%`}>
                 <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent opacity-60 rounded-r-full" />
               </div>
             </div>
@@ -277,7 +277,7 @@ export function AgentAnalyticsSection({ data }: AgentAnalyticsProps) {
                 <tr key={ag.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
                   <td className="px-6 py-3.5 font-black text-slate-900 dark:text-white">
                     {idx === 0 ? (
-                      <span className="rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-white px-2.5 py-0.5 text-[11px] font-black shadow-md shadow-amber-500/30 ring-2 ring-amber-300">
+                      <span className="rounded-full bg-gradient-to-r from-brand to-yellow-500 text-white px-2.5 py-0.5 text-[11px] font-black shadow-md shadow-amber-500/30 ring-2 ring-amber-300">
                         #1
                       </span>
                     ) : idx === 1 ? (
@@ -285,7 +285,7 @@ export function AgentAnalyticsSection({ data }: AgentAnalyticsProps) {
                         #2
                       </span>
                     ) : idx === 2 ? (
-                      <span className="rounded-full bg-gradient-to-r from-amber-700 to-amber-800 text-white px-2.5 py-0.5 text-[11px] font-black shadow-sm shadow-amber-800/20">
+                      <span className="rounded-full bg-gradient-to-r from-brand to-brand-hover text-white px-2.5 py-0.5 text-[11px] font-black shadow-sm shadow-amber-800/20">
                         #3
                       </span>
                     ) : (

@@ -1127,7 +1127,7 @@ export function PaymentsManager({ recentPayments }: { recentPayments?: any[] }) 
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-black px-5 py-2 transition shadow-md cursor-pointer"
+                  className="rounded-xl bg-gradient-to-r from-brand to-brand-hover text-white font-black px-5 py-2 transition shadow-md cursor-pointer"
                 >
                   Save Configuration
                 </button>

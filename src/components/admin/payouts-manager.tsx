@@ -1036,7 +1036,7 @@ export function PayoutsManager({
                 <button
                   type="submit"
                   disabled={transferring}
-                  className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-black px-5 py-2 hover:opacity-90 transition shadow-md flex items-center gap-1.5 cursor-pointer"
+                  className="rounded-xl bg-gradient-to-r from-brand to-brand-hover text-white font-black px-5 py-2 hover:opacity-90 transition shadow-md flex items-center gap-1.5 cursor-pointer"
                 >
                   <Send className="h-3.5 w-3.5" />
                   {transferring ? "Executing Transfer..." : "Confirm Bank Transfer"}

@@ -252,7 +252,7 @@ export function TeamHierarchyView({
   const getAvatarGradient = (role: Role) => {
     switch (role as string) {
       case "SUPERADMIN":
-        return "bg-amber-500 text-slate-950 font-black";
+        return "bg-brand text-white font-black";
       case "PLATFORM_ADMIN":
         return "bg-sky-600 text-white font-bold";
       case "WHITE_LABEL_ADMIN":

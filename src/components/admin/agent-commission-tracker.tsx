@@ -639,7 +639,7 @@ export function AgentCommissionTracker({
               onClick={() => setActiveTab(tab.key as any)}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 activeTab === tab.key
-                  ? "bg-amber-500 text-slate-950 shadow-sm"
+                  ? "bg-brand text-white shadow-sm"
                   : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700"
               }`}
             >

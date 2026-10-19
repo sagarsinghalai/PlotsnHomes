@@ -1173,7 +1173,7 @@ export function OrganizationUnitsManager({
             <button
               type="button"
               onClick={openCreateModal}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 text-xs border border-amber-300 shadow-2xs transition cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-400 hover:bg-brand text-white font-bold px-3 py-1.5 text-xs border border-amber-300 shadow-2xs transition cursor-pointer whitespace-nowrap"
             >
               <Plus className="h-4 w-4 shrink-0" />
               <span>Add New</span>
@@ -2166,7 +2166,7 @@ export function OrganizationUnitsManager({
                 type="button"
                 onClick={handleSave}
                 disabled={busy}
-                className="rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 px-4 py-2 text-xs font-bold transition shadow-xs disabled:opacity-50 border border-amber-300 cursor-pointer font-sans"
+                className="rounded-xl bg-amber-400 hover:bg-brand text-white px-4 py-2 text-xs font-bold transition shadow-xs disabled:opacity-50 border border-amber-300 cursor-pointer font-sans"
               >
                 {busy ? "Saving..." : "Save Unit"}
               </button>

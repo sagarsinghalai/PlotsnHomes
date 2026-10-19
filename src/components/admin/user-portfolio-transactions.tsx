@@ -278,7 +278,7 @@ export function UserPropertyPortfolioSection({
                       {/* Actions */}
                       <td className="p-3.5 whitespace-nowrap text-right">
                         <div className="inline-flex items-center gap-2">
-                          <Link href={`/admin/properties/${item.propertyId}/edit`} className="inline-flex items-center gap-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 px-2.5 py-1.5 text-[11px] font-bold transition">
+                          <Link href={`/admin/properties/${item.propertyId}/edit`} className="inline-flex items-center gap-1 rounded-lg bg-brand hover:bg-brand-hover text-white px-2.5 py-1.5 text-[11px] font-bold transition">
                             <Edit className="h-3.5 w-3.5" /> Edit
                           </Link>
                           <Link href={`/properties/${item.slug || item.propertyId}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 text-[11px] font-semibold border border-slate-200 transition">

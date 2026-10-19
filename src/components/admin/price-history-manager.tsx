@@ -216,7 +216,7 @@ export function PriceHistoryManager({
         {canAdd && (
           <button
             onClick={() => setShowLogModal(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold text-sm px-4 py-2.5 shadow-md transition"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand to-brand-hover hover:from-brand hover:to-brand-hover text-white font-extrabold text-sm px-4 py-2.5 shadow-md transition"
           >
             <Plus className="h-4 w-4 stroke-[3]" />
             <span>Log Price Change</span>

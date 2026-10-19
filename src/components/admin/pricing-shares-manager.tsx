@@ -285,7 +285,7 @@ export function PricingSharesManager({
           <button
             type="button"
             onClick={handleSaveAll}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold px-4 py-2.5 text-xs shadow-md transition-all active:scale-95"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand to-brand-hover hover:from-brand hover:to-brand-hover text-slate-950 font-bold px-4 py-2.5 text-xs shadow-md transition-all active:scale-95"
           >
             <Save className="h-4 w-4" />
             <span>Save All Changes</span>
@@ -421,7 +421,7 @@ export function PricingSharesManager({
       </div>
 
       {/* Auto-Calculator Interactive Widget (brickvest simulation tool) */}
-      <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/5 via-slate-900/5 to-amber-500/5 dark:from-amber-500/10 dark:to-amber-500/5 p-5 space-y-4">
+      <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-r from-brand/5 via-slate-900/5 to-brand-hover/5 dark:from-brand/10 dark:to-brand-hover/5 p-5 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calculator className="h-5 w-5 text-amber-500" />
@@ -656,7 +656,7 @@ export function PricingSharesManager({
                           <div className="flex items-center gap-1 min-w-[70px]">
                             <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden w-10">
                               <div
-                                className="h-full bg-gradient-to-r from-amber-500 to-amber-600 rounded-full transition-all duration-300"
+                                className="h-full bg-gradient-to-r from-brand to-brand-hover rounded-full transition-all duration-300"
                                 style={{ width: `${fundedPct}%` }}
                               />
                             </div>

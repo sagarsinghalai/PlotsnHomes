@@ -487,7 +487,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               <button
                 type="submit"
                 disabled={pending}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand via-amber-500 to-brand-hover hover:brightness-110 active:scale-[0.98] px-4 py-2.5 text-sm font-bold text-slate-950 shadow-md shadow-brand/10 hover:shadow-lg hover:shadow-brand/25 transition-all duration-200 disabled:opacity-50 h-[44px]"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand via-brand to-brand-hover hover:brightness-110 active:scale-[0.98] px-4 py-2.5 text-sm font-bold text-slate-950 shadow-md shadow-brand/10 hover:shadow-lg hover:shadow-brand/25 transition-all duration-200 disabled:opacity-50 h-[44px]"
               >
                 <Search className="h-4 w-4 text-slate-950 stroke-[2.5px]" />
                 {pending ? "Searching…" : "Search"}

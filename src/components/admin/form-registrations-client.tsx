@@ -148,7 +148,7 @@ export function FormRegistrationsClient({
     <div className="p-4 sm:p-8 space-y-8 max-w-7xl mx-auto font-sans text-slate-900 dark:text-white">
       {/* TOAST */}
       {toastMsg && (
-        <div className="fixed top-6 right-6 z-50 rounded-2xl bg-amber-500 text-slate-950 px-5 py-3.5 text-xs font-extrabold shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-3">
+        <div className="fixed top-6 right-6 z-50 rounded-2xl bg-brand text-white px-5 py-3.5 text-xs font-extrabold shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-3">
           <Sparkles className="h-4 w-4 shrink-0" />
           <span>{toastMsg}</span>
         </div>
@@ -203,7 +203,7 @@ export function FormRegistrationsClient({
               onClick={() => setTypeFilter(t)}
               className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap ${
                 typeFilter === t
-                  ? "bg-amber-500 text-slate-950 font-extrabold shadow-sm"
+                  ? "bg-brand text-white font-extrabold shadow-sm"
                   : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400"
               }`}
             >
@@ -218,7 +218,7 @@ export function FormRegistrationsClient({
               onClick={() => setStatusFilter(s)}
               className={`px-3 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap ${
                 statusFilter === s
-                  ? "bg-amber-500 text-slate-950 font-extrabold shadow-sm"
+                  ? "bg-brand text-white font-extrabold shadow-sm"
                   : "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400"
               }`}
             >
@@ -540,7 +540,7 @@ export function FormRegistrationsClient({
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setCredsModal(null)}
-                className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold shadow-md transition cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold shadow-md transition cursor-pointer"
               >
                 Done
               </button>

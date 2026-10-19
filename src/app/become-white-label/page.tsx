@@ -420,7 +420,7 @@ export default function BecomeWhiteLabelPage() {
                         onClick={() => togglePropertyType(type)}
                         className={`px-3.5 py-2 rounded-xl text-xs font-semibold border transition ${
                           isSelected
-                            ? "bg-amber-500 text-slate-950 border-amber-500 font-extrabold"
+                            ? "bg-brand text-white border-brand font-extrabold"
                             : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700"
                         }`}
                       >

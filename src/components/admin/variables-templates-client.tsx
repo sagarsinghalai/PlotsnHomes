@@ -456,7 +456,7 @@ export function VariablesTemplatesClient({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => openAddGlobalVarModal()}
-                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold shadow-md transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold shadow-md transition cursor-pointer"
                   >
                     <Plus className="h-4 w-4" />
                     <span>+ Add custom value</span>
@@ -699,7 +699,7 @@ export function VariablesTemplatesClient({
                   <button
                     onClick={handleSaveWaTemplate}
                     disabled={saving}
-                    className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/20 transition cursor-pointer disabled:opacity-50"
+                    className="w-full py-3.5 rounded-2xl bg-brand hover:bg-brand-hover text-white font-extrabold text-sm shadow-lg shadow-brand/20 transition cursor-pointer disabled:opacity-50"
                   >
                     {saving ? "Saving Template..." : "Save Templates"}
                   </button>
@@ -996,7 +996,7 @@ export function VariablesTemplatesClient({
               </button>
               <button
                 onClick={handleAddSystemVar}
-                className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold shadow-md shadow-amber-500/20 transition cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold shadow-md shadow-brand/20 transition cursor-pointer"
               >
                 Save Variable
               </button>
@@ -1075,7 +1075,7 @@ export function VariablesTemplatesClient({
               </button>
               <button
                 onClick={handleSaveGlobalVar}
-                className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold shadow-md shadow-amber-500/20 transition cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-extrabold shadow-md shadow-brand/20 transition cursor-pointer"
               >
                 Save Value
               </button>

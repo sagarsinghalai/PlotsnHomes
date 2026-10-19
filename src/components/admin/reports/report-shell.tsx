@@ -58,7 +58,7 @@ export const REPORT_CATALOG = [
     title: "Lead sources",
     description: "Which channels bring the most and best-quality leads",
     category: "Sales",
-    color: "from-amber-500/10 to-orange-500/10 border-amber-200",
+    color: "from-brand/10 to-orange-500/10 border-amber-200",
   },
   {
     href: "/admin/reports/team",
@@ -72,7 +72,7 @@ export const REPORT_CATALOG = [
     title: "Revenue analytics",
     description: "Completed payments, monthly trend, and transaction mix",
     category: "Finance",
-    color: "from-brand/20 to-amber-500/10 border-amber-300",
+    color: "from-brand/20 to-brand-hover/10 border-amber-300",
   },
   {
     href: "/admin/reports/properties",

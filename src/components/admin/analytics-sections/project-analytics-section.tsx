@@ -49,7 +49,7 @@ export function ProjectAnalyticsSection({ data }: ProjectAnalyticsProps) {
   const projectGradients = [
     "from-purple-600 via-indigo-500 to-pink-500 shadow-[0_0_16px_rgba(168,85,247,0.6)]",
     "from-blue-600 via-cyan-500 to-teal-400 shadow-[0_0_16px_rgba(6,182,212,0.6)]",
-    "from-amber-500 via-orange-500 to-yellow-400 shadow-[0_0_16px_rgba(245,158,11,0.6)]",
+    "from-brand via-orange-500 to-yellow-400 shadow-[0_0_16px_rgba(245,158,11,0.6)]",
     "from-emerald-500 via-teal-500 to-cyan-500 shadow-[0_0_16px_rgba(16,185,129,0.6)]",
     "from-indigo-600 via-violet-500 to-purple-500 shadow-[0_0_16px_rgba(99,102,241,0.6)]",
   ];
