@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { ViewToggle, useViewMode, viewContainerClass } from "@/components/admin/view-toggle";
 import {
   Building2,
   Plus,
@@ -234,6 +235,7 @@ export function ProjectManager({
   const [selectedDeveloperId, setSelectedDeveloperId] = useState<string>(preselectedDeveloperId);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [viewMode, setViewMode] = useViewMode("admin-projects");
 
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -726,6 +728,8 @@ export function ProjectManager({
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
+
+        <ViewToggle mode={viewMode} onChange={setViewMode} className="ml-auto" />
       </div>
 
       {/* Projects Grid List */}
@@ -747,8 +751,45 @@ export function ProjectManager({
           )}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((p) => (
+        <div className={viewContainerClass(viewMode)}>
+          {projects.map((p) => viewMode === "list" ? (
+            <div
+              key={p.id}
+              className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 shadow-xs hover:border-slate-300 transition"
+            >
+              <span className="text-[10px] font-mono font-bold bg-brand-soft border border-brand/20 text-brand px-2 py-0.5 rounded-lg shrink-0">
+                {p.code || "PRJ-XXXX"}
+              </span>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">{p.name}</h3>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate flex items-center gap-1">
+                  🏢 {p.developer?.name || p.builderName || "Independent Developer"}
+                  <span className="text-slate-300">·</span>
+                  <MapPin className="h-3 w-3 text-brand shrink-0" />
+                  {p.area ? `${p.area}, ${p.city}` : p.city || "—"}
+                </p>
+              </div>
+              <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 shrink-0">
+                {p.minPrice ? formatCurrency(p.minPrice) : "On Request"}
+                {p.maxPrice ? ` - ${formatCurrency(p.maxPrice)}` : ""}
+              </span>
+              <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 shrink-0">
+                {p.status || "New Launch"}
+              </span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {canEdit && (
+                  <Button type="button" variant="secondary" size="sm" onClick={() => handleOpenEditModal(p)} className="text-xs font-bold gap-1">
+                    <Edit2 className="h-3.5 w-3.5" /> Edit
+                  </Button>
+                )}
+                {canDelete && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => handleDeleteProject(p.id, p.name)} className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 p-2" title="Delete Project">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
             <div
               key={p.id}
               className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between"
