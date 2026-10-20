@@ -740,6 +740,7 @@ model Project {
 
   // Media assets, pricing extras & sales managers
   assetsJson            String?    @default("[]")
+  videosJson            String?    @default("[]")
   pricingExtraJson      String?    @default("[]")
   salesManagersJson     String?    @default("[]")
 

@@ -138,6 +138,7 @@ export interface ProjectData {
 
   // New: media assets, pricing extras & sales managers
   assetsJson?: string | null;
+  videosJson?: string | null;
   pricingExtraJson?: string | null;
   salesManagersJson?: string | null;
 
@@ -441,6 +442,8 @@ export function ProjectManager({
   // New dynamic lists & section helpers
   const [galleryList, setGalleryList] = useState<string[]>([]);
   const [newGalleryUrl, setNewGalleryUrl] = useState("");
+  const [videosList, setVideosList] = useState<any[]>([]);
+  const [newVideoUrl, setNewVideoUrl] = useState("");
   const [assetsList, setAssetsList] = useState<any[]>([]);
   const [pricingExtraList, setPricingExtraList] = useState<any[]>([]);
   const [salesManagersList, setSalesManagersList] = useState<any[]>([]);
@@ -469,6 +472,23 @@ export function ProjectManager({
       return null;
     }
   }
+
+  // Upload a single file straight into a formData URL field (Cover, Banner, PDFs, etc.)
+  async function uploadToField(field: keyof ProjectData, file: File, kind?: string) {
+    setUploading(`field-${String(field)}`);
+    const res = await uploadFile(file, kind);
+    if (res) setFormData((prev) => ({ ...prev, [field]: res.url }));
+    setUploading(null);
+  }
+
+  // Compact "upload a file into this field" button rendered next to a URL input.
+  const fieldUploadBtn = (field: keyof ProjectData, accept: string, kind?: string) => (
+    <label className="inline-flex items-center justify-center rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 shrink-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" title="Upload a file">
+      {uploading === `field-${String(field)}` ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" /> : <Upload className="h-4 w-4 text-slate-500" />}
+      <input type="file" accept={accept} className="hidden" disabled={!!uploading}
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadToField(field, f, kind); e.target.value = ""; }} />
+    </label>
+  );
 
   // Parse the first sheet of an .xlsx/.csv file into row objects, then map each
   // row via `mapRow` (header lookups are case-insensitive).
@@ -601,6 +621,7 @@ export function ProjectManager({
       salesManagerName: "",
     });
     setGalleryList([]);
+    setVideosList([]);
     setAssetsList([]);
     setPricingExtraList([]);
     setSalesManagersList([]);
@@ -645,6 +666,7 @@ export function ProjectManager({
 
       // New dynamic lists
       setGalleryList(proj.galleryImagesJson ? (JSON.parse(proj.galleryImagesJson) as any[]).filter((x) => typeof x === "string") : []);
+      setVideosList(proj.videosJson ? JSON.parse(proj.videosJson) : []);
       setAssetsList(proj.assetsJson ? JSON.parse(proj.assetsJson) : []);
       setPricingExtraList(proj.pricingExtraJson ? JSON.parse(proj.pricingExtraJson) : []);
       const parsedManagers = proj.salesManagersJson ? JSON.parse(proj.salesManagersJson) : [];
@@ -734,6 +756,7 @@ export function ProjectManager({
       relationshipsJson: JSON.stringify(relationshipsMap),
       customFieldsJson: JSON.stringify(customFieldsList),
       galleryImagesJson: JSON.stringify(galleryList),
+      videosJson: JSON.stringify(videosList),
       assetsJson: JSON.stringify(assetsList),
       pricingExtraJson: JSON.stringify(pricingExtraList),
       salesManagersJson: JSON.stringify(salesManagersList),
@@ -1297,24 +1320,39 @@ export function ProjectManager({
                     </h4>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Cover Image URL</label>
-                        <Input value={formData.coverImage || ""} onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })} placeholder="https://images.unsplash.com/photo-..." />
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Cover Image <span className="text-slate-400 font-medium">(upload or URL)</span></label>
+                        <div className="flex gap-1.5">
+                          <Input value={formData.coverImage || ""} onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })} placeholder="Upload or paste image URL" />
+                          {fieldUploadBtn("coverImage", "image/*", "image")}
+                        </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Banner Image URL</label>
-                        <Input value={formData.bannerImage || ""} onChange={(e) => setFormData({ ...formData, bannerImage: e.target.value })} placeholder="https://images.unsplash.com/photo-..." />
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Banner Image <span className="text-slate-400 font-medium">(upload or URL)</span></label>
+                        <div className="flex gap-1.5">
+                          <Input value={formData.bannerImage || ""} onChange={(e) => setFormData({ ...formData, bannerImage: e.target.value })} placeholder="Upload or paste image URL" />
+                          {fieldUploadBtn("bannerImage", "image/*", "image")}
+                        </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Master Plan URL</label>
-                        <Input value={formData.masterPlanUrl || ""} onChange={(e) => setFormData({ ...formData, masterPlanUrl: e.target.value })} placeholder="https://..." />
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Master Plan <span className="text-slate-400 font-medium">(upload or URL)</span></label>
+                        <div className="flex gap-1.5">
+                          <Input value={formData.masterPlanUrl || ""} onChange={(e) => setFormData({ ...formData, masterPlanUrl: e.target.value })} placeholder="Upload image/PDF or paste URL" />
+                          {fieldUploadBtn("masterPlanUrl", "image/*,application/pdf")}
+                        </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Brochure PDF URL</label>
-                        <Input value={formData.brochurePdfUrl || ""} onChange={(e) => setFormData({ ...formData, brochurePdfUrl: e.target.value })} placeholder="https://...brochure.pdf" />
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Brochure PDF <span className="text-slate-400 font-medium">(upload or URL)</span></label>
+                        <div className="flex gap-1.5">
+                          <Input value={formData.brochurePdfUrl || ""} onChange={(e) => setFormData({ ...formData, brochurePdfUrl: e.target.value })} placeholder="Upload or paste PDF URL" />
+                          {fieldUploadBtn("brochurePdfUrl", "application/pdf", "pdf")}
+                        </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Price Sheet PDF URL</label>
-                        <Input value={formData.priceSheetPdfUrl || ""} onChange={(e) => setFormData({ ...formData, priceSheetPdfUrl: e.target.value })} placeholder="https://...price-sheet.pdf" />
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Price Sheet PDF <span className="text-slate-400 font-medium">(upload or URL)</span></label>
+                        <div className="flex gap-1.5">
+                          <Input value={formData.priceSheetPdfUrl || ""} onChange={(e) => setFormData({ ...formData, priceSheetPdfUrl: e.target.value })} placeholder="Upload or paste PDF URL" />
+                          {fieldUploadBtn("priceSheetPdfUrl", "application/pdf", "pdf")}
+                        </div>
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">YouTube Walkthrough Link</label>
@@ -1325,8 +1363,11 @@ export function ProjectManager({
                         <Input value={formData.virtualTourUrl || ""} onChange={(e) => setFormData({ ...formData, virtualTourUrl: e.target.value })} placeholder="https://my.matterport.com/show/..." />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Drone Video URL</label>
-                        <Input value={formData.droneVideoUrl || ""} onChange={(e) => setFormData({ ...formData, droneVideoUrl: e.target.value })} placeholder="https://..." />
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Drone Video <span className="text-slate-400 font-medium">(upload or URL)</span></label>
+                        <div className="flex gap-1.5">
+                          <Input value={formData.droneVideoUrl || ""} onChange={(e) => setFormData({ ...formData, droneVideoUrl: e.target.value })} placeholder="Upload or paste video URL" />
+                          {fieldUploadBtn("droneVideoUrl", "video/*", "video")}
+                        </div>
                       </div>
                     </div>
 
@@ -1380,6 +1421,52 @@ export function ProjectManager({
                         <Button type="button" variant="gold" size="sm" className="shrink-0 gap-1" onClick={() => {
                           const u = newGalleryUrl.trim(); if (!u) return;
                           setGalleryList([...galleryList, u]); setNewGalleryUrl("");
+                        }}><Plus className="h-3.5 w-3.5" /> Add</Button>
+                      </div>
+                    </div>
+
+                    {/* Project videos */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5"><Film className="h-3.5 w-3.5 text-brand" /> Project Videos</label>
+                          <p className="text-[11px] text-slate-400">Upload multiple videos — they play in the gallery on the public project page.</p>
+                        </div>
+                        <label className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold cursor-pointer transition ${uploading === "video" ? "bg-slate-200 text-slate-500" : "bg-brand text-white hover:bg-brand-hover"}`}>
+                          {uploading === "video" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                          {uploading === "video" ? "Uploading..." : "Upload Videos"}
+                          <input type="file" multiple accept="video/*" className="hidden" disabled={uploading === "video"}
+                            onChange={async (e) => {
+                              const files = Array.from(e.target.files || []);
+                              if (!files.length) return;
+                              setUploading("video");
+                              for (const f of files) {
+                                const res = await uploadFile(f, "video");
+                                if (res) setVideosList((prev) => [...prev, { url: res.url, name: res.name }]);
+                              }
+                              setUploading(null);
+                              e.target.value = "";
+                            }} />
+                        </label>
+                      </div>
+                      {videosList.length === 0 ? (
+                        <p className="text-[11px] text-slate-400">No videos uploaded yet.</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {videosList.map((v, idx) => (
+                            <div key={idx} className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                              <Film className="h-4 w-4 text-slate-400 shrink-0" />
+                              <a href={v.url} target="_blank" rel="noreferrer" className="flex-1 min-w-0 text-xs font-semibold text-brand-hover truncate hover:underline">{v.name || v.url}</a>
+                              <button type="button" onClick={() => setVideosList(videosList.filter((_, i) => i !== idx))} className="text-rose-600 shrink-0"><X className="h-4 w-4" /></button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <Input value={newVideoUrl} onChange={(e) => setNewVideoUrl(e.target.value)} placeholder="...or paste a video URL (mp4 / YouTube etc.)" />
+                        <Button type="button" variant="gold" size="sm" className="shrink-0 gap-1" onClick={() => {
+                          const u = newVideoUrl.trim(); if (!u) return;
+                          setVideosList([...videosList, { url: u, name: u.split("/").pop() || "Video" }]); setNewVideoUrl("");
                         }}><Plus className="h-3.5 w-3.5" /> Add</Button>
                       </div>
                     </div>

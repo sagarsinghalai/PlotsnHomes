@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, X, Expand, Images } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Expand, Images, Download } from "lucide-react";
 
 /**
  * Premium project gallery: a large featured image with a centered row of
@@ -113,8 +113,19 @@ export function ProjectGallery({ images, title }: { images: string[]; title: str
         >
           <div className="flex items-center justify-between px-5 py-4 text-white/90">
             <span className="text-sm font-semibold">{title}</span>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <span className="text-sm tabular-nums text-white/70">{idx + 1} / {list.length}</span>
+              <a
+                href={list[idx]}
+                download
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                aria-label="Download photo"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
+              >
+                <Download className="h-4 w-4" /> Download
+              </a>
               <button type="button" aria-label="Close" onClick={() => setLightbox(false)} className="rounded-full p-1.5 text-white/80 hover:bg-white/10 hover:text-white">
                 <X className="h-6 w-6" />
               </button>

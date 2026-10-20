@@ -145,6 +145,7 @@ export async function POST(req: Request) {
 
       // Media assets, pricing extras & sales managers
       assetsJson,
+      videosJson,
       pricingExtraJson,
       salesManagersJson,
 
@@ -284,6 +285,7 @@ export async function POST(req: Request) {
         towersJson: typeof towersJson === "string" ? towersJson : JSON.stringify(towersJson || []),
         unitsJson: typeof unitsJson === "string" ? unitsJson : JSON.stringify(unitsJson || []),
         assetsJson: typeof assetsJson === "string" ? assetsJson : JSON.stringify(assetsJson || []),
+        videosJson: typeof videosJson === "string" ? videosJson : JSON.stringify(videosJson || []),
         pricingExtraJson: typeof pricingExtraJson === "string" ? pricingExtraJson : JSON.stringify(pricingExtraJson || []),
         salesManagersJson: typeof salesManagersJson === "string" ? salesManagersJson : JSON.stringify(salesManagersJson || []),
 
