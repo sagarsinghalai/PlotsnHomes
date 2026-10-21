@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Script from "next/script";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import {
@@ -137,6 +138,12 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
   const progressVideos = Array.isArray(timeline.videos) ? timeline.videos : [];
   const timelineVideoLinks = Array.isArray(timeline.videoLinks) ? timeline.videoLinks : [];
 
+  const sectionVis = parseObj(p.sectionVisibilityJson);
+  const vis = (tabId: string) => sectionVis[tabId] !== false;
+  const trk = parseObj(p.analyticsConfigJson);
+  const salesInfo = parseObj(p.salesInfoJson);
+  const builderExtra = parseArr(p.builderExtraJson).filter((b: any) => b?.label);
+
   const description = p.fullDescription || p.description || p.shortDescription || "";
   const location = [p.area, p.locality, p.city, p.state].filter(Boolean).join(", ");
   const developerName = dev?.name || p.builderName || "";
@@ -162,6 +169,26 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
 
   return (
     <div className="bg-slate-50 min-h-screen">
+      {/* Analytics / tracking — injected per project when IDs are set */}
+      {trk.ga4 && (
+        <>
+          <Script src={`https://www.googletagmanager.com/gtag/js?id=${trk.ga4}`} strategy="afterInteractive" />
+          <Script id="ga4-init" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${trk.ga4}');`}</Script>
+        </>
+      )}
+      {trk.gtm && (
+        <Script id="gtm-init" strategy="afterInteractive">{`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${trk.gtm}');`}</Script>
+      )}
+      {trk.metaPixel && (
+        <Script id="meta-pixel" strategy="afterInteractive">{`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${trk.metaPixel}');fbq('track','PageView');`}</Script>
+      )}
+      {trk.hotjar && (
+        <Script id="hotjar" strategy="afterInteractive">{`(function(h,o,t,j,a,r){h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};h._hjSettings={hjid:${trk.hotjar},hjsv:6};a=o.getElementsByTagName('head')[0];r=o.createElement('script');r.async=1;r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;a.appendChild(r);})(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');`}</Script>
+      )}
+      {trk.clarity && (
+        <Script id="ms-clarity" strategy="afterInteractive">{`(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${trk.clarity}");`}</Script>
+      )}
+
       {/* Breadcrumb */}
       <div className="border-b bg-white">
         <div className="mx-auto max-w-7xl px-4 py-3 text-sm text-slate-500 flex items-center gap-1.5 flex-wrap">
@@ -220,14 +247,14 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
           {/* Main column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Gallery */}
-            {gallery.length > 0 && (
+            {vis("media") && gallery.length > 0 && (
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                 <ProjectGallery images={gallery} title={p.name} />
               </div>
             )}
 
             {/* Videos & tours */}
-            {(uploadedVideos.length > 0 || videoLinks.length > 0) && (
+            {vis("media") && (uploadedVideos.length > 0 || videoLinks.length > 0) && (
               <SectionCard id="videos" icon={Film} title="Videos & Virtual Tours">
                 {uploadedVideos.length > 0 && (
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -257,7 +284,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             )}
 
             {/* Overview */}
-            {(description || highlights.length > 0 || p.lifestyleDescription) && (
+            {vis("description") && (description || highlights.length > 0 || p.lifestyleDescription) && (
               <SectionCard id="overview" icon={Sparkles} title="Project Overview">
                 {description && <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">{description}</p>}
                 {p.lifestyleDescription && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-600">{p.lifestyleDescription}</p>}
@@ -281,7 +308,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             )}
 
             {/* Unit configurations */}
-            {configs.length > 0 && (
+            {vis("configs") && configs.length > 0 && (
               <SectionCard id="configurations" icon={Layers} title="Unit Configurations">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[480px]">
@@ -309,7 +336,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             )}
 
             {/* Amenities */}
-            {amenities.length > 0 && (
+            {vis("amenities") && amenities.length > 0 && (
               <SectionCard id="amenities" icon={Home} title="Amenities & Features">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                   {amenities.map((a) => (
@@ -322,7 +349,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             )}
 
             {/* Towers */}
-            {towers.length > 0 && (
+            {vis("towers") && towers.length > 0 && (
               <SectionCard id="towers" icon={Building2} title="Towers & Buildings">
                 <div className="grid gap-3 sm:grid-cols-2">
                   {towers.map((t: any, i: number) => (
@@ -340,7 +367,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             )}
 
             {/* Specifications */}
-            {specEntries.length > 0 && (
+            {vis("specifications") && specEntries.length > 0 && (
               <SectionCard id="specifications" icon={Hammer} title="Specifications">
                 <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
                   {specEntries.map(([k, v]) => (
@@ -354,7 +381,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             )}
 
             {/* Pricing & charges */}
-            {charges.length > 0 && (
+            {vis("pricing") && charges.length > 0 && (
               <SectionCard id="pricing" icon={IndianRupee} title="Pricing & Charges">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {charges.map((c, i) => (
@@ -368,7 +395,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             )}
 
             {/* Financial plans */}
-            {(paymentPlans.length > 0 || bankApprovals.length > 0 || loanPartners.length > 0) && (
+            {vis("financial") && (paymentPlans.length > 0 || bankApprovals.length > 0 || loanPartners.length > 0) && (
               <SectionCard id="financial" icon={Landmark} title="Payment Plans & Bank Approvals">
                 {paymentPlans.filter((pp: any) => pp.enabled !== false && pp.name).length > 0 && (
                   <div className="space-y-2">
@@ -418,7 +445,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             )}
 
             {/* Construction timeline */}
-            {(timeline.foundationStatus || milestones.length > 0 || progressImages.length > 0 || progressVideos.length > 0 || timelineVideoLinks.length > 0) && (
+            {vis("timeline") && (timeline.foundationStatus || milestones.length > 0 || progressImages.length > 0 || progressVideos.length > 0 || timelineVideoLinks.length > 0) && (
               <SectionCard id="timeline" icon={Clock} title="Construction Progress">
                 <div className="flex flex-wrap gap-2">
                   {[["Foundation", timeline.foundationStatus], ["Structure", timeline.structureStatus], ["Finishing", timeline.finishingStatus]]
@@ -465,7 +492,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             )}
 
             {/* Nearby */}
-            {nearby.length > 0 && (
+            {vis("nearby") && nearby.length > 0 && (
               <SectionCard id="nearby" icon={MapPin} title="Location & Connectivity">
                 <div className="grid gap-2 sm:grid-cols-2">
                   {nearby.map((n: any, i: number) => (
@@ -484,7 +511,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             )}
 
             {/* Documents & assets */}
-            {(docEntries.length > 0 || assets.length > 0 || p.brochurePdfUrl || p.priceSheetPdfUrl) && (
+            {vis("documents") && (docEntries.length > 0 || assets.length > 0 || p.brochurePdfUrl || p.priceSheetPdfUrl) && (
               <SectionCard id="documents" icon={FileText} title="Documents & Downloads">
                 <div className="grid gap-2 sm:grid-cols-2">
                   {p.brochurePdfUrl && <DocLink href={p.brochurePdfUrl} label="Project Brochure" />}
@@ -524,7 +551,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             </div>
 
             {/* Builder card */}
-            {developerName && (
+            {vis("builder") && developerName && (
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-400">About the Developer</p>
                 <div className="mt-2 flex items-center gap-3">
@@ -547,6 +574,16 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
                 {(dev?.description || p.aboutBuilder) && (
                   <p className="mt-3 text-xs leading-relaxed text-slate-600 line-clamp-5">{dev?.description || p.aboutBuilder}</p>
                 )}
+                {builderExtra.length > 0 && (
+                  <dl className="mt-3 space-y-1 border-t border-slate-100 pt-3">
+                    {builderExtra.map((b: any, i: number) => (
+                      <div key={i} className="flex justify-between gap-2 text-xs">
+                        <dt className="text-slate-400">{b.label}</dt>
+                        <dd className="font-semibold text-slate-700 text-right">{b.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
                 {(dev?.website || p.website) && (
                   <a href={(dev?.website || p.website) as string} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline">
                     <Globe className="h-4 w-4" /> Visit website
@@ -556,7 +593,21 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
             )}
 
             {/* Sales contact */}
-            {(p.address || p.salesPhone || p.salesEmail || p.salesWhatsapp || salesManagers.length > 0) && (
+            {vis("sales") && Object.entries(salesInfo).filter(([, v]) => v && String(v).trim()).length > 0 && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Project Details</p>
+                <dl className="mt-3 space-y-1.5">
+                  {Object.entries(salesInfo).filter(([, v]) => v && String(v).trim()).map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-2 text-sm">
+                      <dt className="text-slate-500">{k}</dt>
+                      <dd className="font-semibold text-slate-800 text-right">{String(v)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+
+            {vis("contact") && (p.address || p.salesPhone || p.salesEmail || p.salesWhatsapp || salesManagers.length > 0) && (
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Sales Contact</p>
                 {p.address && <p className="mt-2 flex items-start gap-2 text-sm text-slate-600"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand" /> {p.address}</p>}

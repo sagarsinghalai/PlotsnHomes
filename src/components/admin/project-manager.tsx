@@ -19,6 +19,7 @@ import {
   Edit2,
   Trash2,
   Upload,
+  EyeOff,
   Globe,
   Tag,
   ShieldAlert,
@@ -1239,6 +1240,24 @@ export function ProjectManager({
 
               {/* Right Form Panels */}
               <form onSubmit={handleSaveProject} className="flex-1 p-6 overflow-y-auto space-y-6">
+                {/* Per-section frontend visibility toggle */}
+                {(() => {
+                  const shown = sectionVisibility[activeTab] !== false;
+                  const tabLabel = PROJECT_TAB_SECTIONS.find((t) => t.id === activeTab)?.label || "This section";
+                  return (
+                    <div className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 ${shown ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/30" : "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950"}`}>
+                      <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                        {shown ? "✓ This section is shown on the public project page" : "Hidden from the public project page"}
+                      </span>
+                      <button type="button" onClick={() => setSectionVisibility({ ...sectionVisibility, [activeTab]: !shown })}
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold transition ${shown ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-200 hover:bg-slate-400"}`}
+                        title={`Show or hide "${tabLabel}" on the website`}>
+                        {shown ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                        {shown ? "Shown on site" : "Hidden"}
+                      </button>
+                    </div>
+                  );
+                })()}
                 {/* 1. BASIC INFORMATION */}
                 {activeTab === "basic" && (
                   <div className="space-y-4">
