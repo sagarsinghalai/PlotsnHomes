@@ -43,11 +43,17 @@ import {
   FileSpreadsheet,
   Link2,
   Film,
+  Download,
+  FileDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
+import { CountrySelect } from "@/components/ui/country-select";
+import { GlobalStateSelect, GlobalCitySelect, GlobalZipSelect } from "@/components/ui/location-select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { State } from "country-state-city";
 
 export interface DeveloperOption {
   id: string;
@@ -444,6 +450,21 @@ export function ProjectManager({
   const [newGalleryUrl, setNewGalleryUrl] = useState("");
   const [videosList, setVideosList] = useState<any[]>([]);
   const [newVideoUrl, setNewVideoUrl] = useState("");
+  const [uspList, setUspList] = useState<string[]>([]);
+  const [locationStateCode, setLocationStateCode] = useState("");
+
+  // Download a sample CSV template with the exact importer columns.
+  function downloadSampleCsv(filename: string, headers: string[], example: string[]) {
+    const esc = (s: string) => `"${String(s).replace(/"/g, '""')}"`;
+    const csv = [headers.map(esc).join(","), example.map(esc).join(",")].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
   const [assetsList, setAssetsList] = useState<any[]>([]);
   const [pricingExtraList, setPricingExtraList] = useState<any[]>([]);
   const [salesManagersList, setSalesManagersList] = useState<any[]>([]);
@@ -622,6 +643,8 @@ export function ProjectManager({
     });
     setGalleryList([]);
     setVideosList([]);
+    setUspList([]);
+    setLocationStateCode("");
     setAssetsList([]);
     setPricingExtraList([]);
     setSalesManagersList([]);
@@ -667,6 +690,17 @@ export function ProjectManager({
       // New dynamic lists
       setGalleryList(proj.galleryImagesJson ? (JSON.parse(proj.galleryImagesJson) as any[]).filter((x) => typeof x === "string") : []);
       setVideosList(proj.videosJson ? JSON.parse(proj.videosJson) : []);
+      try {
+        const u = proj.projectUspJson ? JSON.parse(proj.projectUspJson) : [];
+        setUspList(Array.isArray(u) ? u.filter((x) => typeof x === "string") : (typeof proj.projectUspJson === "string" && proj.projectUspJson.trim() ? proj.projectUspJson.split(",").map((s) => s.trim()).filter(Boolean) : []));
+      } catch {
+        setUspList(typeof proj.projectUspJson === "string" && proj.projectUspJson.trim() ? proj.projectUspJson.split(",").map((s) => s.trim()).filter(Boolean) : []);
+      }
+      try {
+        const states = State.getStatesOfCountry(proj.country || "IN");
+        const found = states.find((s) => s.name === proj.state);
+        setLocationStateCode(found ? found.isoCode : "");
+      } catch { setLocationStateCode(""); }
       setAssetsList(proj.assetsJson ? JSON.parse(proj.assetsJson) : []);
       setPricingExtraList(proj.pricingExtraJson ? JSON.parse(proj.pricingExtraJson) : []);
       const parsedManagers = proj.salesManagersJson ? JSON.parse(proj.salesManagersJson) : [];
@@ -757,6 +791,7 @@ export function ProjectManager({
       customFieldsJson: JSON.stringify(customFieldsList),
       galleryImagesJson: JSON.stringify(galleryList),
       videosJson: JSON.stringify(videosList),
+      projectUspJson: JSON.stringify(uspList.filter((x) => x.trim())),
       assetsJson: JSON.stringify(assetsList),
       pricingExtraJson: JSON.stringify(pricingExtraList),
       salesManagersJson: JSON.stringify(salesManagersList),
@@ -1239,15 +1274,15 @@ export function ProjectManager({
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Country</label>
-                        <Input value={formData.country || "IN"} onChange={(e) => setFormData({ ...formData, country: e.target.value })} placeholder="IN" />
+                        <CountrySelect value={formData.country || "IN"} onChange={(code) => { setFormData({ ...formData, country: code, state: "", city: "", zip: "" }); setLocationStateCode(""); }} />
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">State</label>
-                        <Input value={formData.state || ""} onChange={(e) => setFormData({ ...formData, state: e.target.value })} placeholder="Haryana" />
+                        <GlobalStateSelect countryCode={formData.country || "IN"} value={locationStateCode} onChange={(code, name) => { setLocationStateCode(code); setFormData({ ...formData, state: name, city: "", zip: "" }); }} />
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">City</label>
-                        <Input value={formData.city || ""} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Gurugram" />
+                        <GlobalCitySelect countryCode={formData.country || "IN"} stateCode={locationStateCode} value={formData.city || ""} onChange={(city) => setFormData({ ...formData, city, zip: "" })} />
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Area</label>
@@ -1263,7 +1298,7 @@ export function ProjectManager({
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Pin Code</label>
-                        <Input value={formData.zip || ""} onChange={(e) => setFormData({ ...formData, zip: e.target.value })} placeholder="122001" />
+                        <GlobalZipSelect countryCode={formData.country || "IN"} city={formData.city || ""} value={formData.zip || ""} onChange={(zip) => setFormData({ ...formData, zip })} placeholder="Auto-loads from city" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Latitude</label>
@@ -1300,9 +1335,22 @@ export function ProjectManager({
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Full Description</label>
                         <textarea rows={4} value={formData.fullDescription || ""} onChange={(e) => setFormData({ ...formData, fullDescription: e.target.value })} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 p-3 text-xs" placeholder="Full project story, architecture specs, and lifestyle summary..." />
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Project USP / Key Highlights</label>
-                        <Input value={formData.projectUspJson || ""} onChange={(e) => setFormData({ ...formData, projectUspJson: e.target.value })} placeholder="e.g. 80% Green Open Space, Olympic Size Pool, Smart Automation" />
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Project USP / Key Highlights <span className="text-slate-400 font-medium">(shown as bullet points)</span></label>
+                          <Button type="button" size="sm" variant="gold" className="gap-1 text-xs" onClick={() => setUspList([...uspList, ""])}><Plus className="h-3.5 w-3.5" /> Add USP</Button>
+                        </div>
+                        {uspList.length === 0 ? (
+                          <p className="text-[11px] text-slate-400">No highlights yet. Click &quot;Add USP&quot; to add key selling points.</p>
+                        ) : (
+                          uspList.map((usp, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <span className="text-brand">•</span>
+                              <Input value={usp} onChange={(e) => { const next = [...uspList]; next[idx] = e.target.value; setUspList(next); }} placeholder="e.g. 80% Green Open Space" />
+                              <Button type="button" variant="ghost" size="sm" onClick={() => setUspList(uspList.filter((_, i) => i !== idx))} className="text-rose-600 shrink-0"><Trash2 className="h-4 w-4" /></Button>
+                            </div>
+                          ))
+                        )}
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Lifestyle & Amenities Description</label>
@@ -1586,7 +1634,10 @@ export function ProjectManager({
                         6. Unit Configurations Matrix
                       </h4>
                       <div className="flex items-center gap-2">
-                        <label className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" title="Bulk upload from Excel. Columns: Type, Size, Starting Price, Carpet Area, Builtup Area, Balcony, Bathrooms, Parking">
+                        <button type="button" onClick={() => downloadSampleCsv("unit-configurations-sample.csv", ["Type", "Size", "Starting Price", "Carpet Area", "Builtup Area", "Balcony", "Bathrooms", "Parking"], ["2 BHK", "980 sqft", "6800000", "750 sqft", "900 sqft", "2", "2", "1"])} className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800" title="Download a sample CSV with the exact columns">
+                          <FileDown className="h-3.5 w-3.5 text-brand" /> Sample CSV
+                        </button>
+                        <label className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" title="Bulk upload from Excel/CSV. Columns: Type, Size, Starting Price, Carpet Area, Builtup Area, Balcony, Bathrooms, Parking">
                           <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> Upload Excel
                           <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={async (e) => {
                             const f = e.target.files?.[0]; if (!f) return;
@@ -1614,6 +1665,11 @@ export function ProjectManager({
                     </div>
 
                     <div className="space-y-3">
+                      {configurationsList.length > 0 && (
+                        <div className="hidden sm:grid gap-2 sm:grid-cols-4 items-center px-3">
+                          {["Config Type", "Size", "Starting Price", ""].map((h, i) => (<span key={i} className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{h || <span className="sr-only">Actions</span>}</span>))}
+                        </div>
+                      )}
                       {configurationsList.map((cfg, idx) => (
                         <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 grid gap-2 sm:grid-cols-4 items-center">
                           <Input value={cfg.type} onChange={(e) => { const next = [...configurationsList]; next[idx].type = e.target.value; setConfigurationsList(next); }} placeholder="Type (e.g. 2 BHK)" />
@@ -1636,7 +1692,10 @@ export function ProjectManager({
                         7. Towers & Building Blocks
                       </h4>
                       <div className="flex items-center gap-2">
-                        <label className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" title="Bulk upload from Excel. Columns: Tower Name, Total Floors, Lift Count, Status">
+                        <button type="button" onClick={() => downloadSampleCsv("towers-sample.csv", ["Tower Name", "Total Floors", "Lift Count", "Status"], ["Tower A", "24", "3", "Under Construction"])} className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800" title="Download a sample CSV with the exact columns">
+                          <FileDown className="h-3.5 w-3.5 text-brand" /> Sample CSV
+                        </button>
+                        <label className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" title="Bulk upload from Excel/CSV. Columns: Tower Name, Total Floors, Lift Count, Status">
                           <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> Upload Excel
                           <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={async (e) => {
                             const f = e.target.files?.[0]; if (!f) return;
@@ -1704,7 +1763,10 @@ export function ProjectManager({
                         8. Inventory Units Linker
                       </h4>
                       <div className="flex items-center gap-2">
-                        <label className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" title="Bulk upload from Excel. Columns: Unit No, Tower, Floor, Facing, Area, Config, Status, Price, Parking">
+                        <button type="button" onClick={() => downloadSampleCsv("inventory-units-sample.csv", ["Unit No", "Tower", "Floor", "Facing", "Area", "Config", "Status", "Price", "Parking"], ["A-101", "Tower A", "1", "East", "1350 sqft", "3 BHK", "Available", "9500000", "1"])} className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800" title="Download a sample CSV with the exact columns">
+                          <FileDown className="h-3.5 w-3.5 text-brand" /> Sample CSV
+                        </button>
+                        <label className="inline-flex items-center gap-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" title="Bulk upload from Excel/CSV. Columns: Unit No, Tower, Floor, Facing, Area, Config, Status, Price, Parking">
                           <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> Upload Excel
                           <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={async (e) => {
                             const f = e.target.files?.[0]; if (!f) return;
@@ -1732,6 +1794,11 @@ export function ProjectManager({
                     </div>
 
                     <div className="space-y-3">
+                      {inventoryList.length > 0 && (
+                        <div className="hidden sm:grid gap-2 sm:grid-cols-5 items-center px-3">
+                          {["Unit No", "Config", "Price (₹)", "Status", ""].map((h, i) => (<span key={i} className="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">{h || <span className="sr-only">Actions</span>}</span>))}
+                        </div>
+                      )}
                       {inventoryList.map((u, idx) => (
                         <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 grid gap-2 sm:grid-cols-5 items-center">
                           <Input value={u.unitNo} onChange={(e) => { const next = [...inventoryList]; next[idx].unitNo = e.target.value; setInventoryList(next); }} placeholder="Unit No (e.g. A-101)" />
