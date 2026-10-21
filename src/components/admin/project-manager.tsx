@@ -203,7 +203,12 @@ export interface ProjectData {
   visibility?: string | null;
   customFieldsJson?: string | null;
   analyticsJson?: string | null;
+  analyticsConfigJson?: string | null;
   relationshipsJson?: string | null;
+  salesInfoJson?: string | null;
+  builderExtraJson?: string | null;
+  settingsJson?: string | null;
+  sectionVisibilityJson?: string | null;
 
   _count?: { properties: number };
   createdAt?: string;
@@ -454,6 +459,13 @@ export function ProjectManager({
   const [locationStateCode, setLocationStateCode] = useState("");
   const [fieldDefaults, setFieldDefaults] = useState<any>(null);
   const [newNearbyCategory, setNewNearbyCategory] = useState("");
+  const [salesInfoObj, setSalesInfoObj] = useState<Record<string, string>>({});
+  const [newSalesLabel, setNewSalesLabel] = useState("");
+  const [builderExtraList, setBuilderExtraList] = useState<any[]>([]);
+  const [settingsObj, setSettingsObj] = useState<any>({});
+  const [sectionVisibility, setSectionVisibility] = useState<Record<string, boolean>>({});
+  const [analyticsConfig, setAnalyticsConfig] = useState<any>({});
+  const [orgHierarchy, setOrgHierarchy] = useState<any>(null);
 
   // Clean display label: keep already-spaced labels / acronyms as-is, split camelCase otherwise.
   const niceLabel = (k: string) => (/\s/.test(k) ? k : k.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase()));
@@ -627,6 +639,21 @@ export function ProjectManager({
       .catch(() => {});
   }, []);
 
+  // Load the org hierarchy + users (Lead-Settings cascade & Contact dropdowns)
+  useEffect(() => {
+    fetch("/api/admin/org-hierarchy")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data?.success) setOrgHierarchy(data); })
+      .catch(() => {});
+  }, []);
+
+  const crmUsers: any[] = orgHierarchy?.users || [];
+  const salesFieldsFromCatalog = (): Record<string, string> => {
+    const obj: Record<string, string> = {};
+    (fieldDefaults?.salesFields || []).forEach((s: any) => { if (s.enabled && s.label) obj[s.label] = s.value || ""; });
+    return obj;
+  };
+
   // Load teams for the Lead Settings "Assign Team" dropdown
   useEffect(() => {
     fetch("/api/admin/teams")
@@ -680,11 +707,18 @@ export function ProjectManager({
     setVideosList([]);
     setUspList([]);
     setLocationStateCode("");
-    // Pre-fill amenities / specs / documents from the central catalog
+    setBuilderExtraList([]);
+    setSettingsObj({});
+    setSectionVisibility({});
+    setAnalyticsConfig({});
+    // Pre-fill amenities / specs / documents / sales fields from the central catalog
     if (fieldDefaults) {
       const am = amenitiesFromCatalog(); if (Object.keys(am).length) setAmenitiesMap(am);
       const sp = specsFromCatalog(); if (Object.keys(sp).length) setSpecificationsObj(sp);
       const dc = docsFromCatalog(); if (Object.keys(dc).length) setDocumentsObj(dc);
+      setSalesInfoObj(salesFieldsFromCatalog());
+    } else {
+      setSalesInfoObj({});
     }
     setAssetsList([]);
     setPricingExtraList([]);
@@ -731,6 +765,11 @@ export function ProjectManager({
       // New dynamic lists
       setGalleryList(proj.galleryImagesJson ? (JSON.parse(proj.galleryImagesJson) as any[]).filter((x) => typeof x === "string") : []);
       setVideosList(proj.videosJson ? JSON.parse(proj.videosJson) : []);
+      setSalesInfoObj(proj.salesInfoJson ? JSON.parse(proj.salesInfoJson) : {});
+      setBuilderExtraList(proj.builderExtraJson ? JSON.parse(proj.builderExtraJson) : []);
+      setSettingsObj(proj.settingsJson ? JSON.parse(proj.settingsJson) : {});
+      setSectionVisibility(proj.sectionVisibilityJson ? JSON.parse(proj.sectionVisibilityJson) : {});
+      setAnalyticsConfig(proj.analyticsConfigJson ? JSON.parse(proj.analyticsConfigJson) : {});
       try {
         const u = proj.projectUspJson ? JSON.parse(proj.projectUspJson) : [];
         setUspList(Array.isArray(u) ? u.filter((x) => typeof x === "string") : (typeof proj.projectUspJson === "string" && proj.projectUspJson.trim() ? proj.projectUspJson.split(",").map((s) => s.trim()).filter(Boolean) : []));
@@ -830,6 +869,11 @@ export function ProjectManager({
       analyticsJson: JSON.stringify(analyticsObj),
       relationshipsJson: JSON.stringify(relationshipsMap),
       customFieldsJson: JSON.stringify(customFieldsList),
+      salesInfoJson: JSON.stringify(salesInfoObj),
+      builderExtraJson: JSON.stringify(builderExtraList),
+      settingsJson: JSON.stringify(settingsObj),
+      sectionVisibilityJson: JSON.stringify(sectionVisibility),
+      analyticsConfigJson: JSON.stringify(analyticsConfig),
       galleryImagesJson: JSON.stringify(galleryList),
       videosJson: JSON.stringify(videosList),
       projectUspJson: JSON.stringify(uspList.filter((x) => x.trim())),
@@ -2037,6 +2081,38 @@ export function ProjectManager({
                         <Input type="number" value={formData.availableUnitsCount || 0} onChange={(e) => setFormData({ ...formData, availableUnitsCount: parseInt(e.target.value) || 0 })} />
                       </div>
                     </div>
+
+                    {/* Detailed sales fields (catalog-driven) */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Sales Details</label>
+                        <Button type="button" size="sm" variant="ghost" className="text-xs gap-1" title="Load default sales fields from the central catalog" onClick={() => setSalesInfoObj({ ...salesFieldsFromCatalog(), ...salesInfoObj })}><Plus className="h-3.5 w-3.5" /> Load catalog defaults</Button>
+                      </div>
+                      {Object.keys(salesInfoObj).length === 0 ? (
+                        <p className="text-[11px] text-slate-400">No sales detail fields. Click &quot;Load catalog defaults&quot; or add one below.</p>
+                      ) : (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {Object.keys(salesInfoObj).map((key) => (
+                            <div key={key} className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{niceLabel(key)}</label>
+                                <button type="button" onClick={() => { const next = { ...salesInfoObj }; delete next[key]; setSalesInfoObj(next); }} className="text-slate-300 hover:text-rose-600" title="Remove"><X className="h-3.5 w-3.5" /></button>
+                              </div>
+                              <Input value={salesInfoObj[key]} onChange={(e) => setSalesInfoObj({ ...salesInfoObj, [key]: e.target.value })} placeholder={niceLabel(key)} />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-2 pt-1">
+                        <Input value={newSalesLabel} onChange={(e) => setNewSalesLabel(e.target.value)} placeholder="Add a sales field (e.g. Maintenance Deposit)" />
+                        <Button type="button" variant="gold" size="sm" className="shrink-0 gap-1" onClick={() => {
+                          const key = newSalesLabel.trim();
+                          if (!key || salesInfoObj[key] !== undefined) { setNewSalesLabel(""); return; }
+                          setSalesInfoObj({ ...salesInfoObj, [key]: "" });
+                          setNewSalesLabel("");
+                        }}><Plus className="h-3.5 w-3.5" /> Add Field</Button>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -2101,6 +2177,25 @@ export function ProjectManager({
                         <textarea rows={3} value={formData.aboutBuilder || ""} onChange={(e) => setFormData({ ...formData, aboutBuilder: e.target.value })} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 p-2.5 text-xs font-medium" placeholder="Over 3 decades of real estate excellence..." />
                       </div>
                     </div>
+
+                    {/* Additional builder details (awards, certifications, etc.) */}
+                    <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Additional Builder Details</label>
+                        <Button type="button" size="sm" variant="gold" className="gap-1 text-xs" onClick={() => setBuilderExtraList([...builderExtraList, { label: "", value: "" }])}><Plus className="h-3.5 w-3.5" /> Add Detail</Button>
+                      </div>
+                      {builderExtraList.length === 0 ? (
+                        <p className="text-[11px] text-slate-400">Add awards, certifications, RERA registration, group turnover, etc.</p>
+                      ) : (
+                        builderExtraList.map((row, idx) => (
+                          <div key={idx} className="grid gap-2 sm:grid-cols-[1fr_1.5fr_auto] items-center">
+                            <Input value={row.label} onChange={(e) => { const next = [...builderExtraList]; next[idx] = { ...next[idx], label: e.target.value }; setBuilderExtraList(next); }} placeholder="Label (e.g. Awards)" />
+                            <Input value={row.value} onChange={(e) => { const next = [...builderExtraList]; next[idx] = { ...next[idx], value: e.target.value }; setBuilderExtraList(next); }} placeholder="Value (e.g. CREDAI Developer of the Year 2024)" />
+                            <Button type="button" variant="ghost" size="sm" onClick={() => setBuilderExtraList(builderExtraList.filter((_, i) => i !== idx))} className="text-rose-600 shrink-0"><Trash2 className="h-4 w-4" /></Button>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -2128,8 +2223,14 @@ export function ProjectManager({
                         <Input value={formData.salesWhatsapp || ""} onChange={(e) => setFormData({ ...formData, salesWhatsapp: e.target.value })} placeholder="+91 98765 43210" />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">CRM Assigned</label>
-                        <Input value={formData.crmAssignedId || ""} onChange={(e) => setFormData({ ...formData, crmAssignedId: e.target.value })} placeholder="CRM-MGR-001" />
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">CRM Assigned (search user)</label>
+                        <SearchableSelect
+                          options={[{ value: "", label: "— Unassigned —" }, ...crmUsers.map((u: any) => ({ value: u.id, label: u.name, sublabel: [u.role ? String(u.role).replace(/_/g, " ") : "", u.email].filter(Boolean).join(" · ") }))]}
+                          value={formData.crmAssignedId || ""}
+                          onChange={(val) => setFormData({ ...formData, crmAssignedId: val })}
+                          placeholder="Assign a CRM user..."
+                          searchPlaceholder="Search name, email..."
+                        />
                       </div>
                     </div>
 
@@ -2146,17 +2247,36 @@ export function ProjectManager({
                       ) : (
                         salesManagersList.map((m, idx) => (
                           <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[11px] font-bold text-slate-500">Manager {idx + 1}</span>
-                              <button type="button" onClick={() => setSalesManagersList(salesManagersList.filter((_, i) => i !== idx))} className="text-rose-600"><Trash2 className="h-4 w-4" /></button>
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <SearchableSelect
+                                  options={[{ value: "", label: "— Select user —" }, ...crmUsers.map((u: any) => ({ value: u.id, label: u.name, sublabel: [u.role ? String(u.role).replace(/_/g, " ") : "", u.email].filter(Boolean).join(" · ") }))]}
+                                  value={m.userId || ""}
+                                  onChange={(val) => {
+                                    const u = crmUsers.find((x: any) => x.id === val);
+                                    const next = [...salesManagersList];
+                                    next[idx] = u
+                                      ? { userId: u.id, name: u.name, role: u.role ? String(u.role).replace(/_/g, " ") : "", phone: [u.countryCode, u.phone].filter(Boolean).join(" "), email: u.email || "", whatsapp: [u.countryCode, u.phone].filter(Boolean).join(" ") }
+                                      : { ...next[idx], userId: "" };
+                                    setSalesManagersList(next);
+                                  }}
+                                  placeholder="Search & pick a user..."
+                                  searchPlaceholder="Search name, email..."
+                                />
+                              </div>
+                              <button type="button" onClick={() => setSalesManagersList(salesManagersList.filter((_, i) => i !== idx))} className="text-rose-600 shrink-0"><Trash2 className="h-4 w-4" /></button>
                             </div>
-                            <div className="grid gap-2 sm:grid-cols-2">
-                              <Input value={m.name} onChange={(e) => { const next = [...salesManagersList]; next[idx].name = e.target.value; setSalesManagersList(next); }} placeholder="Name" />
-                              <Input value={m.role} onChange={(e) => { const next = [...salesManagersList]; next[idx].role = e.target.value; setSalesManagersList(next); }} placeholder="Role (e.g. Senior VP Sales)" />
-                              <Input value={m.phone} onChange={(e) => { const next = [...salesManagersList]; next[idx].phone = e.target.value; setSalesManagersList(next); }} placeholder="Phone" />
-                              <Input value={m.email} onChange={(e) => { const next = [...salesManagersList]; next[idx].email = e.target.value; setSalesManagersList(next); }} placeholder="Email" />
-                              <Input value={m.whatsapp} onChange={(e) => { const next = [...salesManagersList]; next[idx].whatsapp = e.target.value; setSalesManagersList(next); }} placeholder="WhatsApp" />
-                            </div>
+                            {m.userId ? (
+                              <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2 text-[11px] text-slate-600 dark:text-slate-400 px-1">
+                                <span>Role: <strong className="text-slate-800 dark:text-slate-200">{m.role || "—"}</strong></span>
+                                <span>Phone: <strong className="text-slate-800 dark:text-slate-200">{m.phone || "—"}</strong></span>
+                                <span className="truncate">Email: <strong className="text-slate-800 dark:text-slate-200">{m.email || "—"}</strong></span>
+                                <span>WhatsApp: <strong className="text-slate-800 dark:text-slate-200">{m.whatsapp || "—"}</strong></span>
+                                <span className="sm:col-span-2 text-[10px] text-slate-400">Details come from the user profile and can&apos;t be edited here.</span>
+                              </div>
+                            ) : (
+                              <p className="text-[11px] text-slate-400 px-1">Pick a listed user — their role, phone, email &amp; WhatsApp fill in automatically.</p>
+                            )}
                           </div>
                         ))
                       )}
@@ -2170,27 +2290,70 @@ export function ProjectManager({
                     <h4 className="text-sm font-extrabold text-slate-900 dark:text-white border-b pb-2">
                       17. Lead Settings & Routing Rules
                     </h4>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Assign Team</label>
-                        <select
-                          value={leadSettingsObj.assignTeamId || ""}
-                          onChange={(e) => {
-                            const id = e.target.value;
-                            const team = teamsOptions.find((t) => t.id === id);
-                            setLeadSettingsObj({ ...leadSettingsObj, assignTeamId: id, assignTeam: team?.name || "" });
-                          }}
-                          className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 text-xs font-bold"
-                        >
-                          <option value="">
-                            {teamsOptions.length === 0 ? "No teams yet — create one under People → Teams" : "— Select Team —"}
-                          </option>
-                          {teamsOptions.map((t) => (<option key={t.id} value={t.id}>{t.name}</option>))}
-                          {leadSettingsObj.assignTeam && !teamsOptions.some((t) => t.id === leadSettingsObj.assignTeamId) && (
-                            <option value={leadSettingsObj.assignTeamId || ""}>{leadSettingsObj.assignTeam} (current)</option>
-                          )}
-                        </select>
+                    {/* Org hierarchy cascade: Whitelabel → Franchise → Branch → Department → Team → Manager */}
+                    <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950 p-3">
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-2">Routing Hierarchy</p>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        {(() => {
+                          const H = orgHierarchy || {};
+                          const L = leadSettingsObj;
+                          const set = (patch: any) => setLeadSettingsObj({ ...L, ...patch });
+                          const franchises = (H.franchises || []).filter((f: any) => !L.whitelabelId || f.organizationId === L.whitelabelId);
+                          const branches = (H.branches || []).filter((b: any) => !L.franchiseId || b.franchiseId === L.franchiseId);
+                          const departments = (H.departments || []).filter((d: any) => !L.branchId || d.branchId === L.branchId);
+                          const teams = (H.teams || []).filter((t: any) => !L.departmentId || t.departmentId === L.departmentId);
+                          const managers = (H.users || []).filter((u: any) => (L.teamId ? u.teamId === L.teamId : L.departmentId ? u.departmentId === L.departmentId : L.branchId ? u.branchId === L.branchId : false));
+                          const sel = "w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 text-xs font-bold";
+                          return (
+                            <>
+                              <div className="space-y-1">
+                                <label className="text-[11px] font-bold text-slate-500">Whitelabel</label>
+                                <select className={sel} value={L.whitelabelId || ""} onChange={(e) => set({ whitelabelId: e.target.value, franchiseId: "", branchId: "", departmentId: "", teamId: "", managerId: "", assignTeamId: "", assignTeam: "" })}>
+                                  <option value="">— Any —</option>
+                                  {(H.organizations || []).map((o: any) => (<option key={o.id} value={o.id}>{o.name}</option>))}
+                                </select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[11px] font-bold text-slate-500">Franchise</label>
+                                <select className={sel} value={L.franchiseId || ""} onChange={(e) => set({ franchiseId: e.target.value, branchId: "", departmentId: "", teamId: "", managerId: "", assignTeamId: "", assignTeam: "" })}>
+                                  <option value="">— Any —</option>
+                                  {franchises.map((f: any) => (<option key={f.id} value={f.id}>{f.name}</option>))}
+                                </select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[11px] font-bold text-slate-500">Branch</label>
+                                <select className={sel} value={L.branchId || ""} onChange={(e) => set({ branchId: e.target.value, departmentId: "", teamId: "", managerId: "", assignTeamId: "", assignTeam: "" })}>
+                                  <option value="">— Any —</option>
+                                  {branches.map((b: any) => (<option key={b.id} value={b.id}>{b.name}</option>))}
+                                </select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[11px] font-bold text-slate-500">Department</label>
+                                <select className={sel} value={L.departmentId || ""} onChange={(e) => set({ departmentId: e.target.value, teamId: "", managerId: "", assignTeamId: "", assignTeam: "" })}>
+                                  <option value="">— Any —</option>
+                                  {departments.map((d: any) => (<option key={d.id} value={d.id}>{d.name}</option>))}
+                                </select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[11px] font-bold text-slate-500">Team</label>
+                                <select className={sel} value={L.teamId || ""} onChange={(e) => { const t = teams.find((x: any) => x.id === e.target.value); set({ teamId: e.target.value, assignTeamId: e.target.value, assignTeam: t?.name || "", managerId: "" }); }}>
+                                  <option value="">— Any —</option>
+                                  {teams.map((t: any) => (<option key={t.id} value={t.id}>{t.name}</option>))}
+                                </select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[11px] font-bold text-slate-500">Manager</label>
+                                <select className={sel} value={L.managerId || ""} onChange={(e) => { const u = managers.find((x: any) => x.id === e.target.value); set({ managerId: e.target.value, managerName: u?.name || "" }); }}>
+                                  <option value="">{managers.length === 0 ? "— Pick a team first —" : "— Any —"}</option>
+                                  {managers.map((u: any) => (<option key={u.id} value={u.id}>{u.name}</option>))}
+                                </select>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Default Lead Source</label>
                         <select value={leadSettingsObj.defaultLeadSource} onChange={(e) => setLeadSettingsObj({ ...leadSettingsObj, defaultLeadSource: e.target.value })} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 text-xs font-bold">

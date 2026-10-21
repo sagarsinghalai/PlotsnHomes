@@ -800,6 +800,9 @@ model Project {
   analyticsConfigJson   String?    @default("{}")
   salesInfoJson         String?    @default("{}")
   sectionVisibilityJson String?    @default("{}")
+  relationshipsJson     String?    @default("{}")
+  builderExtraJson      String?    @default("[]")
+  settingsJson          String?    @default("{}")
 
   properties            Property[]
   createdAt             DateTime   @default(now())

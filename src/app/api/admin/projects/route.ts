@@ -202,6 +202,12 @@ export async function POST(req: Request) {
       visibility,
       customFieldsJson,
       analyticsJson,
+      analyticsConfigJson,
+      relationshipsJson,
+      salesInfoJson,
+      builderExtraJson,
+      settingsJson,
+      sectionVisibilityJson,
     } = body;
 
     if (!name || !name.trim()) {
@@ -342,6 +348,12 @@ export async function POST(req: Request) {
         visibility: visibility || "Public",
         customFieldsJson: typeof customFieldsJson === "string" ? customFieldsJson : JSON.stringify(customFieldsJson || []),
         analyticsJson: typeof analyticsJson === "string" ? analyticsJson : JSON.stringify(analyticsJson || {}),
+        analyticsConfigJson: typeof analyticsConfigJson === "string" ? analyticsConfigJson : JSON.stringify(analyticsConfigJson || {}),
+        relationshipsJson: typeof relationshipsJson === "string" ? relationshipsJson : JSON.stringify(relationshipsJson || {}),
+        salesInfoJson: typeof salesInfoJson === "string" ? salesInfoJson : JSON.stringify(salesInfoJson || {}),
+        builderExtraJson: typeof builderExtraJson === "string" ? builderExtraJson : JSON.stringify(builderExtraJson || []),
+        settingsJson: typeof settingsJson === "string" ? settingsJson : JSON.stringify(settingsJson || {}),
+        sectionVisibilityJson: typeof sectionVisibilityJson === "string" ? sectionVisibilityJson : JSON.stringify(sectionVisibilityJson || {}),
       },
     });
 
