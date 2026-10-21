@@ -2610,7 +2610,7 @@ export function ProjectManager({
                             <select value={m.status} onChange={(e) => { const next = [...timelineObj.milestones]; next[idx] = { ...next[idx], status: e.target.value }; setTimelineObj({ ...timelineObj, milestones: next }); }} className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-xs font-bold">
                               {["Completed", "Ongoing", "Pending"].map((s) => (<option key={s} value={s}>{s}</option>))}
                             </select>
-                            <Input value={m.date} onChange={(e) => { const next = [...timelineObj.milestones]; next[idx] = { ...next[idx], date: e.target.value }; setTimelineObj({ ...timelineObj, milestones: next }); }} placeholder="Date (e.g. Mar 2027)" />
+                            <Input type="date" value={m.date} onChange={(e) => { const next = [...timelineObj.milestones]; next[idx] = { ...next[idx], date: e.target.value }; setTimelineObj({ ...timelineObj, milestones: next }); }} />
                             <button type="button" onClick={() => setTimelineObj({ ...timelineObj, milestones: timelineObj.milestones.filter((_: any, i: number) => i !== idx) })} className="text-rose-600 shrink-0"><Trash2 className="h-4 w-4" /></button>
                           </div>
                         ))
@@ -2709,6 +2709,39 @@ export function ProjectManager({
                     <h4 className="text-sm font-extrabold text-slate-900 dark:text-white border-b pb-2">
                       22. Analytics & Performance Tracking
                     </h4>
+
+                    {/* Tracking integrations — IDs saved per project, scripts injected on the public page */}
+                    <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950 p-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Tracking &amp; Integrations</p>
+                        <span className="text-[10px] text-slate-400">Paste IDs now — tracking activates on the live page</span>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {[
+                          ["ga4", "Google Analytics 4 (Measurement ID)", "G-XXXXXXX"],
+                          ["ga4PropertyId", "GA4 Property ID (for live numbers)", "123456789"],
+                          ["gtm", "Google Tag Manager ID", "GTM-XXXXXX"],
+                          ["metaPixel", "Meta (Facebook) Pixel ID", "123456789012345"],
+                          ["searchConsole", "Search Console verification", "google-site-verification=..."],
+                          ["hotjar", "Hotjar Site ID", "3xxxxxx"],
+                          ["clarity", "Microsoft Clarity ID", "xxxxxxxxxx"],
+                          ["linkedin", "LinkedIn Insight Partner ID", "1234567"],
+                        ].map(([key, label, ph]) => (
+                          <div key={key} className="space-y-1">
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{label}</label>
+                            <Input value={analyticsConfig[key] || ""} onChange={(e) => setAnalyticsConfig({ ...analyticsConfig, [key]: e.target.value })} placeholder={ph} />
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Recommended tools: Google Analytics 4 + Search Console (traffic &amp; SEO), Meta Pixel &amp; LinkedIn Insight (ad conversions), Hotjar / Microsoft Clarity (heatmaps &amp; recordings), Google Tag Manager (manage all tags). Live GA numbers appear automatically once an admin adds the Google service-account key under <strong>Settings → Analytics Integration</strong> and sets the GA4 Property ID above.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">Manual / Fallback Metrics</p>
+                      <span className="text-[10px] text-slate-400">Shown until live GA data is connected</span>
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-3">
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Views</label>
@@ -2769,11 +2802,45 @@ export function ProjectManager({
                     <h4 className="text-sm font-extrabold text-slate-900 dark:text-white border-b pb-2">
                       23. Project Visibility & Lifecycle Settings
                     </h4>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Visibility Status</label>
-                      <select value={formData.visibility || "Public"} onChange={(e) => setFormData({ ...formData, visibility: e.target.value })} className="w-full rounded-xl border p-2.5 text-xs font-bold">
-                        {["Public", "Private", "Archived", "Draft", "Published", "Deleted"].map((v) => (<option key={v} value={v}>{v}</option>))}
-                      </select>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Visibility Status</label>
+                        <select value={formData.visibility || "Public"} onChange={(e) => setFormData({ ...formData, visibility: e.target.value })} className="w-full rounded-xl border p-2.5 text-xs font-bold">
+                          {["Public", "Unlisted", "Private", "Draft", "Published", "Archived"].map((v) => (<option key={v} value={v}>{v}</option>))}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Lifecycle Stage</label>
+                        <select value={settingsObj.lifecycleStage || ""} onChange={(e) => setSettingsObj({ ...settingsObj, lifecycleStage: e.target.value })} className="w-full rounded-xl border p-2.5 text-xs font-bold">
+                          {["", "Planning", "Pre-Launch", "Launched", "Under Construction", "Nearing Possession", "Ready to Move", "Sold Out", "On Hold"].map((v) => (<option key={v} value={v}>{v || "— Select —"}</option>))}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Approval Status</label>
+                        <select value={settingsObj.approvalStatus || "Approved"} onChange={(e) => setSettingsObj({ ...settingsObj, approvalStatus: e.target.value })} className="w-full rounded-xl border p-2.5 text-xs font-bold">
+                          {["Approved", "Pending Review", "Rejected", "Needs Changes"].map((v) => (<option key={v} value={v}>{v}</option>))}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Listing Priority (sort order)</label>
+                        <Input type="number" value={settingsObj.priority ?? ""} onChange={(e) => setSettingsObj({ ...settingsObj, priority: e.target.value === "" ? "" : parseInt(e.target.value) || 0 })} placeholder="Higher shows first (e.g. 10)" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Publish Date</label>
+                        <Input type="date" value={settingsObj.publishDate || ""} onChange={(e) => setSettingsObj({ ...settingsObj, publishDate: e.target.value })} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Listing Expiry Date</label>
+                        <Input type="date" value={settingsObj.expiryDate || ""} onChange={(e) => setSettingsObj({ ...settingsObj, expiryDate: e.target.value })} />
+                      </div>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      {[["archived", "Archived (hidden everywhere)"], ["allowComparisons", "Allow in compare tool"], ["showPriceToPublic", "Show price publicly"], ["acceptingBookings", "Accepting bookings"]].map(([k, lbl]) => (
+                        <label key={k} className="flex items-center gap-2 text-xs font-bold cursor-pointer p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                          <input type="checkbox" checked={!!settingsObj[k]} onChange={(e) => setSettingsObj({ ...settingsObj, [k]: e.target.checked })} className="rounded text-amber-500" />
+                          {lbl}
+                        </label>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -2819,6 +2886,22 @@ export function ProjectManager({
                       25. Linked CRM Modules & System Relationships
                     </h4>
                     <p className="text-xs text-slate-500">Enable or link project data across enterprise CRM modules:</p>
+
+                    {/* Live linked summary + quick manage links */}
+                    <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950 p-3 space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs font-bold text-slate-700 dark:text-slate-200">Linked Properties: <strong className="text-brand">{formData._count?.properties ?? 0}</strong></span>
+                        {formData.developerId && <span className="inline-flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs font-bold text-slate-700 dark:text-slate-200">Developer linked ✓</span>}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {[["Properties", "/admin/properties"], ["Leads", "/admin/leads"], ["Site Visits", "/admin/showings"], ["Bookings", "/admin/bookings"], ["Invoices", "/admin/invoices"], ["Payments", "/admin/payments"]].map(([label, href]) => (
+                          <a key={label} href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:border-brand/50 hover:text-brand">
+                            <ExternalLink className="h-3 w-3" /> Manage {label}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+
                     <div className="grid gap-3 sm:grid-cols-3">
                       {[
                         "Properties/Units", "Leads", "Customers", "Builders", "Agents",

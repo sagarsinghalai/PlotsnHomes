@@ -136,6 +136,7 @@ const DEFAULT_NAV: NavGroup[] = [
       { href: "/admin/settings/roles", label: "Roles & permissions", icon: ShieldCheck },
       { href: "/admin/settings/dropdowns", label: "Dropdown options", icon: ListFilter },
       { href: "/admin/settings/project-defaults", label: "Project Defaults", icon: SlidersHorizontal },
+      { href: "/admin/settings/analytics-integration", label: "Analytics Integration", icon: Plug },
       { href: "/admin/settings/webpage-editor", label: "Webpage Editor", icon: Globe },
       { href: "/admin/settings/footer", label: "Footer", icon: Layout },
       { href: "/admin/variables-templates", label: "Variables & Templates", icon: SlidersHorizontal },
