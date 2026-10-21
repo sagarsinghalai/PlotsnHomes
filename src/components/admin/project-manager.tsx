@@ -452,6 +452,32 @@ export function ProjectManager({
   const [newVideoUrl, setNewVideoUrl] = useState("");
   const [uspList, setUspList] = useState<string[]>([]);
   const [locationStateCode, setLocationStateCode] = useState("");
+  const [fieldDefaults, setFieldDefaults] = useState<any>(null);
+  const [newNearbyCategory, setNewNearbyCategory] = useState("");
+
+  // Clean display label: keep already-spaced labels / acronyms as-is, split camelCase otherwise.
+  const niceLabel = (k: string) => (/\s/.test(k) ? k : k.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase()));
+
+  // Build project field maps from the central catalog (enabled items only).
+  const amenitiesFromCatalog = (): Record<string, boolean> => {
+    const map: Record<string, boolean> = {};
+    (fieldDefaults?.amenities || []).forEach((a: any) => { if (a.enabled && a.label) map[a.label] = true; });
+    return map;
+  };
+  const specsFromCatalog = (): Record<string, string> => {
+    const obj: Record<string, string> = {};
+    (fieldDefaults?.specifications || []).forEach((s: any) => { if (s.enabled && s.label) obj[s.label] = s.value || ""; });
+    return obj;
+  };
+  const docsFromCatalog = (): Record<string, string> => {
+    const obj: Record<string, string> = {};
+    (fieldDefaults?.documents || []).forEach((d: any) => { if (d.enabled && d.label) obj[d.label] = ""; });
+    return obj;
+  };
+  const nearbyCategoryOptions = (): string[] => {
+    const cats = (fieldDefaults?.nearbyCategories || []).filter((c: any) => c.enabled).map((c: any) => c.label);
+    return cats.length ? cats : ["School", "Hospital", "Metro", "Airport", "Mall", "Restaurant", "Bank", "Highway"];
+  };
 
   // Download a sample CSV template with the exact importer columns.
   function downloadSampleCsv(filename: string, headers: string[], example: string[]) {
@@ -472,6 +498,7 @@ export function ProjectManager({
   const [newAmenity, setNewAmenity] = useState("");
   const [newTag, setNewTag] = useState("");
   const [newDocLabel, setNewDocLabel] = useState("");
+  const [newSpecLabel, setNewSpecLabel] = useState("");
   const [newVideoLink, setNewVideoLink] = useState("");
   const [uploading, setUploading] = useState<string | null>(null);
 
@@ -592,6 +619,14 @@ export function ProjectManager({
     fetchProjects();
   }, [selectedDeveloperId, statusFilter, searchQuery]);
 
+  // Load the central field-defaults catalog (amenities/specs/docs/sales/nearby)
+  useEffect(() => {
+    fetch("/api/admin/project-defaults")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data?.defaults) setFieldDefaults(data.defaults); })
+      .catch(() => {});
+  }, []);
+
   // Load teams for the Lead Settings "Assign Team" dropdown
   useEffect(() => {
     fetch("/api/admin/teams")
@@ -645,6 +680,12 @@ export function ProjectManager({
     setVideosList([]);
     setUspList([]);
     setLocationStateCode("");
+    // Pre-fill amenities / specs / documents from the central catalog
+    if (fieldDefaults) {
+      const am = amenitiesFromCatalog(); if (Object.keys(am).length) setAmenitiesMap(am);
+      const sp = specsFromCatalog(); if (Object.keys(sp).length) setSpecificationsObj(sp);
+      const dc = docsFromCatalog(); if (Object.keys(dc).length) setDocumentsObj(dc);
+    }
     setAssetsList([]);
     setPricingExtraList([]);
     setSalesManagersList([]);
@@ -1819,15 +1860,16 @@ export function ProjectManager({
                 {/* 9. AMENITIES */}
                 {activeTab === "amenities" && (
                   <div className="space-y-4">
-                    <h4 className="text-sm font-extrabold text-slate-900 dark:text-white border-b pb-2">
-                      9. Project Amenities Matrix
-                    </h4>
+                    <div className="flex items-center justify-between border-b pb-2">
+                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">9. Project Amenities Matrix</h4>
+                      <Button type="button" size="sm" variant="ghost" className="text-xs gap-1" title="Load the enabled amenities from the central catalog" onClick={() => setAmenitiesMap({ ...amenitiesFromCatalog(), ...amenitiesMap })}><Plus className="h-3.5 w-3.5" /> Load catalog defaults</Button>
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-3">
                       {Object.keys(amenitiesMap).map((key) => (
                         <label key={key} className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-bold cursor-pointer">
                           <span className="flex items-center gap-2">
                             <input type="checkbox" checked={amenitiesMap[key]} onChange={(e) => setAmenitiesMap({ ...amenitiesMap, [key]: e.target.checked })} className="rounded text-amber-500" />
-                            {key.replace(/([A-Z])/g, " $1").trim()}
+                            {niceLabel(key)}
                           </span>
                           <button type="button" onClick={(ev) => { ev.preventDefault(); const next = { ...amenitiesMap }; delete next[key]; setAmenitiesMap(next); }} className="text-slate-300 hover:text-rose-600"><X className="h-3.5 w-3.5" /></button>
                         </label>
@@ -1836,7 +1878,7 @@ export function ProjectManager({
                     <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                       <Input value={newAmenity} onChange={(e) => setNewAmenity(e.target.value)} placeholder="Add a new amenity (e.g. Co-working Space)" />
                       <Button type="button" variant="gold" size="sm" className="shrink-0 gap-1" onClick={() => {
-                        const key = newAmenity.trim().replace(/\s+/g, "");
+                        const key = newAmenity.trim();
                         if (!key) return;
                         setAmenitiesMap({ ...amenitiesMap, [key]: true });
                         setNewAmenity("");
@@ -1860,8 +1902,16 @@ export function ProjectManager({
                     <div className="space-y-2">
                       {nearbyPlacesList.map((place, idx) => (
                         <div key={idx} className="p-3 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 grid gap-2 sm:grid-cols-4 items-center">
-                          <select value={place.category} onChange={(e) => { const next = [...nearbyPlacesList]; next[idx].category = e.target.value; setNearbyPlacesList(next); }} className="rounded-xl border border-slate-300 p-2 text-xs font-bold">
-                            {["School", "Hospital", "Metro", "Airport", "Mall", "Restaurant", "Bank", "Highway"].map((cat) => (<option key={cat} value={cat}>{cat}</option>))}
+                          <select value={place.category} onChange={(e) => {
+                            if (e.target.value === "__custom__") {
+                              const custom = window.prompt("Enter a custom category:")?.trim();
+                              if (custom) { const next = [...nearbyPlacesList]; next[idx].category = custom; setNearbyPlacesList(next); }
+                              return;
+                            }
+                            const next = [...nearbyPlacesList]; next[idx].category = e.target.value; setNearbyPlacesList(next);
+                          }} className="rounded-xl border border-slate-300 p-2 text-xs font-bold">
+                            {Array.from(new Set([...(place.category ? [place.category] : []), ...nearbyCategoryOptions()])).map((cat) => (<option key={cat} value={cat}>{cat}</option>))}
+                            <option value="__custom__">+ Add custom…</option>
                           </select>
                           <Input value={place.name} onChange={(e) => { const next = [...nearbyPlacesList]; next[idx].name = e.target.value; setNearbyPlacesList(next); }} placeholder="Name (e.g. DPS School)" />
                           <Input value={place.distance} onChange={(e) => { const next = [...nearbyPlacesList]; next[idx].distance = e.target.value; setNearbyPlacesList(next); }} placeholder="Distance (e.g. 1.2 km)" />
@@ -1877,16 +1927,29 @@ export function ProjectManager({
                 {/* 11. SPECIFICATIONS */}
                 {activeTab === "specifications" && (
                   <div className="space-y-4">
-                    <h4 className="text-sm font-extrabold text-slate-900 dark:text-white border-b pb-2">
-                      11. Architectural Specifications
-                    </h4>
+                    <div className="flex items-center justify-between border-b pb-2">
+                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">11. Architectural Specifications</h4>
+                      <Button type="button" size="sm" variant="ghost" className="text-xs gap-1" title="Load default specifications from the central catalog" onClick={() => setSpecificationsObj({ ...specsFromCatalog(), ...specificationsObj })}><Plus className="h-3.5 w-3.5" /> Load catalog defaults</Button>
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {Object.keys(specificationsObj).map((key) => (
                         <div key={key} className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 capitalize">{key}</label>
-                          <Input value={specificationsObj[key]} onChange={(e) => setSpecificationsObj({ ...specificationsObj, [key]: e.target.value })} placeholder={`e.g. ${key} details...`} />
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{niceLabel(key)}</label>
+                            <button type="button" onClick={() => { const next = { ...specificationsObj }; delete next[key]; setSpecificationsObj(next); }} className="text-slate-300 hover:text-rose-600" title="Remove"><X className="h-3.5 w-3.5" /></button>
+                          </div>
+                          <Input value={specificationsObj[key]} onChange={(e) => setSpecificationsObj({ ...specificationsObj, [key]: e.target.value })} placeholder={`e.g. ${niceLabel(key)} details...`} />
                         </div>
                       ))}
+                    </div>
+                    <div className="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <Input value={newSpecLabel} onChange={(e) => setNewSpecLabel(e.target.value)} placeholder="Add a specification field (e.g. Terrace)" />
+                      <Button type="button" variant="gold" size="sm" className="shrink-0 gap-1" onClick={() => {
+                        const key = newSpecLabel.trim();
+                        if (!key || specificationsObj[key] !== undefined) { setNewSpecLabel(""); return; }
+                        setSpecificationsObj({ ...specificationsObj, [key]: "" });
+                        setNewSpecLabel("");
+                      }}><Plus className="h-3.5 w-3.5" /> Add Field</Button>
                     </div>
                   </div>
                 )}
@@ -1894,13 +1957,14 @@ export function ProjectManager({
                 {/* 12. DOCUMENTS */}
                 {activeTab === "documents" && (
                   <div className="space-y-4">
-                    <h4 className="text-sm font-extrabold text-slate-900 dark:text-white border-b pb-2">
-                      12. Legal Documents & Approvals
-                    </h4>
+                    <div className="flex items-center justify-between border-b pb-2">
+                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">12. Legal Documents & Approvals</h4>
+                      <Button type="button" size="sm" variant="ghost" className="text-xs gap-1" title="Load default document fields from the central catalog" onClick={() => setDocumentsObj({ ...docsFromCatalog(), ...documentsObj })}><Plus className="h-3.5 w-3.5" /> Load catalog defaults</Button>
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {Object.keys(documentsObj).map((key) => (
                         <div key={key} className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 capitalize">{key.replace(/([A-Z])/g, " $1")}</label>
+                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{niceLabel(key)}</label>
                           <div className="flex gap-1.5">
                             <Input value={documentsObj[key]} onChange={(e) => setDocumentsObj({ ...documentsObj, [key]: e.target.value })} placeholder="Document PDF URL..." />
                             <label className="inline-flex items-center justify-center rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 cursor-pointer shrink-0" title="Upload PDF">
