@@ -797,6 +797,9 @@ model Project {
   visibility            String?    @default("Public")
   customFieldsJson      String?    @default("[]")
   analyticsJson         String?    @default("{}")
+  analyticsConfigJson   String?    @default("{}")
+  salesInfoJson         String?    @default("{}")
+  sectionVisibilityJson String?    @default("{}")
 
   properties            Property[]
   createdAt             DateTime   @default(now())

@@ -10,6 +10,8 @@ export const SITE_SETTING_KEYS = {
   TESTIMONIALS: "site_testimonials",
   TEAM_MEMBERS: "site_team_members",
   DROPDOWN_OPTIONS: "site_dropdown_options",
+  PROJECT_FIELD_DEFAULTS: "project_field_defaults",
+  ANALYTICS_INTEGRATION: "analytics_integration",
 } as const;
 
 export type SiteSettingKey = typeof SITE_SETTING_KEYS[keyof typeof SITE_SETTING_KEYS];
@@ -34,6 +36,82 @@ export interface SectionDropdownConfig {
   sectionTitle: string;
   fields: DropdownFieldConfig[];
 }
+
+// ─── Central "master list" catalogs that pre-fill every project ───
+export interface CatalogItem {
+  key: string;        // stable key (also the field key for specs/docs/sales)
+  label: string;      // display label / amenity name / category name
+  value?: string;     // default value text (specs & sales fields)
+  enabled: boolean;   // whether it pre-fills new projects / shows in pickers
+}
+
+export interface ProjectFieldDefaults {
+  amenities: CatalogItem[];
+  specifications: CatalogItem[];
+  documents: CatalogItem[];
+  salesFields: CatalogItem[];
+  nearbyCategories: CatalogItem[];
+}
+
+export interface AnalyticsIntegration {
+  gaServiceAccountJson?: string; // Google service-account key (platform-wide)
+  gaEnabled?: boolean;
+  defaultGtmId?: string;
+  defaultMetaPixelId?: string;
+}
+
+const ci = (label: string, value?: string, key?: string): CatalogItem => ({
+  key: key || label.replace(/[^a-zA-Z0-9]+/g, (m, i) => (i === 0 ? "" : " ")).trim().replace(/\s+(.)/g, (_m, c) => c.toUpperCase()).replace(/^(.)/, (_m, c) => c.toLowerCase()) || label,
+  label,
+  ...(value !== undefined ? { value } : {}),
+  enabled: true,
+});
+
+export const DEFAULT_PROJECT_FIELD_DEFAULTS: ProjectFieldDefaults = {
+  amenities: [
+    "Gymnasium", "Swimming Pool", "Clubhouse", "Kids Play Area", "Jogging Track",
+    "Landscaped Gardens", "Indoor Games", "Banquet Hall", "Library", "Yoga / Meditation Deck",
+    "Amphitheatre", "Multipurpose Court", "Tennis Court", "Basketball Court", "Cricket Pitch",
+    "Table Tennis", "Billiards", "Squash Court", "Spa & Sauna", "Senior Citizen Area",
+    "Party Lawn", "Cafeteria", "Mini Theatre", "Co-working Space", "Business Centre",
+    "24x7 Security", "CCTV Surveillance", "Video Door Phone", "Gated Community", "Fire Fighting System",
+    "Power Backup", "Lifts / Elevators", "Covered Car Parking", "Visitor Parking", "EV Charging",
+    "Rain Water Harvesting", "Sewage Treatment Plant", "Solar Power", "Water Softening Plant", "Piped Gas",
+    "Intercom", "Wi-Fi Connectivity", "Smart Home Automation", "Maintenance Staff", "Vastu Compliant",
+  ].map((a) => ci(a)),
+  specifications: [
+    ["Flooring", "Imported Italian Marble in Living & Dining, Wooden Flooring in Bedrooms"],
+    ["Kitchen", "Modular Kitchen with Granite Countertop & Stainless Steel Sink"],
+    ["Bathroom", "Premium Kohler / Grohe Sanitary Ware & CP Fittings"],
+    ["Electrical", "Concealed Copper Wiring with Modular Switches (Havells/Legrand)"],
+    ["Doors", "Teak Wood Frame Main Door with Digital Smart Lock"],
+    ["Windows", "UPVC Soundproof Double Glazed Sliding Windows"],
+    ["Walls", "Smooth POP Finish with Acrylic Emulsion Paint"],
+    ["Painting", "Weatherproof Exterior Paint"],
+    ["Lift", "High-Speed Mitsubishi / Otis Automatic Passenger Lifts"],
+    ["Structure", "Earthquake Resistant RCC Frame Structure Zone 5"],
+    ["Ceiling Height", "10 ft floor-to-floor height"],
+    ["Balcony", "Toughened glass railing with anti-skid tiles"],
+  ].map(([label, value]) => ci(label, value)),
+  documents: [
+    "RERA Certificate", "Approval Documents", "Occupancy Certificate", "Completion Certificate",
+    "NOC Documents", "Layout Plan PDF", "Legal Documents", "Sample Agreement PDF",
+    "Fire NOC", "Environment Clearance", "Commencement Certificate", "Title Deed / Encumbrance",
+  ].map((d) => ci(d)),
+  salesFields: [
+    ["Total Units", ""], ["Available Units", ""], ["Booked Units", ""], ["Sold Units", ""],
+    ["Possession Date", ""], ["Booking Amount", ""], ["Price on Request", "No"],
+    ["Sample Flat Available", "Yes"], ["Home Loan Available", "Yes"], ["Approved Banks", ""],
+    ["Payment Plan", ""], ["Current Offer", ""], ["Offer Valid Till", ""], ["Booking Window", ""],
+    ["Channel Partner", ""], ["Sales Office Hours", "Mon–Sun, 10 AM – 7 PM"], ["Site Visit Available", "Yes"],
+  ].map(([label, value]) => ci(label, value)),
+  nearbyCategories: [
+    "School", "Hospital", "Metro Station", "Railway Station", "Airport", "Bus Stop",
+    "Shopping Mall", "Supermarket", "Restaurant", "Bank / ATM", "Highway", "Park",
+    "Gym / Fitness", "Pharmacy", "IT Park", "Business District", "University / College",
+    "Petrol Pump", "Place of Worship", "Cinema",
+  ].map((n) => ci(n)),
+};
 
 export interface HeroStat {
   id: string;
@@ -345,6 +423,8 @@ const DEFAULTS: Record<string, string> = {
   [SITE_SETTING_KEYS.TEAM_MEMBERS]:
     '[{"id":"1","name":"Sarah Mitchell","designation":"Real estate agent","countryCode":"+91","phone":"9820134567"},{"id":"2","name":"Maria Lopez","designation":"Real estate agent","countryCode":"+91","phone":"9678045123"},{"id":"3","name":"David Kim","designation":"Real estate agent","countryCode":"+91","phone":"9845671234"},{"id":"4","name":"James Chen","designation":"Real estate agent","countryCode":"+91","phone":"9730022891"}]',
   [SITE_SETTING_KEYS.DROPDOWN_OPTIONS]: JSON.stringify(DEFAULT_USERS_ACCOUNTS_DROPDOWNS),
+  [SITE_SETTING_KEYS.PROJECT_FIELD_DEFAULTS]: JSON.stringify(DEFAULT_PROJECT_FIELD_DEFAULTS),
+  [SITE_SETTING_KEYS.ANALYTICS_INTEGRATION]: JSON.stringify({ gaEnabled: false } as AnalyticsIntegration),
 };
 
 export async function getSiteSetting<T>(key: string): Promise<T> {
