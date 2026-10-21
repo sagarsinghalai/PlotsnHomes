@@ -128,6 +128,7 @@ const DEFAULT_NAV: NavGroup[] = [
       { href: "/admin/settings/frontend", label: "Frontend Settings", icon: Palette },
       { href: "/admin/platform", label: "Platform", icon: Settings },
       { href: "/admin/integrations", label: "Integrations", icon: Plug },
+      { href: "/admin/integrations/lead-channels", label: "Lead Channels", icon: Workflow },
     ],
   },
   {
