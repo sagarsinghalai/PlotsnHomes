@@ -484,6 +484,21 @@ model SystemSetting {
   updatedAt DateTime @updatedAt
 }
 
+model InboundLeadLog {
+  id        String   @id @default(cuid())
+  channel   String
+  status    String   @default("RECEIVED") // RECEIVED | CREATED | DUPLICATE | IGNORED | ERROR
+  leadId    String?
+  name      String?
+  phone     String?
+  payload   String?
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([channel, createdAt])
+  @@index([status])
+}
+
 model RatingSlab {
   id        String   @id @default(cuid())
   label     String
