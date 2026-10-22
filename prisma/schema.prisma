@@ -200,6 +200,7 @@ model User {
 // HubSpot-style CRM activity timeline attached to a User (contact):
 // notes, emails, calls, tasks and meetings.
 model UserActivity {
+  tenantId      String?
   id           String   @id @default(cuid())
   contactId    String
   contact      User     @relation("ContactActivities", fields: [contactId], references: [id], onDelete: Cascade)
@@ -228,6 +229,7 @@ model UserActivity {
   @@index([contactId])
   @@index([type])
   @@index([createdAt])
+  @@index([tenantId])
 }
 
 // Comments on a CRM activity (e.g. teammates discussing a note).
@@ -245,6 +247,7 @@ model ActivityComment {
 }
 
 model Property {
+  tenantId      String?
   id                 String         @id @default(cuid())
   symbol             String         @unique
   title              String
@@ -341,9 +344,11 @@ model Property {
   @@index([changeYtd])
   @@index([availabilityStatus])
   @@index([furnishingStatus])
+  @@index([tenantId])
 }
 
 model Lead {
+  tenantId      String?
   id            String      @id @default(cuid())
   name          String
   email         String      @default("")
@@ -380,9 +385,11 @@ model Lead {
   @@index([createdAt])
   @@index([lifecycleStage])
   @@index([leadStatus])
+  @@index([tenantId])
 }
 
 model LeadActivity {
+  tenantId      String?
   id        String   @id @default(cuid())
   leadId     String
   lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
@@ -391,9 +398,11 @@ model LeadActivity {
   type      String   @default("NOTE")
   message   String
   createdAt DateTime @default(now())
+  @@index([tenantId])
 }
 
 model LeadTask {
+  tenantId      String?
   id          String   @id @default(cuid())
   leadId      String
   lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
@@ -403,9 +412,11 @@ model LeadTask {
   dueAt       DateTime?
   completed   Boolean  @default(false)
   createdAt   DateTime @default(now())
+  @@index([tenantId])
 }
 
 model Transaction {
+  tenantId      String?
   id              String            @id @default(cuid())
   userId          String
   user            User              @relation(fields: [userId], references: [id])
@@ -439,9 +450,11 @@ model Transaction {
   completedAt        DateTime?
   createdAt          DateTime       @default(now())
   agentCommission    AgentCommission?
+  @@index([tenantId])
 }
 
 model Inquiry {
+  tenantId      String?
   id         String    @id @default(cuid())
   propertyId String
   property   Property  @relation(fields: [propertyId], references: [id])
@@ -454,6 +467,7 @@ model Inquiry {
   message    String
   createdAt  DateTime  @default(now())
   lead       Lead?
+  @@index([tenantId])
 }
 
 model Favorite {
@@ -467,6 +481,7 @@ model Favorite {
 }
 
 model EmailLog {
+  tenantId      String?
   id        String   @id @default(cuid())
   to        String
   subject   String
@@ -475,6 +490,7 @@ model EmailLog {
   provider  String   @default("dev")
   error     String?
   createdAt DateTime @default(now())
+  @@index([tenantId])
 }
 
 model SystemSetting {
@@ -484,6 +500,7 @@ model SystemSetting {
 }
 
 model InboundLeadLog {
+  tenantId      String?
   id        String   @id @default(cuid())
   channel   String
   status    String   @default("RECEIVED") // RECEIVED | CREATED | DUPLICATE | IGNORED | ERROR
@@ -496,6 +513,7 @@ model InboundLeadLog {
 
   @@index([channel, createdAt])
   @@index([status])
+  @@index([tenantId])
 }
 
 model RatingSlab {
@@ -511,6 +529,7 @@ model RatingSlab {
 }
 
 model MessageLog {
+  tenantId      String?
   id          String         @id @default(cuid())
   channel     MessageChannel
   recipientId String?
@@ -529,9 +548,11 @@ model MessageLog {
   meetingId   String?
   meeting     MeetingInvite? @relation(fields: [meetingId], references: [id])
   createdAt   DateTime       @default(now())
+  @@index([tenantId])
 }
 
 model MeetingInvite {
+  tenantId      String?
   id          String        @id @default(cuid())
   token       String        @unique @default(cuid())
   userId      String
@@ -550,9 +571,11 @@ model MeetingInvite {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   messages    MessageLog[]
+  @@index([tenantId])
 }
 
 model KycProfile {
+  tenantId      String?
   id                  String    @id @default(cuid())
   userId              String    @unique
   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -579,9 +602,11 @@ model KycProfile {
   reviewedAt          DateTime?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
+  @@index([tenantId])
 }
 
 model LoanApplication {
+  tenantId      String?
   id                  String     @id @default(cuid())
   userId              String
   user                User       @relation(fields: [userId], references: [id])
@@ -608,9 +633,11 @@ model LoanApplication {
   adminNotes          String?
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
+  @@index([tenantId])
 }
 
 model PropertyShowing {
+  tenantId      String?
   id         String        @id @default(cuid())
   propertyId String
   property   Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
@@ -627,9 +654,11 @@ model PropertyShowing {
   status     ShowingStatus @default(REQUESTED)
   createdAt  DateTime      @default(now())
   lead       Lead?
+  @@index([tenantId])
 }
 
 model CrmGoal {
+  tenantId      String?
   id        String   @id @default(cuid())
   title     String
   target    Int
@@ -639,9 +668,11 @@ model CrmGoal {
   owner     User?    @relation(fields: [ownerId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@index([tenantId])
 }
 
 model BulkJob {
+  tenantId      String?
   id          String   @id @default(cuid())
   type        String
   status      String   @default("PENDING")
@@ -651,9 +682,11 @@ model BulkJob {
   createdById String
   createdBy   User     @relation(fields: [createdById], references: [id])
   createdAt   DateTime @default(now())
+  @@index([tenantId])
 }
 
 model Developer {
+  tenantId      String?
   id              String          @id @default(cuid())
   name            String          @unique
   projectCount    Int             @default(0)
@@ -678,9 +711,11 @@ model Developer {
   properties      Property[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+  @@index([tenantId])
 }
 
 model Project {
+  tenantId      String?
   id                    String     @id @default(cuid())
   name                  String
   code                  String?
@@ -827,6 +862,7 @@ model Project {
   @@index([slug])
   @@index([city])
   @@index([status])
+  @@index([tenantId])
 }
 
 model DeveloperTask {
@@ -844,6 +880,7 @@ model DeveloperTask {
 }
 
 model BrokerageInvoice {
+  tenantId      String?
   id              String    @id @default(cuid())
   invoiceNumber   String?   @unique
   bookingId       String?
@@ -872,6 +909,7 @@ model BrokerageInvoice {
   notes           String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @default(now()) @updatedAt
+  @@index([tenantId])
 }
 
 model SubscriptionPlan {
@@ -932,6 +970,7 @@ enum CommissionStatus {
 }
 
 model AgentCommission {
+  tenantId      String?
   id               String           @id @default(cuid())
   agentId          String
   agent            User             @relation("AgentCommissions", fields: [agentId], references: [id], onDelete: Cascade)
@@ -959,6 +998,7 @@ model AgentCommission {
   @@index([agentId])
   @@index([propertyId])
   @@index([status])
+  @@index([tenantId])
 }
 
 model PropertyCategory {
@@ -1004,6 +1044,7 @@ model Organization {
 }
 
 model Franchise {
+  tenantId      String?
   id               String        @id @default(cuid())
   name             String
   code             String        @unique
@@ -1017,9 +1058,11 @@ model Franchise {
   updatedAt        DateTime      @updatedAt
   branches         Branch[]
   users            User[]        @relation("UserFranchise")
+  @@index([tenantId])
 }
 
 model Branch {
+  tenantId      String?
   id              String      @id @default(cuid())
   name            String
   code            String      @unique
@@ -1033,9 +1076,11 @@ model Branch {
   updatedAt       DateTime    @updatedAt
   departments     Department[]
   users           User[]      @relation("UserBranch")
+  @@index([tenantId])
 }
 
 model Department {
+  tenantId      String?
   id               String     @id @default(cuid())
   name             String
   code             String     @unique
@@ -1048,9 +1093,11 @@ model Department {
   updatedAt        DateTime   @updatedAt
   teams            Team[]
   users            User[]     @relation("UserDepartment")
+  @@index([tenantId])
 }
 
 model Team {
+  tenantId      String?
   id           String      @id @default(cuid())
   name         String
   code         String      @unique
@@ -1062,6 +1109,7 @@ model Team {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   users        User[]      @relation("UserTeam")
+  @@index([tenantId])
 }
 
 // Single-use, time-limited password-reset tokens. Only the SHA-256 hash of the
@@ -1081,6 +1129,7 @@ model PasswordResetToken {
 // Log of bulk WhatsApp/marketing campaigns: who launched, when, the audience
 // size, success/failed counts, and the per-contact results for download.
 model WhatsAppCampaign {
+  tenantId      String?
   id            String   @id @default(cuid())
   name          String
   templateName  String?
@@ -1098,6 +1147,7 @@ model WhatsAppCampaign {
 
   @@index([createdAt])
   @@index([createdById])
+  @@index([tenantId])
 }
 
 // Audit trail for sensitive platform-owner actions (impersonation, password
