@@ -19,5 +19,5 @@ export async function requirePlatformApi() {
   if (!isSuperAdmin(session.user.role)) {
     return { error: NextResponse.json({ error: "Platform owner access required" }, { status: 403 }) } as const;
   }
-  return { session, actorId: session.user.id } as const;
+  return { session, actorId: session.user.id, tenantId: session.user.tenantId ?? null } as const;
 }

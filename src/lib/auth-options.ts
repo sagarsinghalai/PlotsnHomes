@@ -49,6 +49,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           image: user.image,
+          tenantId: user.tenantId ?? null,
         };
       },
     }),
@@ -58,6 +59,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.tenantId = (user as { tenantId?: string | null }).tenantId ?? null;
         token.stale = false;
       }
 
@@ -74,7 +76,7 @@ export const authOptions: NextAuthOptions = {
           if (actorId && actorRole && isSuperAdmin(actorRole)) {
             const target = await prisma.user.findUnique({
               where: { id: s.impersonateUserId },
-              select: { id: true, role: true, email: true, active: true },
+              select: { id: true, role: true, email: true, active: true, tenantId: true },
             });
             // Never impersonate another platform admin; never an inactive user.
             if (target && target.active !== false && !isSuperAdmin(target.role)) {
@@ -87,9 +89,11 @@ export const authOptions: NextAuthOptions = {
                 token.actualRole = actorRole;
                 token.actualName = actor?.name ?? null;
                 token.actualEmail = actor?.email ?? null;
+                token.actualTenantId = token.tenantId ?? null;
               }
               token.id = target.id;
               token.role = target.role;
+              token.tenantId = target.tenantId ?? null;
               token.impersonating = true;
               await writeAudit({
                 actorId,
@@ -113,11 +117,13 @@ export const authOptions: NextAuthOptions = {
           });
           token.id = actorId;
           token.role = token.actualRole as Role;
+          token.tenantId = token.actualTenantId ?? null;
           token.impersonating = false;
           delete token.actualUserId;
           delete token.actualRole;
           delete token.actualName;
           delete token.actualEmail;
+          delete token.actualTenantId;
           return token;
         }
       }
@@ -126,17 +132,20 @@ export const authOptions: NextAuthOptions = {
       if (!user && token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { id: true, role: true, active: true },
+          select: { id: true, role: true, active: true, tenantId: true },
         });
 
         if (!dbUser || dbUser.active === false) {
           delete token.id;
           delete token.role;
+          delete token.tenantId;
           token.stale = true;
           return token;
         }
 
         token.role = dbUser.role;
+        // Keep tenant in sync (but don't clobber the impersonated tenant).
+        if (!token.impersonating) token.tenantId = dbUser.tenantId ?? null;
       }
 
       if (trigger === "update" && token.id) {
@@ -154,6 +163,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = (token.role as Role) ?? "BUYER";
+        session.user.tenantId = (token.tenantId as string | null) ?? null;
       }
       session.impersonating = !!token.impersonating;
       if (token.impersonating) {

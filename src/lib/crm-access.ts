@@ -16,6 +16,7 @@ export async function requireCrmApi() {
     session,
     isAdmin: isSuperAdmin(session.user.role),
     userId: session.user.id,
+    tenantId: session.user.tenantId ?? null,
   };
 }
 

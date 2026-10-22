@@ -11,5 +11,5 @@ export async function requireAdminApi() {
   if (!hasAdminPanelAccess(session.user.role)) {
     return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
   }
-  return { session };
+  return { session, tenantId: session.user.tenantId ?? null };
 }
