@@ -33,6 +33,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import { CampaignReports } from "@/components/admin/campaign-reports";
+import { TemplateFormatToolbar } from "@/components/admin/template-format-toolbar";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 
@@ -856,6 +857,7 @@ export function WhatsAppHub({
   const [fOwner, setFOwner] = useState("");
   const [fProperty, setFProperty] = useState("");
   const [campaignName, setCampaignName] = useState("");
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   // Tag-input: Phone chips (for WhatsApp / SMS channels)
   const [phoneChips, setPhoneChips] = useState<string[]>([]);
@@ -1544,9 +1546,15 @@ export function WhatsAppHub({
 
                 <div>
                   <Label>Message Body Text</Label>
+                  <TemplateFormatToolbar
+                    textareaRef={bodyRef}
+                    value={selectedTemplate.body}
+                    onChange={(v) => updateActiveTemplate({ body: v })}
+                  />
                   <textarea
-                    rows={5}
-                    className="w-full rounded-xl border px-3 py-2 text-sm mt-1 bg-slate-50"
+                    ref={bodyRef}
+                    rows={6}
+                    className="w-full rounded-b-xl border border-slate-200 px-3 py-2 text-sm bg-slate-50"
                     value={selectedTemplate.body}
                     onChange={(e) => updateActiveTemplate({ body: e.target.value })}
                   />

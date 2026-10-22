@@ -20,6 +20,39 @@ type RecipientInput = {
   budgetMax?: string;
 };
 
+// Convert WhatsApp-style formatting (*bold* _italic_ ~strike~ ```mono```, bullets,
+// numbered lists, bare URLs) into HTML so it renders in email.
+function waMarkdownToHtml(src: string): string {
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const inline = (s: string) =>
+    esc(s)
+      .replace(/```([\s\S]+?)```/g, "<code>$1</code>")
+      .replace(/\*(.+?)\*/g, "<strong>$1</strong>")
+      .replace(/_(.+?)_/g, "<em>$1</em>")
+      .replace(/~(.+?)~/g, "<del>$1</del>")
+      .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>');
+  const lines = src.split(/\r?\n/);
+  const out: string[] = [];
+  let list: "ul" | "ol" | null = null;
+  const closeList = () => { if (list) { out.push(`</${list}>`); list = null; } };
+  for (const ln of lines) {
+    const bullet = ln.match(/^\s*•\s+(.*)$/);
+    const num = ln.match(/^\s*\d+\.\s+(.*)$/);
+    if (bullet) {
+      if (list !== "ul") { closeList(); out.push("<ul>"); list = "ul"; }
+      out.push(`<li>${inline(bullet[1])}</li>`);
+    } else if (num) {
+      if (list !== "ol") { closeList(); out.push("<ol>"); list = "ol"; }
+      out.push(`<li>${inline(num[1])}</li>`);
+    } else {
+      closeList();
+      out.push(ln.trim() === "" ? "<br>" : `${inline(ln)}<br>`);
+    }
+  }
+  closeList();
+  return out.join("");
+}
+
 // Replace all supported {{variables}} with this recipient's values.
 function compileVars(text: string, r: RecipientInput): string {
   return (text || "")
@@ -105,7 +138,7 @@ export async function POST(req: Request) {
           } else if (ch === "email") {
             channelEnum = MessageChannel.EMAIL;
             const compiledSubject = compileVars(subject || `Campaign Message from ${config.companyName}`, r);
-            const html = `<div style="font-family:system-ui,sans-serif;max-width:560px"><p>${compiledBody.replace(/\n/g, "<br>")}</p></div>`;
+            const html = `<div style="font-family:system-ui,sans-serif;max-width:560px;line-height:1.5">${waMarkdownToHtml(compiledBody)}</div>`;
 
             const gmail = await sendViaGmail(toEmail, compiledSubject, html, config);
             if (gmail) {
