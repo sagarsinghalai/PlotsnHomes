@@ -22,6 +22,8 @@ export default async function AdminWhatsAppPage() {
         stage: true,
         source: true,
         leadStatus: true,
+        budgetMin: true,
+        budgetMax: true,
         owner: { select: { name: true } },
         property: { select: { title: true } },
       },
@@ -48,6 +50,8 @@ export default async function AdminWhatsAppPage() {
     stage: l.stage,
     source: l.source,
     leadStatus: l.leadStatus,
+    budgetMin: l.budgetMin,
+    budgetMax: l.budgetMax,
     ownerName: l.owner?.name ?? null,
     propertyTitle: l.property?.title ?? null,
   }));

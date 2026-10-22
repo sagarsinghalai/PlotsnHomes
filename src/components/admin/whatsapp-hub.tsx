@@ -44,6 +44,8 @@ type LeadOption = {
   stage?: string | null;
   source?: string | null;
   leadStatus?: string | null;
+  budgetMin?: number | null;
+  budgetMax?: number | null;
   ownerName?: string | null;
   propertyTitle?: string | null;
 };
@@ -1031,11 +1033,20 @@ export function WhatsAppHub({
   // Get active recipients
   const activeRecipients = useMemo(() => {
     if (campaignRecipientsType === "leads") {
+      const toRecipient = (l: LeadOption) => ({
+        name: l.name,
+        phone: l.phone || "",
+        email: l.email || "",
+        property: l.propertyTitle || "",
+        owner: l.ownerName || "",
+        budgetMin: l.budgetMin != null ? String(l.budgetMin) : "",
+        budgetMax: l.budgetMax != null ? String(l.budgetMax) : "",
+      });
       if (selectedLeadId === "all") {
-        return filteredLeads.map((l) => ({ name: l.name, phone: l.phone || "", email: l.email || "" }));
+        return filteredLeads.map(toRecipient);
       } else {
         const single = leads.find((l) => l.id === selectedLeadId);
-        return single ? [{ name: single.name, phone: single.phone || "", email: single.email || "" }] : [];
+        return single ? [toRecipient(single)] : [];
       }
     } else if (campaignRecipientsType === "manual") {
       const validPhones = phoneChipsWithValidity.filter((c) => c.valid).map((c) => c.raw);
@@ -1148,7 +1159,11 @@ export function WhatsAppHub({
         let compiledBody = selectedTemplate.body
           .replace(/\{\{name\}\}/g, r.name || "Client")
           .replace(/\{\{phone\}\}/g, r.phone || "")
-          .replace(/\{\{email\}\}/g, r.email || "");
+          .replace(/\{\{email\}\}/g, r.email || "")
+          .replace(/\{\{property\}\}/g, (r as any).property || "")
+          .replace(/\{\{owner\}\}/g, (r as any).owner || "")
+          .replace(/\{\{budgetMin\}\}/g, (r as any).budgetMin || "")
+          .replace(/\{\{budgetMax\}\}/g, (r as any).budgetMax || "");
 
         if (selectedTemplate.templateType === "Text + Buttons" && selectedTemplate.buttons && selectedTemplate.buttons.length > 0) {
           compiledBody += "\n\n*Reply Options:*\n" + selectedTemplate.buttons.map((b, i) => {

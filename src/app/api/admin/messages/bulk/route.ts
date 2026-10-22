@@ -14,7 +14,23 @@ type RecipientInput = {
   name: string;
   phone?: string;
   email?: string;
+  property?: string;
+  owner?: string;
+  budgetMin?: string;
+  budgetMax?: string;
 };
+
+// Replace all supported {{variables}} with this recipient's values.
+function compileVars(text: string, r: RecipientInput): string {
+  return (text || "")
+    .replace(/\{\{name\}\}/g, r.name || "Client")
+    .replace(/\{\{email\}\}/g, r.email || "")
+    .replace(/\{\{phone\}\}/g, r.phone || "")
+    .replace(/\{\{property\}\}/g, r.property || "")
+    .replace(/\{\{owner\}\}/g, r.owner || "")
+    .replace(/\{\{budgetMin\}\}/g, r.budgetMin || "")
+    .replace(/\{\{budgetMax\}\}/g, r.budgetMax || "");
+}
 
 export async function POST(req: Request) {
   const auth = await requireCrmApi();
@@ -52,11 +68,8 @@ export async function POST(req: Request) {
         }
       }
 
-      // Compile body
-      let compiledBody = body;
-      compiledBody = compiledBody.replace(/\{\{name\}\}/g, r.name || "Client");
-      compiledBody = compiledBody.replace(/\{\{email\}\}/g, r.email || "");
-      compiledBody = compiledBody.replace(/\{\{phone\}\}/g, r.phone || "");
+      // Compile body — substitutes every supported {{variable}} for this contact.
+      const compiledBody = compileVars(body, r);
 
       const toPhone = r.phone?.trim() || "";
       const toEmail = r.email?.trim() || "";
@@ -91,7 +104,7 @@ export async function POST(req: Request) {
             logs.push(`WhatsApp API OK`);
           } else if (ch === "email") {
             channelEnum = MessageChannel.EMAIL;
-            const compiledSubject = subject || `Campaign Message from ${config.companyName}`;
+            const compiledSubject = compileVars(subject || `Campaign Message from ${config.companyName}`, r);
             const html = `<div style="font-family:system-ui,sans-serif;max-width:560px"><p>${compiledBody.replace(/\n/g, "<br>")}</p></div>`;
 
             const gmail = await sendViaGmail(toEmail, compiledSubject, html, config);
