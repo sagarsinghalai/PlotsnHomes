@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireCrmApi } from "@/lib/crm-access";
 
 const DEFAULT_CATEGORIES = [
   {
@@ -171,6 +172,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
   try {
     const body = await req.json();
     const { name, slug, icon, description, subcategories, tags, targetGroup, optionValue } = body;
@@ -253,6 +256,8 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
   try {
     const body = await req.json();
     const { id, name, slug, icon, description, subcategories, tags, targetGroup, optionsList } = body;
@@ -310,6 +315,8 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

@@ -21,6 +21,10 @@ export async function POST(req: Request) {
       console.error(err);
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
+  } else if (process.env.NODE_ENV === "production") {
+    // Fail closed: never process an unverified payment webhook in production.
+    console.error("[PlotsnHomes] STRIPE_WEBHOOK_SECRET missing in production — rejecting unverified webhook");
+    return NextResponse.json({ error: "Webhook signature verification not configured" }, { status: 503 });
   } else {
     console.warn("[PlotsnHomes] STRIPE_WEBHOOK_SECRET not set — parsing body without verification (dev only)");
     event = JSON.parse(body) as Stripe.Event;

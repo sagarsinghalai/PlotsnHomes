@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCustomPages, saveCustomPage, deleteCustomPage } from "@/lib/webpage-editor-store";
-import { getSession } from "@/lib/auth";
+import { requireCrmApi } from "@/lib/crm-access";
 
 export async function GET() {
   const pages = await getCustomPages();
@@ -8,10 +8,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
 
   try {
     const body = await req.json();
@@ -27,10 +25,8 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const session = await getSession();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");

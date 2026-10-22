@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { groupCountByMonth, groupSumByMonth } from "@/lib/admin-reports";
+import { requireCrmApi } from "@/lib/crm-access";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
   const [transactions, leads, users, inquiries] = await Promise.all([
     prisma.transaction.findMany({
       where: { status: "COMPLETED" },

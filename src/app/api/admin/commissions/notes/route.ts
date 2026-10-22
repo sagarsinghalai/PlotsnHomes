@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireCrmApi } from "@/lib/crm-access";
 
 export async function POST(req: Request) {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
   try {
     const { id, notes } = await req.json();
     if (!id) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { LeadStage, PropertyStatus, PropertyType, ShowingStatus, CommissionStatus, TransactionStatus } from "@prisma/client";
+import { requireCrmApi } from "@/lib/crm-access";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,8 @@ function getDateRange(range?: string, from?: string, to?: string) {
 }
 
 export async function GET(request: Request) {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
   try {
     const { searchParams } = new URL(request.url);
     const range = searchParams.get("range") || "30d";

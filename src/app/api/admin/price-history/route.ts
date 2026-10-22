@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireCrmApi } from "@/lib/crm-access";
 
 export async function GET(req: Request) {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
   try {
     const { searchParams } = new URL(req.url);
     const propertyId = searchParams.get("propertyId");
@@ -219,6 +222,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
   try {
     const body = await req.json();
     const { propertyId, newPrice, ratePerSqft, stage = "Valuation Revision", notes = "", changedByName = "Admin User" } = body;

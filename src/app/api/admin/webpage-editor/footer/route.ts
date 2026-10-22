@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getFooterSettings, saveFooterSettings } from "@/lib/webpage-editor-store";
-import { getSession } from "@/lib/auth";
+import { requireCrmApi } from "@/lib/crm-access";
 
 export const dynamic = "force-dynamic";
 
@@ -10,10 +10,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
 
   try {
     const body = await req.json();

@@ -6,6 +6,20 @@ import {
 } from "@/lib/form-registrations-store";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { isSuperAdmin } from "@/lib/roles";
+
+// Platform-owner only: these actions create/approve privileged accounts
+// (WHITE_LABEL_ADMIN / SELLER), so they must never be callable by tenants or
+// anonymously.
+async function requirePlatformOwner() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user || !isSuperAdmin(session.user.role)) {
+    return NextResponse.json({ error: "Super Admin authorization required" }, { status: 403 });
+  }
+  return null;
+}
 
 function generatePassword(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -19,6 +33,8 @@ function generatePassword(): string {
 }
 
 export async function GET() {
+  const denied = await requirePlatformOwner();
+  if (denied) return denied;
   try {
     const registrations = await getFormRegistrations();
     return NextResponse.json({ registrations });
@@ -28,6 +44,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const denied = await requirePlatformOwner();
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { action, registrationId, declineReason } = body;

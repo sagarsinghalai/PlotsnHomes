@@ -1,4 +1,28 @@
 import { NextResponse } from "next/server";
+import { requireCrmApi } from "@/lib/crm-access";
+
+// Only these hosts may be fetched server-side (SSRF guard). A substring check is
+// not safe (e.g. "http://169.254.169.254/#goo.gl" contains "goo.gl"), so we parse
+// the URL and match the exact hostname against this allowlist.
+const ALLOWED_FETCH_HOSTS = new Set([
+  "goo.gl",
+  "maps.app.goo.gl",
+  "app.goo.gl",
+  "bit.ly",
+  "maps.google.com",
+  "www.google.com",
+  "google.com",
+]);
+
+function isAllowedShortenerUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+    return ALLOWED_FETCH_HOSTS.has(u.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
 
 function extractLatLngFromUrl(url: string) {
   if (!url) return null;
@@ -24,6 +48,8 @@ function extractLatLngFromUrl(url: string) {
 }
 
 export async function GET(req: Request) {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
   try {
     const { searchParams } = new URL(req.url);
     const mapsUrl = searchParams.get("url");
@@ -38,8 +64,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ lat: directMatch.lat, lng: directMatch.lng, method: "direct" });
     }
 
-    // 2. Follow Redirects for Shortened Links (e.g., maps.app.goo.gl or goo.gl)
-    if (mapsUrl.includes("goo.gl") || mapsUrl.includes("maps.app.goo.gl") || mapsUrl.includes("bit.ly")) {
+    // 2. Follow Redirects for Shortened Links — ONLY for allowlisted hosts (SSRF guard).
+    if (isAllowedShortenerUrl(mapsUrl)) {
       const response = await fetch(mapsUrl, {
         redirect: "follow",
         headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },

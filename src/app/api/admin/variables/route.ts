@@ -5,8 +5,11 @@ import {
   saveGlobalCustomVariables,
   saveSystemVariables,
 } from "@/lib/variables-store";
+import { requireCrmApi } from "@/lib/crm-access";
 
 export async function GET() {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
   try {
     const [systemVariables, globalCustomVariables] = await Promise.all([
       getSystemVariables(),
@@ -23,6 +26,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
   try {
     const body = await req.json();
 
