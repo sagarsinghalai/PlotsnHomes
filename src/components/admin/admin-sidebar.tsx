@@ -45,6 +45,7 @@ import {
   History,
   Globe,
   Layout,
+  Bot,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -69,8 +70,6 @@ const DEFAULT_NAV: NavGroup[] = [
     items: [
       { href: "/admin/users", label: "Users & accounts", icon: Users },
       { href: "/admin/platform/users", label: "Platform users", icon: Users },
-      { href: "/admin/whatsapp/settings", label: "WhatsApp settings", icon: MessageSquare },
-      { href: "/admin/whatsapp/bot", label: "WhatsApp bot", icon: MessageSquare },
       { href: "/admin/teams", label: "Teams", icon: Users2 },
       { href: "/admin/hierarchy", label: "Team hierarchy", icon: GitFork },
       { href: "/admin/organization", label: "Organizations & Franchises", icon: Building2 },
@@ -91,7 +90,6 @@ const DEFAULT_NAV: NavGroup[] = [
     title: "Sales & CRM",
     items: [
       { href: "/admin/leads", label: "All leads", icon: List },
-      { href: "/admin/whatsapp/inbox", label: "WhatsApp inbox", icon: MessageSquare },
       { href: "/admin/crm", label: "Pipeline", icon: KanbanSquare },
       { href: "/admin/inquiries", label: "Inquiries", icon: MessageSquare },
       { href: "/admin/showings", label: "Site visits", icon: CalendarCheck },
@@ -115,10 +113,18 @@ const DEFAULT_NAV: NavGroup[] = [
     ],
   },
   {
+    title: "WhatsApp Hub",
+    items: [
+      { href: "/admin/whatsapp", label: "Overview & Send", icon: MessageCircle },
+      { href: "/admin/whatsapp/inbox", label: "Inbox", icon: MessageSquare },
+      { href: "/admin/whatsapp/bot", label: "Bot flows", icon: Bot },
+      { href: "/admin/whatsapp/settings", label: "Settings", icon: Settings },
+    ],
+  },
+  {
     title: "Communications",
     items: [
       { href: "/admin/communications", label: "Hub", icon: MessageSquare },
-      { href: "/admin/whatsapp", label: "WhatsApp Hub", icon: MessageCircle },
       { href: "/admin/variables-templates", label: "Variables & Templates", icon: SlidersHorizontal },
       { href: "/admin/messages", label: "Send message", icon: Send },
       { href: "/admin/meetings", label: "Meetings", icon: Calendar },
@@ -160,7 +166,7 @@ DEFAULT_NAV.forEach((g) => {
   });
 });
 
-const STORAGE_KEY = "plotsnhomes_admin_sidebar_layout_v12";
+const STORAGE_KEY = "plotsnhomes_admin_sidebar_layout_v13";
 
 function isActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === "/admin";
