@@ -90,6 +90,7 @@ const DEFAULT_NAV: NavGroup[] = [
     title: "Sales & CRM",
     items: [
       { href: "/admin/leads", label: "All leads", icon: List },
+      { href: "/admin/whatsapp/inbox", label: "WhatsApp inbox", icon: MessageSquare },
       { href: "/admin/crm", label: "Pipeline", icon: KanbanSquare },
       { href: "/admin/inquiries", label: "Inquiries", icon: MessageSquare },
       { href: "/admin/showings", label: "Site visits", icon: CalendarCheck },
