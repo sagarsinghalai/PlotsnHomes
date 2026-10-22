@@ -190,6 +190,9 @@ export function AdminSidebar({
   // Drag & Drop State
   const [draggedItem, setDraggedItem] = useState<{ groupTitle: string; itemHref: string } | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<{ groupTitle: string; itemIndex?: number } | null>(null);
+  // Section (main-menu group) drag state — reorders whole sections.
+  const [draggedGroup, setDraggedGroup] = useState<string | null>(null);
+  const [dragOverGroupTitle, setDragOverGroupTitle] = useState<string | null>(null);
 
   // Load layout from localStorage
   useEffect(() => {
@@ -365,6 +368,40 @@ export function AdminSidebar({
     setDragOverTarget(null);
   };
 
+  // --- Section (group) reordering ---
+  const handleGroupDragStart = (e: React.DragEvent, title: string) => {
+    e.stopPropagation();
+    setDraggedGroup(title);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("application/x-nav-group", title);
+  };
+
+  const handleGroupDragOver = (e: React.DragEvent, title: string) => {
+    if (!draggedGroup) return; // let item drag-over handle it
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverGroupTitle !== title) setDragOverGroupTitle(title);
+  };
+
+  const handleGroupDrop = (e: React.DragEvent, targetTitle: string) => {
+    if (!draggedGroup) return false; // not a section drag — caller falls back to item drop
+    e.preventDefault();
+    e.stopPropagation();
+    const from = draggedGroup;
+    setDraggedGroup(null);
+    setDragOverGroupTitle(null);
+    if (from === targetTitle) return true;
+
+    const newNav = navState.map((g) => ({ title: g.title, items: [...g.items] }));
+    const fromIdx = newNav.findIndex((g) => g.title === from);
+    if (fromIdx < 0) return true;
+    const [moved] = newNav.splice(fromIdx, 1);
+    const toIdx = newNav.findIndex((g) => g.title === targetTitle);
+    newNav.splice(toIdx < 0 ? newNav.length : toIdx, 0, moved);
+    saveLayout(newNav);
+    return true;
+  };
+
   const filteredNav = navState.map((group) => {
     const items = group.items
       .filter((item) => hasItemPermission(item.href))
@@ -437,18 +474,28 @@ export function AdminSidebar({
           {filteredNav.map((group) => {
             const isGroupDragOver = dragOverTarget?.groupTitle === group.title && dragOverTarget?.itemIndex === undefined;
 
+            const isSectionDragOver = !!draggedGroup && dragOverGroupTitle === group.title && draggedGroup !== group.title;
+
             return (
               <div
                 key={group.title}
-                onDragOver={(e) => handleDragOverGroup(e, group.title)}
-                onDrop={(e) => handleDrop(e, group.title)}
+                onDragOver={(e) => (draggedGroup ? handleGroupDragOver(e, group.title) : handleDragOverGroup(e, group.title))}
+                onDrop={(e) => { if (handleGroupDrop(e, group.title)) return; handleDrop(e, group.title); }}
                 className={cn(
                   "rounded-xl p-1.5 transition-all duration-150 border border-transparent",
-                  isGroupDragOver && "border-dashed border-brand/80 bg-brand/20 shadow-sm"
+                  isGroupDragOver && "border-dashed border-brand/80 bg-brand/20 shadow-sm",
+                  isSectionDragOver && "border-t-2 border-t-brand"
                 )}
               >
-                <div className="flex items-center justify-between px-2 mb-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                <div
+                  draggable
+                  onDragStart={(e) => handleGroupDragStart(e, group.title)}
+                  onDragEnd={() => { setDraggedGroup(null); setDragOverGroupTitle(null); }}
+                  className="group/sec flex cursor-grab items-center justify-between px-2 mb-1.5 active:cursor-grabbing"
+                  title="Drag to reorder this section"
+                >
+                  <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                    <GripVertical className="h-3 w-3 text-slate-700 group-hover/sec:text-slate-400 transition" />
                     {group.title}
                   </p>
                   <span className="text-[9px] font-mono text-slate-600 font-normal">
@@ -474,8 +521,8 @@ export function AdminSidebar({
                         key={item.href}
                         draggable
                         onDragStart={(e) => handleDragStart(e, group.title, item.href)}
-                        onDragOver={(e) => handleDragOverItem(e, group.title, idx)}
-                        onDrop={(e) => handleDrop(e, group.title, idx)}
+                        onDragOver={(e) => (draggedGroup ? handleGroupDragOver(e, group.title) : handleDragOverItem(e, group.title, idx))}
+                        onDrop={(e) => { if (handleGroupDrop(e, group.title)) return; handleDrop(e, group.title, idx); }}
                         className={cn(
                           "group relative transition-all rounded-lg",
                           isDraggingThis && "opacity-40 scale-95 border border-dashed border-amber-500",
