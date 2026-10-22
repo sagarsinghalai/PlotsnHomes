@@ -15,6 +15,7 @@ import { stripeConfigured } from "@/lib/stripe";
 import { razorpayConfigured } from "@/lib/razorpay";
 import { CurrencyConverter } from "@/components/property/currency-converter";
 import { PropertyActions } from "@/components/property/property-actions";
+import { getPublicWhatsAppNumber } from "@/lib/whatsapp-settings";
 import { PropertyPrintBrochure } from "@/components/property/property-print-brochure";
 import { formatCurrency, parseImages, parseJsonArray } from "@/lib/utils";
 import { Metadata } from "next";
@@ -95,6 +96,8 @@ export default async function PropertyDetailPage({
     },
   });
   if (!property) notFound();
+
+  const waNumber = await getPublicWhatsAppNumber();
 
   const developerName = property.developer?.name || (property as any).developerName || "Emaar Properties";
 
@@ -217,6 +220,8 @@ export default async function PropertyDetailPage({
               bedsText={property.bedrooms > 0 ? `${property.bedrooms} Bed${property.bedrooms !== 1 ? "s" : ""}` : undefined}
               bathsText={property.bathrooms > 0 ? `${property.bathrooms} Bath${property.bathrooms !== 1 ? "s" : ""}` : undefined}
               areaText={property.sqft != null ? `${property.sqft.toLocaleString()} sq ft` : (property.area ?? undefined)}
+              propertySymbol={property.symbol}
+              whatsappNumber={waNumber || undefined}
             />
           </div>
         </div>

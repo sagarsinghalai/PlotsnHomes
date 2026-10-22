@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireCrmApi } from "@/lib/crm-access";
+import { getWhatsAppConfig } from "@/lib/whatsapp-settings";
 
 // Staff-only: this sends from the business WhatsApp number (costs money and can
 // get the number flagged if abused). The public property "share" button no longer
@@ -8,9 +9,8 @@ import { requireCrmApi } from "@/lib/crm-access";
 export async function GET() {
   const auth = await requireCrmApi();
   if (auth.error) return auth.error;
-  const token = process.env.WHATSAPP_ACCESS_TOKEN;
-  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  return NextResponse.json({ apiConfigured: !!(token && phoneId) });
+  const cfg = await getWhatsAppConfig();
+  return NextResponse.json({ apiConfigured: !!(cfg.accessToken && cfg.phoneNumberId) });
 }
 
 // Accept both legacy (phone/type) and new (to/messageType) field names
@@ -39,9 +39,10 @@ export async function POST(req: Request) {
   const auth = await requireCrmApi();
   if (auth.error) return auth.error;
 
-  const token = process.env.WHATSAPP_ACCESS_TOKEN;
-  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  const version = process.env.WHATSAPP_API_VERSION || "v20.0";
+  const cfg = await getWhatsAppConfig();
+  const token = cfg.accessToken;
+  const phoneId = cfg.phoneNumberId;
+  const version = cfg.apiVersion || "v20.0";
 
   if (!token || !phoneId) {
     return NextResponse.json(

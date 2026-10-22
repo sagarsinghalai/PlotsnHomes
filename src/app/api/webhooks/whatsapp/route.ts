@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { MessageChannel } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { receiveIncomingMessage } from "@/lib/messaging";
+import { createInboundLead } from "@/lib/inbound-lead";
 import { verifyMetaSignature, exceedsWebhookLimit, safeEqual } from "@/lib/meta-webhook";
+import { getWhatsAppConfig } from "@/lib/whatsapp-settings";
+
+export const dynamic = "force-dynamic";
 
 const IS_PROD = process.env.NODE_ENV === "production";
 
@@ -13,20 +18,31 @@ export async function GET(req: Request) {
     const mode = searchParams.get("hub.mode");
     const challenge = searchParams.get("hub.challenge");
     const token = searchParams.get("hub.verify_token");
-    const expected = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
+    const expected = (await getWhatsAppConfig()).verifyToken;
 
     if (mode === "subscribe") {
       if (expected) {
         if (safeEqual(token, expected)) return new Response(challenge, { status: 200 });
         return new NextResponse("Forbidden", { status: 403 });
       }
-      // No verify token configured: allow only outside production.
       if (IS_PROD) return new NextResponse("Verify token not configured", { status: 403 });
       return new Response(challenge, { status: 200 });
     }
     return NextResponse.json({ ok: true, message: "WhatsApp webhook is active" });
   } catch (e) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+}
+
+/** Pull a property reference out of the enquiry text, e.g. "(Ref: BV-PROP-12)". */
+async function resolvePropertyId(text: string): Promise<string | undefined> {
+  const m = text.match(/Ref:\s*([A-Za-z0-9_-]+)/i);
+  if (!m) return undefined;
+  try {
+    const prop = await prisma.property.findUnique({ where: { symbol: m[1] }, select: { id: true } });
+    return prop?.id;
+  } catch {
+    return undefined;
   }
 }
 
@@ -37,10 +53,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Payload too large" }, { status: 413 });
     }
 
-    // Verify X-Hub-Signature-256 over the raw body using the WhatsApp app secret.
-    // Present → must be valid. Absent → allowed only outside production.
     const raw = await req.text();
-    const appSecret = process.env.WHATSAPP_APP_SECRET || "";
+    const appSecret = (await getWhatsAppConfig()).appSecret;
     const sig = req.headers.get("x-hub-signature-256");
     if (appSecret) {
       if (!verifyMetaSignature(raw, sig, appSecret)) {
@@ -51,12 +65,8 @@ export async function POST(req: Request) {
     }
 
     const payload = JSON.parse(raw);
-
-    const entry = payload.entry?.[0];
-    const change = entry?.changes?.[0];
-    const value = change?.value;
+    const value = payload.entry?.[0]?.changes?.[0]?.value;
     const message = value?.messages?.[0];
-
     if (!message) {
       return NextResponse.json({ ok: true });
     }
@@ -64,8 +74,9 @@ export async function POST(req: Request) {
     let textBody = message.text?.body || "";
     const fromPhone = message.from || "";
     const messageId = message.id || "";
+    // The contact's WhatsApp display name (if the user allows it).
+    const profileName: string = value?.contacts?.[0]?.profile?.name || "";
 
-    // Handle interactive button or list replies
     if (message.type === "interactive" && message.interactive) {
       if (message.interactive.type === "button_reply") {
         textBody = message.interactive.button_reply?.title || "";
@@ -78,6 +89,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Missing sender phone or message body" }, { status: 400 });
     }
 
+    // 1) Capture/record the lead (property-tagged, auto-assigned, de-duplicated).
+    //    De-dup inside createInboundLead prevents a new lead on every message.
+    const propertyId = await resolvePropertyId(textBody);
+    await createInboundLead({
+      channel: "whatsapp",
+      name: profileName || `WhatsApp ${fromPhone}`,
+      phone: `+${fromPhone}`,
+      message: textBody,
+      sourceLabel: "WhatsApp",
+      propertyId,
+      rawPayload: { from: fromPhone, name: profileName, messageId, text: textBody },
+    });
+
+    // 2) Log the message into the conversation inbox (finds the lead just created
+    //    by phone, so this does not create a duplicate) and notify the agent.
     await receiveIncomingMessage({
       channel: MessageChannel.WHATSAPP,
       fromPhone: `+${fromPhone}`,

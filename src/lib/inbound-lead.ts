@@ -32,6 +32,7 @@ export type InboundLeadInput = {
   email?: string;
   message?: string;
   sourceLabel?: string;
+  propertyId?: string; // link the lead to the property the person enquired about
   rawPayload?: any;
 };
 
@@ -83,6 +84,13 @@ export async function createInboundLead(input: InboundLeadInput): Promise<Inboun
     const stage = (cfg?.defaultStage && (LeadStage as any)[cfg.defaultStage]) ? (cfg!.defaultStage as LeadStage) : LeadStage.NEW;
     const source = input.sourceLabel || cfg?.label || channel;
 
+    // Only attach the property if it still exists (avoid FK errors on a bad ref).
+    let propertyId: string | null = null;
+    if (input.propertyId) {
+      const prop = await prisma.property.findUnique({ where: { id: input.propertyId }, select: { id: true } });
+      propertyId = prop?.id ?? null;
+    }
+
     const lead = await prisma.lead.create({
       data: {
         name: name || "Unknown",
@@ -92,6 +100,7 @@ export async function createInboundLead(input: InboundLeadInput): Promise<Inboun
         stage,
         score,
         ownerId,
+        propertyId,
         lifecycleStage,
         leadStatus,
         requirements: input.message?.trim() || null,

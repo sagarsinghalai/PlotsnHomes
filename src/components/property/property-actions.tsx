@@ -14,6 +14,8 @@ interface PropertyActionsProps {
   bedsText?: string;
   bathsText?: string;
   areaText?: string;
+  propertySymbol?: string;
+  whatsappNumber?: string;
 }
 
 export function PropertyActions({
@@ -27,6 +29,8 @@ export function PropertyActions({
   bathsText,
   areaText,
   coverImageUrl,
+  propertySymbol,
+  whatsappNumber,
 }: PropertyActionsProps) {
   const [copied, setCopied] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -110,6 +114,20 @@ export function PropertyActions({
     }
   };
 
+  // Lead-capture CTA: opens WhatsApp to YOUR business number with a property-
+  // tagged message. When the visitor sends it, the webhook records a CRM lead
+  // (name + phone + this property) and auto-assigns it to a team member.
+  const handleEnquire = () => {
+    if (!whatsappNumber) return;
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const refPart = propertySymbol ? ` (Ref: ${propertySymbol})` : "";
+    const text = `Hi, I'm interested in this property: ${propertyTitle}${refPart}. ${url}`;
+    const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`;
+    if (typeof window !== "undefined") {
+      window.open(waUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
   const handleCopyLink = () => {
     const url = typeof window !== "undefined" ? window.location.href : "";
     navigator.clipboard.writeText(url).then(() => {
@@ -122,6 +140,16 @@ export function PropertyActions({
   return (
     <div className="flex flex-col items-end gap-2 mt-3" ref={dropdownRef}>
       <div className="flex items-center justify-end gap-2 relative">
+        {whatsappNumber && (
+          <button
+            onClick={handleEnquire}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors shadow-sm"
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            Enquire on WhatsApp
+          </button>
+        )}
+
         <button
           onClick={handlePrint}
           className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
