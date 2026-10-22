@@ -68,8 +68,15 @@ export function decryptSecret(value: string | null | undefined): string {
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(ct), decipher.final()]).toString("utf8");
   } catch {
-    // Wrong key or corrupted value — fail safe, never leak the secret.
-    console.warn("[credentials-crypto] could not decrypt a stored secret (wrong CREDENTIALS_ENC_KEY or corrupted value).");
+    // Fail safe: never throw, never leak the secret, never touch stored data.
+    // Distinguish a deployment/config fault (missing key) from a per-value
+    // fault so operators get an actionable signal. The stored ciphertext is
+    // left intact — callers get "" and must not persist that back.
+    if (!hasEncKey()) {
+      console.error("[credentials-crypto] CONFIG ERROR: CREDENTIALS_ENC_KEY is missing or too short — stored credentials cannot be decrypted. Set the key in the environment. (ciphertext preserved; no secret logged)");
+    } else {
+      console.warn("[credentials-crypto] could not decrypt a stored secret (wrong CREDENTIALS_ENC_KEY or corrupted value). Ciphertext preserved; no secret logged.");
+    }
     return "";
   }
 }

@@ -11,6 +11,16 @@
  *
  * Run:  node scripts/encrypt-lead-channel-secrets.mjs
  * Requires env: DATABASE_URL, CREDENTIALS_ENC_KEY  (loaded from .env if present)
+ *
+ * Safety: the target database is printed (sanitized — no password). A non-local
+ * target (anything other than a sqlite file) requires CONFIRM_MIGRATION=1 so the
+ * script cannot accidentally run against the wrong environment.
+ *
+ * Recovery from a failed/incorrect run:
+ *   The pre-change value is copied to SystemSetting "lead_channels_backup_<ts>".
+ *   To restore: set the `lead_channels` value back to that backup's value
+ *   (e.g. in prisma studio or a one-line update), then investigate. The script
+ *   is idempotent and never blanks/deletes a credential, so re-running is safe.
  */
 import crypto from "crypto";
 import fs from "fs";
@@ -47,9 +57,26 @@ function encrypt(plain, key) {
   return PREFIX + Buffer.concat([iv, tag, ct]).toString("base64");
 }
 
+/** Describe the DB target without leaking credentials, and gate non-local runs. */
+function assertSafeTarget() {
+  const url = process.env.DATABASE_URL || "";
+  const isSqlite = /^file:/.test(url) || /\.db(\?|$)/.test(url);
+  let label = "unknown";
+  try {
+    if (isSqlite) label = "sqlite " + url.replace(/^file:/, "");
+    else { const u = new URL(url); label = `${u.protocol.replace(":", "")} ${u.host}${u.pathname}`; }
+  } catch { label = isSqlite ? "sqlite (local file)" : "non-sqlite"; }
+  console.log(`Target database: ${label}`);
+  if (!isSqlite && process.env.CONFIRM_MIGRATION !== "1") {
+    console.error("Refusing to modify a non-local (non-sqlite) database without CONFIRM_MIGRATION=1. Aborting; no changes made.");
+    process.exit(1);
+  }
+}
+
 const prisma = new PrismaClient();
 
 async function main() {
+  assertSafeTarget();
   const key = getKey();
   const row = await prisma.systemSetting.findUnique({ where: { key: "lead_channels" } });
   if (!row?.value) {

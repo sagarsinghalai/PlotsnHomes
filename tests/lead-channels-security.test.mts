@@ -10,6 +10,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import assert from "node:assert/strict";
+import nodeCrypto from "node:crypto";
 
 // Load .env (DATABASE_URL for the Prisma import chain) before importing app code.
 try {
@@ -124,6 +125,73 @@ test("checkMetaWebhook: prod fails safe without App Secret; dev allows", () => {
   const sig = meta.computeMetaSignature(raw, "s");
   assert.equal(meta.checkMetaWebhook({ rawBody: raw, signatureHeader: sig, appSecret: "s", isProduction: true }).ok, true);
   assert.equal(meta.checkMetaWebhook({ rawBody: raw, signatureHeader: "sha256=x", appSecret: "s", isProduction: true }).ok, false);
+});
+
+// --- Phase 1.1 hardening regression tests ---
+
+test("missing encryption key: encrypt throws, decrypt fails safe (no throw)", () => {
+  const enc = crypto.encryptSecret(SECRET); // under KEY_A
+  delete process.env.CREDENTIALS_ENC_KEY;
+  try {
+    assert.equal(crypto.hasEncKey(), false);
+    assert.throws(() => crypto.assertEncKey(), /CREDENTIALS_ENC_KEY/);
+    assert.throws(() => crypto.encryptSecret("x"), /CREDENTIALS_ENC_KEY/);
+    assert.equal(crypto.decryptSecret(enc), ""); // fail-safe, config error logged
+  } finally {
+    process.env.CREDENTIALS_ENC_KEY = KEY_A; // restore for later tests
+  }
+});
+
+test("decryption failure preserves stored ciphertext (merge does not blank)", () => {
+  const current: any = JSON.parse(JSON.stringify(lc.DEFAULT_LEAD_CHANNELS));
+  const corrupt = "enc:v1:" + Buffer.from("not-a-real-ciphertext").toString("base64");
+  current.meta.appSecret = corrupt; // simulates an undecryptable stored value
+  assert.equal(crypto.decryptSecret(corrupt), ""); // confirms it is undecryptable
+  const merged: any = lc.mergeChannelUpdate(current, { meta: { enabled: true } } as any);
+  assert.equal(merged.meta.appSecret, corrupt, "undecryptable ciphertext must be preserved, not blanked");
+});
+
+test("masked config contains no plaintext and no enc:v1: blobs", () => {
+  const cfg: any = { ...lc.DEFAULT_LEAD_CHANNELS.meta, pageAccessToken: "PLAINTOKEN", appSecret: crypto.encryptSecret("ENCSECRET"), verifyToken: "PLAINVERIFY" };
+  const json = JSON.stringify(lc.maskChannel("meta", cfg));
+  assert.ok(!json.includes("enc:v1:"), "no ciphertext blobs in masked output");
+  for (const v of ["PLAINTOKEN", "PLAINVERIFY", "ENCSECRET"]) assert.ok(!json.includes(v), `${v} must not leak`);
+});
+
+test("oversized webhook detection (content-length guard)", () => {
+  assert.equal(meta.exceedsWebhookLimit(meta.MAX_WEBHOOK_BYTES + 1), true);
+  assert.equal(meta.exceedsWebhookLimit(meta.MAX_WEBHOOK_BYTES), false);
+  assert.equal(meta.exceedsWebhookLimit(0), false);
+  assert.equal(meta.exceedsWebhookLimit(NaN), false); // missing/malformed header → backstop handles it
+});
+
+test("signature is bound to the exact raw body (tamper → reject)", () => {
+  const raw = JSON.stringify({ entry: [{ id: "1", changes: [{ value: { leadgen_id: "L1" } }] }] });
+  const sig = meta.computeMetaSignature(raw, "appsec");
+  // Known-answer: HMAC-SHA256 hex is deterministic for (body, secret).
+  const expected = "sha256=" + nodeCrypto.createHmac("sha256", "appsec").update(raw, "utf8").digest("hex");
+  assert.equal(sig, expected);
+  assert.equal(meta.verifyMetaSignature(raw, sig, "appsec"), true);
+  assert.equal(meta.verifyMetaSignature(raw + " ", sig, "appsec"), false, "one extra byte must invalidate");
+});
+
+test("safeEqual is correct (equal true, differing/length-mismatch/empty false)", () => {
+  assert.equal(meta.safeEqual("token-123", "token-123"), true);
+  assert.equal(meta.safeEqual("token-123", "token-124"), false);
+  assert.equal(meta.safeEqual("short", "a-much-longer-value"), false);
+  assert.equal(meta.safeEqual("", ""), false);
+  assert.equal(meta.safeEqual("x", null), false);
+});
+
+test("encryption is idempotent (migration re-run safe) and reversible", () => {
+  const cfg: any = { ...lc.DEFAULT_LEAD_CHANNELS.meta, appSecret: "S1", verifyToken: "V1" };
+  const once: any = lc.encryptChannelSecrets(cfg);
+  const twice: any = lc.encryptChannelSecrets(once); // re-running must not double-encrypt
+  assert.equal(twice.appSecret, once.appSecret, "second pass must be a no-op (already enc:v1:)");
+  assert.equal(twice.verifyToken, once.verifyToken);
+  const dec: any = lc.decryptChannelSecrets(twice);
+  assert.equal(dec.appSecret, "S1");
+  assert.equal(dec.verifyToken, "V1");
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

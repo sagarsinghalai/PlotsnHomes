@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getChannel } from "@/lib/lead-channels";
 import { createInboundLead } from "@/lib/inbound-lead";
-import { checkMetaWebhook, MAX_WEBHOOK_BYTES } from "@/lib/meta-webhook";
+import { checkMetaWebhook, exceedsWebhookLimit, safeEqual, MAX_WEBHOOK_BYTES } from "@/lib/meta-webhook";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export async function GET(req: Request) {
   const token = url.searchParams.get("hub.verify_token");
   const challenge = url.searchParams.get("hub.challenge");
   const cfg = await getChannel("meta");
-  if (mode === "subscribe" && cfg?.verifyToken && token === cfg.verifyToken) {
+  if (mode === "subscribe" && safeEqual(token, cfg?.verifyToken)) {
     return new NextResponse(challenge || "", { status: 200 });
   }
   return new NextResponse("Forbidden", { status: 403 });
@@ -32,11 +32,16 @@ async function fetchLead(leadgenId: string, accessToken: string): Promise<Record
 }
 
 export async function POST(req: Request) {
+  // Abuse / DoS guard — reject by declared size BEFORE buffering the body.
+  if (exceedsWebhookLimit(Number(req.headers.get("content-length") || 0))) {
+    return NextResponse.json({ ok: false, error: "Payload too large" }, { status: 413 });
+  }
+
   const cfg = await getChannel("meta"); // getChannel returns DECRYPTED secrets (server-only)
   const raw = await req.text();
 
-  // Abuse / DoS guard.
-  if (raw.length > MAX_WEBHOOK_BYTES) {
+  // Backstop: content-length can be absent/spoofed, so re-check actual bytes read.
+  if (Buffer.byteLength(raw, "utf8") > MAX_WEBHOOK_BYTES) {
     return NextResponse.json({ ok: false, error: "Payload too large" }, { status: 413 });
   }
 

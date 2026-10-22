@@ -3,6 +3,28 @@ import crypto from "crypto";
 /** Max accepted webhook body (abuse / DoS guard). */
 export const MAX_WEBHOOK_BYTES = 1_000_000; // 1 MB
 
+/**
+ * True when a declared body size exceeds the limit. Routes call this with the
+ * `Content-Length` header BEFORE buffering the body, so oversized requests are
+ * rejected before any expensive processing. A non-finite/negative value (header
+ * missing or malformed) returns false — the post-read byte check is the backstop.
+ */
+export function exceedsWebhookLimit(declaredBytes: number): boolean {
+  return Number.isFinite(declaredBytes) && declaredBytes > MAX_WEBHOOK_BYTES;
+}
+
+/**
+ * Constant-time string equality for short secrets/tokens (verify token, portal
+ * secret, google_key). Compares SHA-256 digests so differing lengths do not leak
+ * via early return and the comparison time is independent of where bytes differ.
+ */
+export function safeEqual(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (typeof a !== "string" || typeof b !== "string" || !a || !b) return false;
+  const da = crypto.createHash("sha256").update(a, "utf8").digest();
+  const db = crypto.createHash("sha256").update(b, "utf8").digest();
+  return crypto.timingSafeEqual(da, db);
+}
+
 export function computeMetaSignature(rawBody: string, appSecret: string): string {
   return "sha256=" + crypto.createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex");
 }

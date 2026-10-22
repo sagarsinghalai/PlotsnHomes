@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server";
 import { getChannel } from "@/lib/lead-channels";
 import { createInboundLead } from "@/lib/inbound-lead";
+import { exceedsWebhookLimit, safeEqual } from "@/lib/meta-webhook";
 
 export const dynamic = "force-dynamic";
 
 // Google Ads Lead Form webhook. Google POSTs JSON containing a shared
 // `google_key` and a `user_column_data` array; it expects a 200 with `{}`.
 export async function POST(req: Request) {
+  // Abuse / DoS guard — reject by declared size before buffering the body.
+  if (exceedsWebhookLimit(Number(req.headers.get("content-length") || 0))) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
+
   const cfg = await getChannel("google");
   let body: any = {};
   try { body = await req.json(); } catch { /* ignore */ }
 
   if (cfg?.googleKey) {
-    if (!body?.google_key || body.google_key !== cfg.googleKey) {
+    if (!safeEqual(body?.google_key, cfg.googleKey)) {
       return NextResponse.json({ error: "Invalid google_key" }, { status: 401 });
     }
   }
