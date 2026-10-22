@@ -1078,6 +1078,25 @@ model PasswordResetToken {
   @@index([userId])
 }
 
+// Log of bulk WhatsApp/marketing campaigns: who launched, when, the audience
+// size, success/failed counts, and the per-contact results for download.
+model WhatsAppCampaign {
+  id            String   @id @default(cuid())
+  name          String
+  templateName  String?
+  channels      String?  // comma-separated: whatsapp,email,sms
+  audienceCount Int      @default(0)
+  sentCount     Int      @default(0)
+  failedCount   Int      @default(0)
+  createdById   String?
+  createdByName String?
+  resultsJson   String?  // JSON array of { name, phone, email, channel, status, detail }
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([createdById])
+}
+
 // Audit trail for sensitive platform-owner actions (impersonation, password
 // resets, etc.). Never stores secrets or plaintext passwords.
 model AuditEvent {

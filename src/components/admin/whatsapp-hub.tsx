@@ -22,6 +22,7 @@ import {
   Send,
   Shield,
   Download,
+  BarChart3,
   Smartphone,
   Sparkles,
   Trash2,
@@ -31,6 +32,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useCallback, useEffect } from "react";
+import { CampaignReports } from "@/components/admin/campaign-reports";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 
@@ -630,7 +632,7 @@ export function WhatsAppHub({
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
-  const [activeTab, setActiveTab] = useState<"templates" | "campaign" | "qr">("templates");
+  const [activeTab, setActiveTab] = useState<"templates" | "campaign" | "qr" | "variables" | "reports">("templates");
 
   // CRM Settings state (holds all templates)
   const [settings, setSettings] = useState<CrmSettings>(initialSettings);
@@ -1264,6 +1266,24 @@ export function WhatsAppHub({
       setCampaignRunning(false);
       setCampaignCompleted(true);
     }
+
+    // Record the campaign in the server-side log (best-effort, non-fatal).
+    try {
+      const sent = results.filter((r) => r.status === "SENT").length;
+      await fetch("/api/admin/whatsapp/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: selectedTemplate?.name || "WhatsApp campaign",
+          templateName: selectedTemplate?.name || null,
+          channels: campaignChannels,
+          audienceCount: activeRecipients.length,
+          sentCount: sent,
+          failedCount: results.length - sent,
+          results,
+        }),
+      });
+    } catch { /* non-fatal */ }
   }
 
   // Download the campaign report (success + failed contacts) as CSV.
@@ -1345,41 +1365,62 @@ export function WhatsAppHub({
           <QrCode className="h-4 w-4 inline mr-2" />
           QR Connection Manager
         </button>
+        <button
+          onClick={() => setActiveTab("variables")}
+          className={`pb-3 px-6 font-semibold text-sm border-b-2 transition ${
+            activeTab === "variables" ? "border-brand-hover text-brand-hover" : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <Sparkles className="h-4 w-4 inline mr-2" />
+          Variables
+        </button>
+        <button
+          onClick={() => setActiveTab("reports")}
+          className={`pb-3 px-6 font-semibold text-sm border-b-2 transition ${
+            activeTab === "reports" ? "border-brand-hover text-brand-hover" : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <BarChart3 className="h-4 w-4 inline mr-2" />
+          Reports
+        </button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left pane: Variables & Template selector */}
-        <div className="space-y-6 lg:col-span-1">
-          {/* Variables Card */}
-          <section className="rounded-2xl border bg-white p-5 shadow-sm space-y-3">
-            <div className="flex items-center justify-between border-b pb-2">
-              <h3 className="font-semibold text-slate-900 text-sm">System Variables</h3>
-              <Sparkles className="h-4 w-4 text-brand-hover" />
-            </div>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Click any variable to copy to clipboard, then paste it in your template body text.
-            </p>
-            <div className="grid gap-2">
-              {variables.map((v) => (
-                <button
-                  key={v.token}
-                  onClick={() => copyToClipboard(v.token)}
-                  className="flex items-center justify-between rounded-xl bg-slate-50 hover:bg-slate-100 p-2.5 text-xs text-left transition border group"
-                >
-                  <div>
-                    <span className="font-mono text-brand-hover font-bold">{v.token}</span>
-                    <span className="block text-[10px] text-slate-500 mt-0.5">{v.label}</span>
-                  </div>
-                  {copiedToken === v.token ? (
-                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                  ) : (
-                    <Copy className="h-3.5 w-3.5 text-slate-400 opacity-0 group-hover:opacity-100 shrink-0 transition" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </section>
+      {/* Variables tab — full width */}
+      {activeTab === "variables" && (
+        <section className="rounded-2xl border bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between border-b pb-3 mb-3">
+            <h3 className="font-semibold text-slate-900">System Variables</h3>
+            <Sparkles className="h-4 w-4 text-brand-hover" />
+          </div>
+          <p className="text-sm text-slate-500 mb-4">Click any variable to copy it, then paste it into your template body text. Variables are replaced per contact when a campaign is sent.</p>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {variables.map((v) => (
+              <button
+                key={v.token}
+                onClick={() => copyToClipboard(v.token)}
+                className="flex items-center justify-between rounded-xl bg-slate-50 hover:bg-slate-100 p-3 text-left transition border group"
+              >
+                <div>
+                  <span className="font-mono text-brand-hover font-bold text-sm">{v.token}</span>
+                  <span className="block text-xs text-slate-500 mt-0.5">{v.label}</span>
+                </div>
+                {copiedToken === v.token ? (
+                  <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <Copy className="h-4 w-4 text-slate-400 opacity-0 group-hover:opacity-100 shrink-0 transition" />
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
+      {/* Reports tab — full width */}
+      {activeTab === "reports" && <CampaignReports />}
+
+      <div className={`grid gap-6 lg:grid-cols-3 ${activeTab === "variables" || activeTab === "reports" ? "hidden" : ""}`}>
+        {/* Left pane: Template selector (templates tab only) */}
+        <div className={`space-y-6 lg:col-span-1 ${activeTab !== "templates" ? "hidden" : ""}`}>
           {/* Templates list card */}
           {activeTab === "templates" && (
             <section className="rounded-2xl border bg-white p-5 shadow-sm space-y-3">
@@ -1423,7 +1464,7 @@ export function WhatsAppHub({
         </div>
 
         {/* Center pane: Form builder or Send Campaign */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className={`space-y-6 ${activeTab !== "templates" ? "lg:col-span-2" : "lg:col-span-1"}`}>
           {activeTab === "templates" && selectedTemplate && (
             <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
               <h2 className="font-semibold text-lg text-slate-900 border-b pb-2">Template Config</h2>
