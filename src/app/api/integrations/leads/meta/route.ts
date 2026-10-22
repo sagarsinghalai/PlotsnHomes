@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 import { getChannel } from "@/lib/lead-channels";
 import { createInboundLead } from "@/lib/inbound-lead";
+import { checkMetaWebhook, MAX_WEBHOOK_BYTES } from "@/lib/meta-webhook";
 
 export const dynamic = "force-dynamic";
 
@@ -32,20 +32,24 @@ async function fetchLead(leadgenId: string, accessToken: string): Promise<Record
 }
 
 export async function POST(req: Request) {
-  const cfg = await getChannel("meta");
+  const cfg = await getChannel("meta"); // getChannel returns DECRYPTED secrets (server-only)
   const raw = await req.text();
 
-  // Validate the X-Hub-Signature-256 HMAC when an app secret is configured.
-  if (cfg?.appSecret) {
-    const sig = req.headers.get("x-hub-signature-256") || "";
-    const expected = "sha256=" + crypto.createHmac("sha256", cfg.appSecret).update(raw).digest("hex");
-    try {
-      if (!sig || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
-        return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 401 });
-      }
-    } catch {
-      return NextResponse.json({ ok: false, error: "Invalid signature" }, { status: 401 });
-    }
+  // Abuse / DoS guard.
+  if (raw.length > MAX_WEBHOOK_BYTES) {
+    return NextResponse.json({ ok: false, error: "Payload too large" }, { status: 413 });
+  }
+
+  // Signature check on the ORIGINAL raw body. In production a missing App
+  // Secret fails (never silently skips verification); dev may skip for testing.
+  const check = checkMetaWebhook({
+    rawBody: raw,
+    signatureHeader: req.headers.get("x-hub-signature-256"),
+    appSecret: cfg?.appSecret,
+    isProduction: process.env.NODE_ENV === "production",
+  });
+  if (!check.ok) {
+    return NextResponse.json({ ok: false, error: check.reason || "Unauthorized" }, { status: 401 });
   }
 
   if (!cfg?.enabled) return NextResponse.json({ ok: false, error: "Channel disabled" }, { status: 200 });

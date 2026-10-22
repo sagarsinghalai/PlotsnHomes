@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { LeadChannelsClient } from "@/components/admin/lead-channels-client";
-import { getLeadChannels } from "@/lib/lead-channels";
+import { getMaskedLeadChannels } from "@/lib/lead-channels";
 
 export const dynamic = "force-dynamic";
 
 export default async function LeadChannelsPage() {
   const [channels, users, teams] = await Promise.all([
-    getLeadChannels(),
+    getMaskedLeadChannels(),
     prisma.user.findMany({ where: { active: true }, select: { id: true, name: true, email: true }, orderBy: { name: "asc" } }),
     prisma.team.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);

@@ -12,6 +12,7 @@
     "schema:mysql": "node scripts/generate-mysql-schema.mjs",
     "build:hostinger": "node scripts/generate-mysql-schema.mjs && prisma generate --schema prisma/schema.mysql.prisma && prisma db push --schema prisma/schema.mysql.prisma && next build",
     "lint": "next lint",
+    "test": "tsx tests/lead-channels-security.test.mts",
     "db:push": "prisma db push",
     "db:seed": "prisma db push && tsx prisma/seed.ts",
     "db:studio": "prisma studio",

@@ -1,6 +1,10 @@
 import { getSetting, setSetting } from "@/lib/system-settings";
+import { encryptSecret, decryptSecret, isEncrypted } from "@/lib/credentials-crypto";
 
 const KEY = "lead_channels";
+
+/** Fields that hold credentials and must be encrypted at rest / masked in GETs. */
+export const SECRET_FIELDS = ["verifyToken", "pageAccessToken", "appSecret", "googleKey", "secret"] as const;
 
 export type LeadChannelKey = "meta" | "google" | "justdial" | "magicbricks" | "acres99" | "generic";
 
@@ -21,6 +25,9 @@ export interface LeadChannelConfig {
   googleKey?: string;
   // Portals / generic
   fieldMap?: ChannelFieldMap;
+  // Present only on masked (client-facing) configs — never contains secrets.
+  _secrets?: Record<string, boolean>;
+  isConfigured?: boolean;
 }
 
 export type LeadChannels = Record<LeadChannelKey, LeadChannelConfig>;
@@ -61,13 +68,86 @@ export async function getLeadChannels(): Promise<LeadChannels> {
   }
 }
 
+/** Server-side only: returns a channel config with secrets DECRYPTED for use. */
 export async function getChannel(channel: string): Promise<LeadChannelConfig | null> {
   const all = await getLeadChannels();
-  return (all as any)[channel] ?? null;
+  const cfg = (all as any)[channel] as LeadChannelConfig | undefined;
+  return cfg ? decryptChannelSecrets(cfg) : null;
 }
 
+/** Persist channels, encrypting any plaintext secret fields (idempotent). */
 export async function saveLeadChannels(value: LeadChannels): Promise<void> {
-  await setSetting(KEY, JSON.stringify(value));
+  const safe: any = {};
+  (Object.keys(value) as LeadChannelKey[]).forEach((k) => { safe[k] = encryptChannelSecrets(value[k]); });
+  await setSetting(KEY, JSON.stringify(safe));
+}
+
+/** Encrypt the secret fields of one channel (skips already-encrypted/empty). */
+export function encryptChannelSecrets(cfg: LeadChannelConfig): LeadChannelConfig {
+  const out: any = { ...cfg };
+  for (const f of SECRET_FIELDS) {
+    const v = (cfg as any)[f];
+    if (v && !isEncrypted(v)) out[f] = encryptSecret(v);
+  }
+  return out;
+}
+
+/** Decrypt the secret fields of one channel (plaintext passes through). */
+export function decryptChannelSecrets(cfg: LeadChannelConfig): LeadChannelConfig {
+  const out: any = { ...cfg };
+  for (const f of SECRET_FIELDS) {
+    const v = (cfg as any)[f];
+    if (v) out[f] = decryptSecret(v);
+  }
+  return out;
+}
+
+export type MaskedChannel = Omit<LeadChannelConfig, "verifyToken" | "pageAccessToken" | "appSecret" | "googleKey" | "secret"> & {
+  secret: "";
+  _secrets: Record<string, boolean>;
+  isConfigured: boolean;
+};
+
+/** Strip all secret values and expose only boolean "is set" indicators. */
+export function maskChannel(key: LeadChannelKey, cfg: LeadChannelConfig): MaskedChannel {
+  const flags: Record<string, boolean> = {};
+  for (const f of SECRET_FIELDS) flags[`has${f[0].toUpperCase()}${f.slice(1)}`] = !!(cfg as any)[f];
+  const required =
+    key === "meta" ? ["pageAccessToken", "appSecret"] :
+    key === "google" ? ["googleKey"] : [];
+  const isConfigured = required.every((f) => !!(cfg as any)[f]);
+  const clean: any = { ...cfg };
+  for (const f of SECRET_FIELDS) clean[f] = "";
+  return { ...clean, _secrets: flags, isConfigured };
+}
+
+/** All channels with secrets removed — safe to return to the browser. */
+export async function getMaskedLeadChannels(): Promise<Record<LeadChannelKey, MaskedChannel>> {
+  const all = await getLeadChannels();
+  const out: any = {};
+  (Object.keys(all) as LeadChannelKey[]).forEach((k) => { out[k] = maskChannel(k, all[k]); });
+  return out;
+}
+
+/**
+ * Merge an incoming (masked) update onto the stored config, PRESERVING existing
+ * secrets when a field is omitted or blank. Non-secret fields always take the
+ * incoming value. New plaintext secrets are left for saveLeadChannels to encrypt.
+ */
+export function mergeChannelUpdate(current: LeadChannels, body: Partial<LeadChannels>): LeadChannels {
+  const merged: any = { ...current };
+  (Object.keys(current) as LeadChannelKey[]).forEach((k) => {
+    const cur = current[k];
+    const inc = (body as any)[k];
+    if (!inc) return;
+    const next: any = { ...cur, ...inc, fieldMap: { ...cur.fieldMap, ...inc.fieldMap } };
+    for (const f of SECRET_FIELDS) {
+      const v = typeof inc[f] === "string" ? inc[f].trim() : "";
+      next[f] = v ? v : (cur as any)[f] || ""; // keep existing (encrypted) when blank/omitted
+    }
+    merged[k] = next;
+  });
+  return merged;
 }
 
 function structuredCloneSafe<T>(v: T): T {

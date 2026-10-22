@@ -70,7 +70,7 @@ export function LeadChannelsClient({ initial, users, teams }: { initial: LeadCha
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-slate-500 dark:text-slate-400">Connect lead sources so their leads drop straight into the CRM and get auto-assigned. Paste each channel's webhook URL into that platform's lead setup.</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Connect lead sources so their leads drop straight into the CRM and get auto-assigned. Paste each channel&rsquo;s webhook URL into that platform&rsquo;s lead setup.</p>
         <button onClick={save} disabled={saving} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-hover disabled:opacity-60">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
           {saved ? "Saved" : "Save All"}
@@ -107,22 +107,25 @@ export function LeadChannelsClient({ initial, users, teams }: { initial: LeadCha
                       <input readOnly value={webhookUrl(key)} className="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs font-mono text-slate-700 dark:text-slate-300" />
                       <button type="button" onClick={() => copy(webhookUrl(key))} className="inline-flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-700 px-3 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800"><Copy className="h-3.5 w-3.5" /> Copy</button>
                     </div>
+                    {isPortal && c._secrets?.hasSecret && !c.secret && (
+                      <p className="text-[11px] text-amber-600">A webhook secret is saved but hidden for security — the live URL needs <code>?key=&lt;your secret&gt;</code>. Click <b>generate</b> on the secret below to rotate it and get a fresh copyable URL.</p>
+                    )}
                   </div>
 
                   {/* Credentials */}
                   {key === "meta" && (
                     <div className="grid gap-3 sm:grid-cols-3">
-                      <SecretField label="Verify Token" value={c.verifyToken || ""} onChange={(v) => patch(key, { verifyToken: v })} onGen={() => patch(key, { verifyToken: rand() })} />
-                      <Field label="Page Access Token" value={c.pageAccessToken || ""} onChange={(v) => patch(key, { pageAccessToken: v })} placeholder="EAAG..." />
-                      <SecretField label="App Secret" value={c.appSecret || ""} onChange={(v) => patch(key, { appSecret: v })} onGen={() => patch(key, { appSecret: rand() })} />
+                      <SecretField label="Verify Token" value={c.verifyToken || ""} onChange={(v) => patch(key, { verifyToken: v })} onGen={() => patch(key, { verifyToken: rand() })} configured={!!c._secrets?.hasVerifyToken} />
+                      <Field label="Page Access Token" value={c.pageAccessToken || ""} onChange={(v) => patch(key, { pageAccessToken: v })} placeholder="EAAG..." configured={!!c._secrets?.hasPageAccessToken} />
+                      <SecretField label="App Secret" value={c.appSecret || ""} onChange={(v) => patch(key, { appSecret: v })} onGen={() => patch(key, { appSecret: rand() })} configured={!!c._secrets?.hasAppSecret} />
                     </div>
                   )}
                   {key === "google" && (
-                    <SecretField label="Webhook Key (google_key)" value={c.googleKey || ""} onChange={(v) => patch(key, { googleKey: v })} onGen={() => patch(key, { googleKey: rand() })} />
+                    <SecretField label="Webhook Key (google_key)" value={c.googleKey || ""} onChange={(v) => patch(key, { googleKey: v })} onGen={() => patch(key, { googleKey: rand() })} configured={!!c._secrets?.hasGoogleKey} />
                   )}
                   {isPortal && (
                     <>
-                      <SecretField label="Webhook Secret (added to URL as ?key=)" value={c.secret || ""} onChange={(v) => patch(key, { secret: v })} onGen={() => patch(key, { secret: rand() })} />
+                      <SecretField label="Webhook Secret (added to URL as ?key=)" value={c.secret || ""} onChange={(v) => patch(key, { secret: v })} onGen={() => patch(key, { secret: rand() })} configured={!!c._secrets?.hasSecret} />
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Field Mapping <span className="text-slate-400 font-medium">(incoming key for each CRM field; use | for alternatives)</span></label>
                         <div className="grid gap-2 sm:grid-cols-4">
@@ -198,22 +201,28 @@ export function LeadChannelsClient({ initial, users, teams }: { initial: LeadCha
   );
 }
 
-function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+function Field({ label, value, onChange, placeholder, configured }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; configured?: boolean }) {
   return (
     <div className="space-y-1">
-      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{label}</label>
-      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-xs outline-none focus:border-brand" />
+      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+        {label}
+        {configured && <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600"><Check className="h-3 w-3" /> set</span>}
+      </label>
+      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={configured ? "•••••••• saved — type to replace" : placeholder} className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-mono outline-none focus:border-brand" />
     </div>
   );
 }
 
-function SecretField({ label, value, onChange, onGen }: { label: string; value: string; onChange: (v: string) => void; onGen: () => void }) {
+function SecretField({ label, value, onChange, onGen, configured }: { label: string; value: string; onChange: (v: string) => void; onGen: () => void; configured?: boolean }) {
   return (
     <div className="space-y-1">
-      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{label}</label>
+      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+        {label}
+        {configured && <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600"><Check className="h-3 w-3" /> set</span>}
+      </label>
       <div className="flex gap-1.5">
-        <input value={value} onChange={(e) => onChange(e.target.value)} placeholder="•••••" className="flex-1 min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-mono outline-none focus:border-brand" />
-        <button type="button" onClick={onGen} title="Generate" className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-700 px-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"><RefreshCw className="h-3.5 w-3.5" /></button>
+        <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={configured ? "•••••••• saved — type to replace" : "•••••"} className="flex-1 min-w-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-xs font-mono outline-none focus:border-brand" />
+        <button type="button" onClick={onGen} title="Generate new" className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-700 px-2 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"><RefreshCw className="h-3.5 w-3.5" /></button>
       </div>
     </div>
   );

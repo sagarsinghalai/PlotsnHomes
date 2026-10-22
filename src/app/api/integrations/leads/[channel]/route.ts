@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getChannel } from "@/lib/lead-channels";
 import { createInboundLead } from "@/lib/inbound-lead";
+import { MAX_WEBHOOK_BYTES } from "@/lib/meta-webhook";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,9 @@ function pick(obj: Record<string, any>, keys: string | undefined): string {
 
 export async function POST(req: Request, { params }: { params: { channel: string } }) {
   const channel = params.channel;
-  const cfg = await getChannel(channel);
+  const cl = Number(req.headers.get("content-length") || 0);
+  if (cl && cl > MAX_WEBHOOK_BYTES) return NextResponse.json({ ok: false, error: "Payload too large" }, { status: 413 });
+  const cfg = await getChannel(channel); // decrypted secret for comparison
   if (!cfg) return NextResponse.json({ ok: false, error: "Unknown channel" }, { status: 404 });
 
   // Validate secret when one is configured
