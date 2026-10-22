@@ -21,6 +21,7 @@ import {
   QrCode,
   Send,
   Shield,
+  Download,
   Smartphone,
   Sparkles,
   Trash2,
@@ -38,6 +39,11 @@ type LeadOption = {
   name: string;
   phone: string | null;
   email: string;
+  stage?: string | null;
+  source?: string | null;
+  leadStatus?: string | null;
+  ownerName?: string | null;
+  propertyTitle?: string | null;
 };
 
 type ButtonItem = { label: string; url?: string };
@@ -839,6 +845,12 @@ export function WhatsAppHub({
   // Bulk Campaign State
   const [campaignRecipientsType, setCampaignRecipientsType] = useState<"leads" | "manual" | "file">("leads");
   const [selectedLeadId, setSelectedLeadId] = useState<string>("all");
+  // Audience filters for building a campaign segment from CRM leads.
+  const [fSearch, setFSearch] = useState("");
+  const [fStage, setFStage] = useState("");
+  const [fSource, setFSource] = useState("");
+  const [fOwner, setFOwner] = useState("");
+  const [fProperty, setFProperty] = useState("");
 
   // Tag-input: Phone chips (for WhatsApp / SMS channels)
   const [phoneChips, setPhoneChips] = useState<string[]>([]);
@@ -863,6 +875,9 @@ export function WhatsAppHub({
 
   // Campaign progress logger state
   const [campaignLogs, setCampaignLogs] = useState<{ number: string; status: string; log: string; webUrl?: string }[]>([]);
+  // Full (unmasked) per-contact results for the downloadable campaign report.
+  type CampaignResult = { name: string; phone: string; email: string; channel: string; status: string; detail: string };
+  const [campaignResults, setCampaignResults] = useState<CampaignResult[]>([]);
   const [campaignRunning, setCampaignRunning] = useState(false);
   const [campaignCompleted, setCampaignCompleted] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
@@ -983,18 +998,38 @@ export function WhatsAppHub({
     return results;
   }
 
+  // Audience segment from CRM leads (contactable + matching the filters).
+  const isContactable = (l: LeadOption) => {
+    if (needsPhone && needsEmail) return !!(l.phone || l.email);
+    if (needsPhone) return !!l.phone;
+    if (needsEmail) return !!l.email;
+    return true;
+  };
+  const filteredLeads = useMemo(() => {
+    const q = fSearch.trim().toLowerCase();
+    return leads.filter((l) => {
+      if (!isContactable(l)) return false;
+      if (fStage && (l.stage || "") !== fStage) return false;
+      if (fSource && (l.source || "") !== fSource) return false;
+      if (fOwner && (l.ownerName || "") !== fOwner) return false;
+      if (fProperty && (l.propertyTitle || "") !== fProperty) return false;
+      if (q && ![l.name, l.phone, l.email].filter(Boolean).some((v) => String(v).toLowerCase().includes(q))) return false;
+      return true;
+    });
+  }, [leads, needsPhone, needsEmail, fStage, fSource, fOwner, fProperty, fSearch]);
+
+  const distinctValues = (pick: (l: LeadOption) => string | null | undefined) =>
+    Array.from(new Set(leads.map((l) => (pick(l) || "").toString()).filter(Boolean))).sort();
+  const stageOptions = useMemo(() => distinctValues((l) => l.stage), [leads]);
+  const sourceOptions = useMemo(() => distinctValues((l) => l.source), [leads]);
+  const ownerOptions = useMemo(() => distinctValues((l) => l.ownerName), [leads]);
+  const propertyOptions = useMemo(() => distinctValues((l) => l.propertyTitle), [leads]);
+
   // Get active recipients
   const activeRecipients = useMemo(() => {
     if (campaignRecipientsType === "leads") {
       if (selectedLeadId === "all") {
-        return leads
-          .filter((l) => {
-            if (needsPhone && needsEmail) return l.phone || l.email;
-            if (needsPhone) return l.phone;
-            if (needsEmail) return l.email;
-            return true;
-          })
-          .map((l) => ({ name: l.name, phone: l.phone || "", email: l.email || "" }));
+        return filteredLeads.map((l) => ({ name: l.name, phone: l.phone || "", email: l.email || "" }));
       } else {
         const single = leads.find((l) => l.id === selectedLeadId);
         return single ? [{ name: single.name, phone: single.phone || "", email: single.email || "" }] : [];
@@ -1032,7 +1067,7 @@ export function WhatsAppHub({
     } else {
       return parsedRecipients;
     }
-  }, [campaignRecipientsType, selectedLeadId, phoneChipsWithValidity, emailChipsWithValidity, parsedRecipients, leads, needsPhone, needsEmail]);
+  }, [campaignRecipientsType, selectedLeadId, phoneChipsWithValidity, emailChipsWithValidity, parsedRecipients, leads, filteredLeads, needsPhone, needsEmail]);
 
   // Whether there are invalid numbers/emails in manual mode
   const hasInvalidManualNumbers = campaignRecipientsType === "manual" && hasInvalidChips;
@@ -1085,8 +1120,10 @@ export function WhatsAppHub({
     setCampaignRunning(true);
     setCampaignCompleted(false);
     setCampaignLogs([]);
+    setCampaignResults([]);
 
     const qrLogs: typeof campaignLogs = [];
+    const results: CampaignResult[] = [];
     const hasWhatsapp = campaignChannels.includes("whatsapp");
 
     if (hasWhatsapp) {
@@ -1101,6 +1138,7 @@ export function WhatsAppHub({
         const r = activeRecipients[idx];
         if (!r.phone) {
           qrLogs.push({ number: r.email || "?", status: "FAILED", log: "No phone for WhatsApp" });
+          results.push({ name: r.name || "", phone: "", email: r.email || "", channel: "whatsapp", status: "FAILED", detail: "No phone number" });
           continue;
         }
 
@@ -1140,8 +1178,10 @@ export function WhatsAppHub({
             throw new Error(apiData.error || "WhatsApp API send failed");
           }
           qrLogs.push({ number: maskPhone(r.phone), status: "SENT", log: "WhatsApp API Sent" });
+          results.push({ name: r.name || "", phone: r.phone, email: r.email || "", channel: "whatsapp", status: "SENT", detail: "WhatsApp API sent" });
         } catch (err: any) {
           qrLogs.push({ number: maskPhone(r.phone), status: "FAILED", log: err.message });
+          results.push({ name: r.name || "", phone: r.phone, email: r.email || "", channel: "whatsapp", status: "FAILED", detail: err.message || "Send failed" });
           if (err.message.includes("API configuration")) {
             setCampaignError("Media sending requires WhatsApp Business API configuration.");
             setCampaignRunning(false);
@@ -1179,6 +1219,12 @@ export function WhatsAppHub({
             log: r.log,
           }));
           setCampaignLogs([...qrLogs, ...apiLogs]);
+          const nameByContact = new Map(activeRecipients.map((r) => [(r.phone || r.email) as string, r.name]));
+          data.results.forEach((r: any) => {
+            const key = (r.phone || r.email || "") as string;
+            results.push({ name: nameByContact.get(key) || "Contact", phone: r.phone || "", email: r.email || "", channel: r.channel || "other", status: r.status, detail: r.log || "" });
+          });
+          setCampaignResults([...results]);
           setSendSuccess(true);
           if (campaignRecipientsType === "manual") {
             setPhoneChips([]);
@@ -1190,6 +1236,7 @@ export function WhatsAppHub({
           setCampaignError(data.error || "Failed to launch bulk campaign");
           if (qrLogs.length > 0) {
             setCampaignLogs(qrLogs);
+            setCampaignResults([...results]);
           }
         }
       } catch (err) {
@@ -1204,6 +1251,7 @@ export function WhatsAppHub({
     } else {
       // Only WhatsApp channel was processed
       setCampaignLogs(qrLogs);
+      setCampaignResults([...results]);
       // Success only if no failures in qrLogs
       const hasFailed = qrLogs.some((l) => l.status === "FAILED");
       if (!hasFailed) {
@@ -1216,6 +1264,26 @@ export function WhatsAppHub({
       setCampaignRunning(false);
       setCampaignCompleted(true);
     }
+  }
+
+  // Download the campaign report (success + failed contacts) as CSV.
+  function downloadCampaignReport() {
+    if (!campaignResults.length) return;
+    const esc = (v: string) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const header = ["Name", "Phone", "Email", "Channel", "Status", "Detail"];
+    const rows = campaignResults.map((r) =>
+      [r.name, r.phone, r.email, r.channel, r.status === "SENT" ? "Success" : "Failed", r.detail].map(esc).join(",")
+    );
+    const csv = [header.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `whatsapp-campaign-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 
   // QR Session connection simulator
@@ -1771,36 +1839,53 @@ export function WhatsAppHub({
                   </div>
 
                   {campaignRecipientsType === "leads" && (
-                    <div>
-                      <Label className="text-xs text-slate-500">Pick Lead(s)</Label>
-                      <select
-                        className="w-full rounded-xl border px-3 py-2 text-sm mt-1 bg-slate-50"
-                        value={selectedLeadId}
-                        onChange={(e) => setSelectedLeadId(e.target.value)}
-                      >
-                        <option value="all">
-                          All Contacts ({
-                            leads.filter((l) => {
-                              if (needsPhone && needsEmail) return l.phone || l.email;
-                              if (needsPhone) return l.phone;
-                              if (needsEmail) return l.email;
-                              return true;
-                            }).length
-                          })
-                        </option>
-                        {leads
-                          .filter((l) => {
-                            if (needsPhone && needsEmail) return l.phone || l.email;
-                            if (needsPhone) return l.phone;
-                            if (needsEmail) return l.email;
-                            return true;
-                          })
-                          .map((l) => (
+                    <div className="space-y-2.5">
+                      <Label className="text-xs text-slate-500">Build audience (filter contacts)</Label>
+                      <input
+                        value={fSearch}
+                        onChange={(e) => setFSearch(e.target.value)}
+                        placeholder="Search name, phone or email…"
+                        className="w-full rounded-xl border px-3 py-2 text-sm bg-slate-50"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <select className="rounded-xl border px-2 py-2 text-xs bg-slate-50" value={fStage} onChange={(e) => setFStage(e.target.value)}>
+                          <option value="">Any stage</option>
+                          {stageOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <select className="rounded-xl border px-2 py-2 text-xs bg-slate-50" value={fSource} onChange={(e) => setFSource(e.target.value)}>
+                          <option value="">Any source</option>
+                          {sourceOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <select className="rounded-xl border px-2 py-2 text-xs bg-slate-50" value={fOwner} onChange={(e) => setFOwner(e.target.value)}>
+                          <option value="">Any owner</option>
+                          {ownerOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <select className="rounded-xl border px-2 py-2 text-xs bg-slate-50" value={fProperty} onChange={(e) => setFProperty(e.target.value)}>
+                          <option value="">Any property</option>
+                          {propertyOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-emerald-700">Audience: {filteredLeads.length} contact{filteredLeads.length !== 1 ? "s" : ""}</span>
+                        {(fSearch || fStage || fSource || fOwner || fProperty) && (
+                          <button type="button" onClick={() => { setFSearch(""); setFStage(""); setFSource(""); setFOwner(""); setFProperty(""); }} className="text-[11px] text-slate-500 underline hover:text-slate-800">Clear filters</button>
+                        )}
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-500">Send to</Label>
+                        <select
+                          className="w-full rounded-xl border px-3 py-2 text-sm mt-1 bg-slate-50"
+                          value={selectedLeadId}
+                          onChange={(e) => setSelectedLeadId(e.target.value)}
+                        >
+                          <option value="all">Whole audience ({filteredLeads.length})</option>
+                          {filteredLeads.map((l) => (
                             <option key={l.id} value={l.id}>
                               {l.name} — {l.phone && l.email ? `${l.phone} & ${l.email}` : (l.phone || l.email || "No contact info")}
                             </option>
                           ))}
-                      </select>
+                        </select>
+                      </div>
                     </div>
                   )}
 
@@ -2050,9 +2135,21 @@ export function WhatsAppHub({
                         <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
                         Campaign Delivery Report
                       </span>
-                      <span className="text-[10px] text-slate-400">
-                        {campaignLogs.filter((l) => l.status === "SENT").length}/{campaignLogs.length} delivered
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] text-slate-400">
+                          {campaignLogs.filter((l) => l.status === "SENT").length}/{campaignLogs.length} delivered
+                        </span>
+                        {campaignResults.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={downloadCampaignReport}
+                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-700 hover:bg-slate-50"
+                            title="Download success & failed contacts (CSV)"
+                          >
+                            <Download className="h-3 w-3" /> Download CSV
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
                       {campaignLogs.map((log, i) => (

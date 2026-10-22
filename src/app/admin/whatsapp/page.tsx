@@ -11,7 +11,7 @@ const HUB_ACTIONS = [
 ];
 
 export default async function AdminWhatsAppPage() {
-  const [leads, crmSettings, properties] = await Promise.all([
+  const [leadsRaw, crmSettings, properties] = await Promise.all([
     prisma.lead.findMany({
       orderBy: { name: "asc" },
       select: {
@@ -19,6 +19,11 @@ export default async function AdminWhatsAppPage() {
         name: true,
         phone: true,
         email: true,
+        stage: true,
+        source: true,
+        leadStatus: true,
+        owner: { select: { name: true } },
+        property: { select: { title: true } },
       },
     }),
     getCrmSettings(),
@@ -33,6 +38,19 @@ export default async function AdminWhatsAppPage() {
       },
     }),
   ]);
+
+  // Flatten relations to plain strings for the client audience filters.
+  const leads = leadsRaw.map((l) => ({
+    id: l.id,
+    name: l.name,
+    phone: l.phone,
+    email: l.email,
+    stage: l.stage,
+    source: l.source,
+    leadStatus: l.leadStatus,
+    ownerName: l.owner?.name ?? null,
+    propertyTitle: l.property?.title ?? null,
+  }));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
