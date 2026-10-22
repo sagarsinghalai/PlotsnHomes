@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 /** Max accepted webhook body (abuse / DoS guard). */
 export const MAX_WEBHOOK_BYTES = 1_000_000; // 1 MB

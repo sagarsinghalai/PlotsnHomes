@@ -1,4 +1,5 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
+import { checkEncKeyReadiness } from "@/lib/enc-key-status";
 
 /**
  * Authenticated encryption (AES-256-GCM) for credentials stored at rest.
@@ -14,11 +15,9 @@ import crypto from "crypto";
  * without ever throwing or logging the secret.
  */
 const PREFIX = "enc:v1:";
-const MIN_KEY_LEN = 16;
 
 export function hasEncKey(): boolean {
-  const k = process.env.CREDENTIALS_ENC_KEY;
-  return typeof k === "string" && k.length >= MIN_KEY_LEN;
+  return checkEncKeyReadiness().configured;
 }
 
 /** Throws a clear (secret-free) error when the key is missing/too weak. */

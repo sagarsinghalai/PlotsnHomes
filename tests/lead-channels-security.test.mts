@@ -31,11 +31,16 @@ process.env.CREDENTIALS_ENC_KEY = KEY_A;
 const crypto = await import("@/lib/credentials-crypto");
 const meta = await import("@/lib/meta-webhook");
 const lc = await import("@/lib/lead-channels");
+const rd = await import("@/lib/readiness");
 
 let pass = 0, fail = 0;
-function test(name: string, fn: () => void) {
-  try { fn(); pass++; console.log("  ✓", name); }
-  catch (e: any) { fail++; console.error("  ✗", name, "\n     ", e?.message); }
+const queue: Array<[string, () => void | Promise<void>]> = [];
+function test(name: string, fn: () => void | Promise<void>) { queue.push([name, fn]); }
+async function runAll() {
+  for (const [name, fn] of queue) {
+    try { await fn(); pass++; console.log("  ✓", name); }
+    catch (e: any) { fail++; console.error("  ✗", name, "\n     ", e?.message); }
+  }
 }
 
 const SECRET = "EAAG-super-secret-token-123";
@@ -194,5 +199,42 @@ test("encryption is idempotent (migration re-run safe) and reversible", () => {
   assert.equal(dec.verifyToken, "V1");
 });
 
+test("readiness: configured hex key reports ready, leaks nothing", async () => {
+  process.env.CREDENTIALS_ENC_KEY = KEY_A; // 64-char hex
+  const r = await rd.checkCredentialsReadiness({ includeStoredSecrets: true });
+  assert.equal(r.ok, true);
+  assert.equal(r.encKey.configured, true);
+  assert.equal(r.encKey.present, true);
+  assert.equal(r.encKey.usingRecommendedHexKey, true);
+  assert.ok(Array.isArray(r.channelsWithEncryptedSecrets));
+  assert.ok(!JSON.stringify(r).includes(KEY_A), "the key value must never appear in readiness output");
+});
+
+test("readiness: missing key reports not-ready with actionable message", async () => {
+  delete process.env.CREDENTIALS_ENC_KEY;
+  try {
+    const r = await rd.checkCredentialsReadiness(); // env-only (no DB)
+    assert.equal(r.ok, false);
+    assert.equal(r.encKey.present, false);
+    assert.equal(r.encKey.configured, false);
+    assert.ok(r.messages.some((m) => m.includes("CREDENTIALS_ENC_KEY")), "must name the missing env var");
+  } finally {
+    process.env.CREDENTIALS_ENC_KEY = KEY_A;
+  }
+});
+
+test("readiness: short key reports present-but-not-configured", () => {
+  process.env.CREDENTIALS_ENC_KEY = "too-short";
+  try {
+    const r = rd.checkEncKeyReadiness();
+    assert.equal(r.present, true);
+    assert.equal(r.configured, false);
+    assert.equal(r.usingRecommendedHexKey, false);
+  } finally {
+    process.env.CREDENTIALS_ENC_KEY = KEY_A;
+  }
+});
+
+await runAll();
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

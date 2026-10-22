@@ -18,6 +18,9 @@ const nextConfig = {
   // bundled by webpack — keep them external so they load at runtime (Node only).
   experimental: {
     serverComponentsExternalPackages: ["whatsapp-web.js", "puppeteer", "puppeteer-core"],
+    // Enables src/instrumentation.ts register() — runs the credential-encryption
+    // readiness gate once at server startup. (Stable without this flag in Next 15.)
+    instrumentationHook: true,
   },
 };
 
