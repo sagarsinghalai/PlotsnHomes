@@ -70,6 +70,7 @@ const DEFAULT_NAV: NavGroup[] = [
       { href: "/admin/users", label: "Users & accounts", icon: Users },
       { href: "/admin/platform/users", label: "Platform users", icon: Users },
       { href: "/admin/whatsapp/settings", label: "WhatsApp settings", icon: MessageSquare },
+      { href: "/admin/whatsapp/bot", label: "WhatsApp bot", icon: MessageSquare },
       { href: "/admin/teams", label: "Teams", icon: Users2 },
       { href: "/admin/hierarchy", label: "Team hierarchy", icon: GitFork },
       { href: "/admin/organization", label: "Organizations & Franchises", icon: Building2 },

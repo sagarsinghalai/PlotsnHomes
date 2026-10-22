@@ -5,6 +5,7 @@ import { receiveIncomingMessage } from "@/lib/messaging";
 import { createInboundLead } from "@/lib/inbound-lead";
 import { verifyMetaSignature, exceedsWebhookLimit, safeEqual } from "@/lib/meta-webhook";
 import { getWhatsAppConfig } from "@/lib/whatsapp-settings";
+import { runBot } from "@/lib/whatsapp-bot";
 
 export const dynamic = "force-dynamic";
 
@@ -92,7 +93,7 @@ export async function POST(req: Request) {
     // 1) Capture/record the lead (property-tagged, auto-assigned, de-duplicated).
     //    De-dup inside createInboundLead prevents a new lead on every message.
     const propertyId = await resolvePropertyId(textBody);
-    await createInboundLead({
+    const leadResult = await createInboundLead({
       channel: "whatsapp",
       name: profileName || `WhatsApp ${fromPhone}`,
       phone: `+${fromPhone}`,
@@ -111,6 +112,14 @@ export async function POST(req: Request) {
       externalId: messageId,
       provider: "whatsapp_api",
     });
+
+    // 3) Rule-based bot auto-reply (within the 24h window). Best-effort: stays
+    //    silent once a human agent is engaged, and never breaks the webhook.
+    try {
+      await runBot({ leadId: leadResult.leadId, phone: `+${fromPhone}`, text: textBody });
+    } catch (e) {
+      console.warn("[whatsapp] bot run failed:", (e as Error)?.message);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (e) {
