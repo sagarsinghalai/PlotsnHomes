@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { requireCrmApi } from "@/lib/crm-access";
 
+// Staff-only: this sends from the business WhatsApp number (costs money and can
+// get the number flagged if abused). The public property "share" button no longer
+// calls this — it opens the visitor's own WhatsApp via a wa.me link instead.
 export async function GET() {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
   const token = process.env.WHATSAPP_ACCESS_TOKEN;
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   return NextResponse.json({ apiConfigured: !!(token && phoneId) });
@@ -30,6 +36,9 @@ const schema = z
   });
 
 export async function POST(req: Request) {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
+
   const token = process.env.WHATSAPP_ACCESS_TOKEN;
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const version = process.env.WHATSAPP_API_VERSION || "v20.0";

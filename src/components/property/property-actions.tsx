@@ -97,62 +97,16 @@ export function PropertyActions({
     }
   };
 
-  const handleWhatsAppShare = async () => {
+  const handleWhatsAppShare = () => {
     setDropdownOpen(false);
-    setApiMissingNotice(false);
-    setSuccessMessage("");
-    setPopupError(false);
-
-    if (sharingLoading) return;
-    setSharingLoading(true);
-
-    try {
-      const phoneInput = window.prompt(
-        "Enter recipient's phone number with country code (e.g. +919876543210):"
-      );
-      if (!phoneInput) {
-        setSharingLoading(false);
-        return;
-      }
-
-      const normalizedPhone = phoneInput.replace(/\D/g, "");
-      if (!normalizedPhone || normalizedPhone.length < 10) {
-        alert("Invalid phone number format. Provide country code and digits.");
-        setSharingLoading(false);
-        return;
-      }
-
-      const { text } = buildShareMessage();
-
-      const payload: any = {
-        phone: normalizedPhone,
-        text: text,
-      };
-
-      if (coverImageUrl) {
-        payload.type = "image";
-        payload.mediaUrl = coverImageUrl;
-      } else {
-        payload.type = "text";
-      }
-
-      const shareRes = await fetch("/api/whatsapp/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const shareData = await shareRes.json();
-      if (!shareRes.ok) {
-        throw new Error(shareData.error || "Failed to share via WhatsApp API");
-      }
-
-      setSuccessMessage("Sent successfully on WhatsApp.");
-      setTimeout(() => setSuccessMessage(""), 5000);
-    } catch (err: any) {
-      alert(`Error: ${err.message}`);
-    } finally {
-      setSharingLoading(false);
+    // Open WhatsApp with the listing pre-filled so the visitor sends it from
+    // THEIR own WhatsApp (they pick the recipient). No server send — so no API
+    // cost, no spam/abuse surface, and no business credentials are involved.
+    // Works on mobile (app) and desktop (WhatsApp Web).
+    const { text } = buildShareMessage();
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    if (typeof window !== "undefined") {
+      window.open(waUrl, "_blank", "noopener,noreferrer");
     }
   };
 
