@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { isPasswordReused, recordPasswordEntry } from "@/lib/password-history-logger";
 
 export async function POST(req: Request) {
   try {
@@ -29,29 +28,15 @@ export async function POST(req: Request) {
     }
 
     const cleanPassword = newPassword.trim();
-
-    // Check Password Reuse Memory
-    if (isPasswordReused(user.email, cleanPassword)) {
-      return NextResponse.json(
-        {
-          error: `Password Reuse Detected: The system detected that "${cleanPassword}" was previously used for ${user.email}. Please create a new password that has not been used in the past.`,
-        },
-        { status: 400 }
-      );
-    }
-
     const passwordHash = await bcrypt.hash(cleanPassword, 10);
 
     await prisma.user.update({
       where: { id: user.id },
       data: {
         passwordHash,
-        displayPassword: cleanPassword,
         updatedAt: new Date(),
       },
     });
-
-    recordPasswordEntry(user.name || "User", user.email, cleanPassword, "UPDATED");
 
     return NextResponse.json({
       success: true,

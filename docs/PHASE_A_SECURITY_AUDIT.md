@@ -19,8 +19,24 @@ Approved scope: add authentication/authorization to the live, pre-tenancy holes.
 
 **New env vars (optional in dev, required in prod):** `WHATSAPP_WEBHOOK_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET` (documented in `.env.example`).
 
-**Deliberately NOT changed in this hotfix (need your decision — see Deliverable 10):**
-- **S-2 plaintext passwords** (`User.displayPassword`, password-history logger/CSV) — a schema/data change, not an auth fix.
+## ✅ Follow-up 2 — Plaintext-password removal + platform-owner console (committed locally)
+Approved by the owner ("all in one"). Verified: `prisma db push` applied to dev, `npx tsc --noEmit` clean, `npm test` 21/21, and a throwaway harness verified the impersonation engine (10/10) against the dev DB.
+
+**S-2 plaintext passwords — FIXED.** Dropped `User.displayPassword` (schema + regenerated MySQL schema; dev `db push` removed the 2 demo values). Removed every plaintext write (`users/bulk`, `form-registrations` incl. the persisted `generatedPassword`, admin password reset, self-service reset). The reveal endpoint `GET users/[id]/password` now returns account info only (no password); `passwords/csv` is deprecated (410, still SUPERADMIN-gated); the client-side plaintext logger is no longer used server-side. Authentication is unaffected (bcrypt `passwordHash` only); one-time passwords are still shown at creation/reset, just never stored.
+
+**Platform-owner console — ADDED** (SUPERADMIN/PLATFORM_ADMIN only):
+- `src/lib/platform-access.ts` `requirePlatformApi()` (true platform gate — `isSuperAdmin`, unlike `requireAdminApi` which admits buyers/sellers).
+- `GET /api/admin/platform/users` — every user across all white-labels, franchises, branches, departments, teams (metadata only, no passwords).
+- **Audited impersonation ("Login as user")** — password-free, driven via NextAuth `session.update()`; the `jwt` callback (in `auth-options.ts`) enforces that only a platform owner can start it, refuses to impersonate another platform admin or an inactive user, retains the real owner's identity underneath, and writes `AuditEvent` rows (new model) on start/stop. A persistent `ImpersonationBanner` (mounted in `providers.tsx`) shows "Viewing as … — Exit" everywhere and exits via `update({ stopImpersonation: true })`.
+- **Reset password** from the console (and the existing user editor) — now `requireCrmApi` (was `requireAdminApi` which admitted customers); returns the new temp password once, stores only the hash, writes a `PASSWORD_RESET` audit event.
+- UI: `/admin/platform/users` page + `platform-users-client.tsx` (grouped by white-label, search, Login-as + Reset), plus a sidebar link.
+
+### 🔴 NEW critical findings discovered during this work (NOT yet fixed — recommend next)
+- **N-1 Account takeover via `auth/reset-password`:** it resets **any** account given only `{ email, newPassword }` — **no token/OTP verification**. Anyone who knows an email can take over that account. (`src/app/api/auth/reset-password/route.ts`)
+- **N-2 `auth/forgot-password` leaks the reset secret:** it returns the `resetUrl` + `otpCode` **in the HTTP response** (and never stores the token for later verification). (`src/app/api/auth/forgot-password/route.ts`)
+- **Fix (needs approval):** add a `PasswordResetToken` store (hashed token + expiry), have `forgot-password` email the link (not return it), and have `reset-password` require a valid, unexpired token. This is a focused next task.
+
+**Still deliberately NOT changed (need your decision — see Deliverable 10):**
 - **`whatsapp/send`** — called from the **public** property page (`property-actions.tsx`) as an intended visitor "share via WhatsApp" feature; requiring auth would break it. Needs rate-limiting / a product decision, not an auth gate.
 - **`telephony/*`, `webhooks/{telegram,twilio-sms}`** — need provider-signature validation (Twilio/Telegram); adding naive auth could break those callbacks.
 - **S-3/S-4/S-5/S-9/S-13** (tenant isolation, session tenant, global settings, cross-tenant IDOR, unscoped server pages) — the core multi-tenancy work, intentionally deferred to Phase B+.

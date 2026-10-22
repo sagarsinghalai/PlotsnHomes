@@ -10,6 +10,15 @@ declare module "next-auth" {
       role: Role;
       image?: string | null;
     };
+    // True when a platform owner is currently impersonating this user.
+    impersonating?: boolean;
+    // The real platform-owner behind an impersonation session (for the banner/audit).
+    impersonator?: {
+      id: string;
+      name?: string | null;
+      email?: string | null;
+      role?: Role;
+    };
   }
 
   interface User {
@@ -23,5 +32,12 @@ declare module "next-auth/jwt" {
     id?: string;
     role?: Role;
     stale?: boolean;
+    // Impersonation state. When `impersonating` is true, `id`/`role` are the
+    // impersonated user and the `actual*` fields hold the real platform owner.
+    impersonating?: boolean;
+    actualUserId?: string;
+    actualRole?: Role;
+    actualName?: string | null;
+    actualEmail?: string | null;
   }
 }

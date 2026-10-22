@@ -78,7 +78,7 @@ export async function POST(req: Request) {
         // Update existing user role if needed
         await prisma.user.update({
           where: { id: existingUser.id },
-          data: { role: role as any, active: true, displayPassword: password },
+          data: { role: role as any, active: true },
         });
       } else {
         // Create new user with generated credentials
@@ -88,7 +88,6 @@ export async function POST(req: Request) {
             name: reg.name,
             phone: reg.phone || null,
             passwordHash,
-            displayPassword: password,
             role: role as any,
             active: true,
           },
@@ -119,7 +118,8 @@ export async function POST(req: Request) {
         approvedAt: now,
         updatedAt: now,
         generatedUserId: userId,
-        generatedPassword: password,
+        // NOTE: the one-time password is returned in the response below and
+        // emailed to the user; it is intentionally NOT persisted in plaintext.
       };
 
       await saveFormRegistrations(allRegs);

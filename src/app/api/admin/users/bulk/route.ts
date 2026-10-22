@@ -232,7 +232,6 @@ export async function POST(req: Request) {
           name,
           email,
           passwordHash,
-          displayPassword: password,
           phone: phone || null,
           countryCode: phone ? (countryCode || "+91") : undefined,
           role,

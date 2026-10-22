@@ -1,38 +1,26 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { generatePasswordLogsCSV, getAllPasswordLogs } from "@/lib/password-history-logger";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: Request) {
+// DEPRECATED: passwords are no longer stored in readable form, so there is
+// nothing to export. This endpoint is kept only to return a clear 410 instead of
+// 404 for any old bookmarks/links. (Still Super Admin gated.)
+export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user || session.user.role !== "SUPERADMIN") {
     return NextResponse.json(
-      { error: "Access Denied: Super Admin authorization required to export password logs." },
+      { error: "Access Denied: Super Admin authorization required." },
       { status: 403 }
     );
   }
-
-  const csvContent = generatePasswordLogsCSV();
-  const logs = getAllPasswordLogs();
-
-  const url = new URL(req.url);
-  const format = url.searchParams.get("format");
-
-  if (format === "json") {
-    return NextResponse.json({
-      success: true,
-      totalLogs: logs.length,
-      logs,
-    });
-  }
-
-  return new NextResponse(csvContent, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="user_password_logs_${Date.now()}.csv"`,
+  return NextResponse.json(
+    {
+      error: "Password export has been removed.",
+      detail:
+        "Passwords are stored only as one-way hashes and cannot be exported. Use Reset password or Login as user instead.",
     },
-  });
+    { status: 410 }
+  );
 }

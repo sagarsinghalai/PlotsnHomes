@@ -1,68 +1,47 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
-import { requireAdminApi } from "@/lib/admin-api";
+import { requireCrmApi } from "@/lib/crm-access";
 import { prisma } from "@/lib/prisma";
+import { writeAudit } from "@/lib/audit";
 
-import { isPasswordReused, recordPasswordEntry } from "@/lib/password-history-logger";
-
-// GET: Allow SUPER ADMIN ONLY to reveal / view the user's actual registered password
+// GET: account info only. Passwords are stored as one-way bcrypt hashes and are
+// NEVER readable — not even by the platform owner. To give a user access, reset
+// to a temporary password (POST below) or use "Login as user" (impersonation).
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  // Strictly restrict password viewing to SUPERADMIN role only
-  if (session.user.role !== "SUPERADMIN") {
-    return NextResponse.json(
-      { error: "Access Denied: Only Super Admin is authorized to view user passwords." },
-      { status: 403 }
-    );
-  }
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
 
   try {
     const { id } = await params;
     const user = await prisma.user.findUnique({
       where: { id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        passwordHash: true,
-        displayPassword: true,
-      },
+      select: { id: true, name: true, email: true, role: true, active: true, lastActiveAt: true },
     });
-
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-
-    // Determine plain text registered password
-    const plainTextPassword = user.displayPassword || "Password123!";
-
     return NextResponse.json({
       success: true,
-      email: user.email,
-      name: user.name,
-      registeredPassword: plainTextPassword,
+      user,
+      passwordStored: false,
+      note: "Passwords are not stored in readable form. Use Reset password or Login as user.",
     });
   } catch (error: any) {
-    console.error("GET user password error:", error);
-    return NextResponse.json({ error: error.message || "Failed to retrieve password" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to retrieve user" }, { status: 500 });
   }
 }
 
-// POST: Allow Admin & Super Admin to change/reset password for any user
+// POST: reset a user's password to a new value (staff only). Stores only the
+// bcrypt hash; records an audit event; never persists or returns... the new
+// value is returned once so the admin can share it, but it is not stored.
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdminApi();
+  const auth = await requireCrmApi();
   if (auth.error) return auth.error;
 
   try {
@@ -76,46 +55,35 @@ export async function POST(
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id },
-    });
-
+    const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const cleanPassword = newPassword.trim();
-
-    // Check Password Reuse Memory
-    if (isPasswordReused(user.email, cleanPassword)) {
-      return NextResponse.json(
-        {
-          error: `Password Reuse Detected: The system detected that "${cleanPassword}" was previously used for ${user.email}. Please create a new password that has not been used in the past.`,
-        },
-        { status: 400 }
-      );
-    }
-
     const passwordHash = await bcrypt.hash(cleanPassword, 10);
 
     await prisma.user.update({
       where: { id },
-      data: {
-        passwordHash,
-        displayPassword: cleanPassword,
-        updatedAt: new Date(),
-      },
+      data: { passwordHash, updatedAt: new Date() },
     });
 
-    recordPasswordEntry(user.name || "User", user.email, cleanPassword, "UPDATED");
+    await writeAudit({
+      actorId: auth.session.user.id,
+      actorEmail: auth.session.user.email,
+      action: "PASSWORD_RESET",
+      targetUserId: user.id,
+      targetEmail: user.email,
+    });
 
     return NextResponse.json({
       success: true,
-      message: `Password for ${user.name || user.email} successfully updated by Admin.`,
-      registeredPassword: cleanPassword,
+      message: `Password for ${user.name || user.email} successfully reset.`,
+      // Returned once so the admin can hand it over; not stored anywhere.
+      temporaryPassword: cleanPassword,
     });
   } catch (error: any) {
-    console.error("Admin user password update error:", error);
-    return NextResponse.json({ error: error.message || "Failed to update password" }, { status: 500 });
+    console.error("Admin user password reset error:", error);
+    return NextResponse.json({ error: error.message || "Failed to reset password" }, { status: 500 });
   }
 }

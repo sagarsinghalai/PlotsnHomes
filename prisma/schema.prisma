@@ -134,7 +134,6 @@ model User {
   userId        String?       @unique
   email         String        @unique
   passwordHash  String
-  displayPassword String?
   name          String
   phone         String?
   countryCode   String?       @default("+91")
@@ -1063,5 +1062,22 @@ model Team {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   users        User[]      @relation("UserTeam")
+}
+
+// Audit trail for sensitive platform-owner actions (impersonation, password
+// resets, etc.). Never stores secrets or plaintext passwords.
+model AuditEvent {
+  id           String   @id @default(cuid())
+  actorId      String   // the real user who performed the action (not the impersonated one)
+  actorEmail   String?
+  action       String   // IMPERSONATE_START | IMPERSONATE_STOP | PASSWORD_RESET | ...
+  targetUserId String?
+  targetEmail  String?
+  detail       String?
+  createdAt    DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
 }
 
