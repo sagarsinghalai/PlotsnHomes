@@ -31,10 +31,10 @@ Approved by the owner ("all in one"). Verified: `prisma db push` applied to dev,
 - **Reset password** from the console (and the existing user editor) — now `requireCrmApi` (was `requireAdminApi` which admitted customers); returns the new temp password once, stores only the hash, writes a `PASSWORD_RESET` audit event.
 - UI: `/admin/platform/users` page + `platform-users-client.tsx` (grouped by white-label, search, Login-as + Reset), plus a sidebar link.
 
-### 🔴 NEW critical findings discovered during this work (NOT yet fixed — recommend next)
-- **N-1 Account takeover via `auth/reset-password`:** it resets **any** account given only `{ email, newPassword }` — **no token/OTP verification**. Anyone who knows an email can take over that account. (`src/app/api/auth/reset-password/route.ts`)
-- **N-2 `auth/forgot-password` leaks the reset secret:** it returns the `resetUrl` + `otpCode` **in the HTTP response** (and never stores the token for later verification). (`src/app/api/auth/forgot-password/route.ts`)
-- **Fix (needs approval):** add a `PasswordResetToken` store (hashed token + expiry), have `forgot-password` email the link (not return it), and have `reset-password` require a valid, unexpired token. This is a focused next task.
+### ✅ NEW criticals discovered during this work — NOW FIXED (committed locally)
+- **N-1 Account takeover via `auth/reset-password` — FIXED.** It now requires a valid, unexpired, **single-use** token (not just an email). Verified E2E (9/9): no-token rejected, wrong token rejected, valid token resets, token cannot be reused.
+- **N-2 `auth/forgot-password` secret leak — FIXED.** It no longer returns the `resetUrl`/`otpCode`. It issues a token, stores only its **SHA-256 hash** (new `PasswordResetToken` model, 1-hour expiry), and **emails the link** (logged to EmailLog in dev). A `devResetUrl` is returned **only when NODE_ENV !== production** for local testing. Generic anti-enumeration response in all cases.
+- Frontend updated: the reset page carries the token from the emailed link; the forgot page shows "check your email" (plus a dev-only link) instead of an on-screen OTP.
 
 **Still deliberately NOT changed (need your decision — see Deliverable 10):**
 - **`whatsapp/send`** — called from the **public** property page (`property-actions.tsx`) as an intended visitor "share via WhatsApp" feature; requiring auth would break it. Needs rate-limiting / a product decision, not an auth gate.

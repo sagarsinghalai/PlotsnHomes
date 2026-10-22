@@ -13,9 +13,8 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successData, setSuccessData] = useState<{
-    resetUrl?: string;
-    otpCode?: string;
-    email?: string;
+    message?: string;
+    devResetUrl?: string;
   } | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -73,30 +72,28 @@ export default function ForgotPasswordPage() {
             <div className="flex items-center gap-3 text-emerald-800">
               <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0" />
               <div>
-                <h3 className="font-bold text-sm">Reset Request Processed</h3>
-                <p className="text-xs text-emerald-700">Instructions generated for {email}</p>
+                <h3 className="font-bold text-sm">Check your email</h3>
+                <p className="text-xs text-emerald-700">{successData.message || "If an account exists, a reset link has been sent."}</p>
               </div>
             </div>
 
-            {successData.otpCode && (
-              <div className="rounded-xl bg-slate-50 p-3.5 border border-slate-200 text-center space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Verification OTP Code</span>
-                <span className="font-mono text-2xl font-black text-amber-600 tracking-widest">{successData.otpCode}</span>
+            <p className="text-xs text-slate-600">
+              We've emailed a secure reset link. It expires in 1 hour and can be used once. If it doesn't arrive, check your spam folder or request another.
+            </p>
+
+            {successData.devResetUrl && (
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Dev mode — email delivery is logged, not sent</p>
+                <Button
+                  type="button"
+                  variant="gold"
+                  className="w-full"
+                  onClick={() => { window.location.href = successData!.devResetUrl!; }}
+                >
+                  <Sparkles className="h-4 w-4" /> Open reset link (dev only)
+                </Button>
               </div>
             )}
-
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <Button
-                type="button"
-                variant="gold"
-                className="w-full"
-                onClick={() =>
-                  router.push(`/reset-password?email=${encodeURIComponent(email)}`)
-                }
-              >
-                <Sparkles className="h-4 w-4" /> Proceed to Reset Password
-              </Button>
-            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

@@ -12,6 +12,7 @@ function ResetPasswordForm() {
   const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,12 +21,19 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     const qEmail = searchParams.get("email");
+    const qToken = searchParams.get("token");
     if (qEmail) setEmail(qEmail);
+    if (qToken) setToken(qToken);
   }, [searchParams]);
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
     if (!email || !newPassword) return;
+
+    if (!token) {
+      setError("This reset link is missing its security token. Please open the link from your password reset email, or request a new one.");
+      return;
+    }
 
     if (newPassword.length < 6) {
       setError("Password must be at least 6 characters long.");
@@ -46,6 +54,7 @@ function ResetPasswordForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
+          token,
           newPassword,
           confirmPassword,
         }),

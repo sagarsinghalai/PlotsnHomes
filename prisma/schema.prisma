@@ -1064,6 +1064,20 @@ model Team {
   users        User[]      @relation("UserTeam")
 }
 
+// Single-use, time-limited password-reset tokens. Only the SHA-256 hash of the
+// token is stored (never the raw token), so a DB leak cannot be used to reset
+// accounts. The raw token travels only in the emailed reset link.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
 // Audit trail for sensitive platform-owner actions (impersonation, password
 // resets, etc.). Never stores secrets or plaintext passwords.
 model AuditEvent {
