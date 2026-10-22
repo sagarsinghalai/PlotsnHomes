@@ -1085,11 +1085,14 @@ model WhatsAppCampaign {
   name          String
   templateName  String?
   channels      String?  // comma-separated: whatsapp,email,sms
+  sourceType    String?  // leads | manual | file (how the audience was built)
   audienceCount Int      @default(0)
   sentCount     Int      @default(0)
   failedCount   Int      @default(0)
   createdById   String?
   createdByName String?
+  createdByEmail String?
+  createdByRole String?
   resultsJson   String?  // JSON array of { name, phone, email, channel, status, detail }
   createdAt     DateTime @default(now())
 

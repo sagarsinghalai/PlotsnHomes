@@ -853,6 +853,7 @@ export function WhatsAppHub({
   const [fSource, setFSource] = useState("");
   const [fOwner, setFOwner] = useState("");
   const [fProperty, setFProperty] = useState("");
+  const [campaignName, setCampaignName] = useState("");
 
   // Tag-input: Phone chips (for WhatsApp / SMS channels)
   const [phoneChips, setPhoneChips] = useState<string[]>([]);
@@ -1274,9 +1275,10 @@ export function WhatsAppHub({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: selectedTemplate?.name || "WhatsApp campaign",
+          name: campaignName.trim() || selectedTemplate?.name || "WhatsApp campaign",
           templateName: selectedTemplate?.name || null,
           channels: campaignChannels,
+          sourceType: campaignRecipientsType,
           audienceCount: activeRecipients.length,
           sentCount: sent,
           failedCount: results.length - sent,
@@ -1800,6 +1802,15 @@ export function WhatsAppHub({
               <h2 className="font-semibold text-lg text-slate-900 border-b pb-2">Campaign Details</h2>
 
               <div className="space-y-3">
+                <div>
+                  <Label>Campaign name</Label>
+                  <input
+                    className="w-full rounded-xl border px-3 py-2.5 text-sm mt-1 bg-slate-50"
+                    value={campaignName}
+                    onChange={(e) => setCampaignName(e.target.value)}
+                    placeholder="e.g. October New-Launch Blast (defaults to template name)"
+                  />
+                </div>
                 <div>
                   <Label>Selected Template</Label>
                   <select
