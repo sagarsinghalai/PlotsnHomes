@@ -3,18 +3,26 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/roles";
+import { canManageOrgUnits } from "@/lib/org-access";
 import { OrganizationUnitsManager } from "@/components/admin/organization-units-manager";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 
 export default async function AdminOrganizationPage() {
   const session = await getServerSession(authOptions);
-  if (!session?.user || !isSuperAdmin(session.user.role)) {
+  if (!session?.user || !canManageOrgUnits(session.user.role)) {
     redirect("/admin");
   }
+
+  // Platform owner sees all tenants; a white-label admin only their own.
+  const superAdmin = isSuperAdmin(session.user.role);
+  const actorTenant = session.user.tenantId || "__no_tenant__";
+  const orgWhere = superAdmin ? {} : { id: actorTenant };
+  const unitWhere = superAdmin ? {} : { tenantId: actorTenant };
 
   const [organizations, franchises, branches, departments, teams, users] = await Promise.all([
     prisma.organization?.findMany
       ? prisma.organization.findMany({
+          where: orgWhere,
           include: {
             whiteLabelAdmin: { select: { id: true, name: true, email: true, role: true } },
             _count: { select: { franchises: true, users: true } },
@@ -24,6 +32,7 @@ export default async function AdminOrganizationPage() {
       : Promise.resolve([]),
     prisma.franchise?.findMany
       ? prisma.franchise.findMany({
+          where: unitWhere,
           include: {
             organization: { select: { id: true, name: true } },
             franchiseAdmin: { select: { id: true, name: true, email: true, role: true } },
@@ -34,6 +43,7 @@ export default async function AdminOrganizationPage() {
       : Promise.resolve([]),
     prisma.branch?.findMany
       ? prisma.branch.findMany({
+          where: unitWhere,
           include: {
             franchise: {
               select: {
@@ -51,6 +61,7 @@ export default async function AdminOrganizationPage() {
       : Promise.resolve([]),
     prisma.department?.findMany
       ? prisma.department.findMany({
+          where: unitWhere,
           include: {
             branch: {
               select: {
@@ -74,6 +85,7 @@ export default async function AdminOrganizationPage() {
       : Promise.resolve([]),
     prisma.team?.findMany
       ? prisma.team.findMany({
+          where: unitWhere,
           include: {
             department: {
               select: {
@@ -103,6 +115,7 @@ export default async function AdminOrganizationPage() {
         })
       : Promise.resolve([]),
     prisma.user.findMany({
+      where: superAdmin ? {} : { tenantId: actorTenant },
       select: {
         id: true,
         name: true,
