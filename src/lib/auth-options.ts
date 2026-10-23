@@ -5,6 +5,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/roles";
 import { writeAudit } from "@/lib/audit";
+import { isTenantAccessAllowed } from "@/lib/tenant-lifecycle";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
@@ -23,10 +24,14 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email.toLowerCase() },
+          include: { organizationRel: { select: { status: true } } },
         });
         if (!user) return null;
         // Only block when explicitly disabled (undefined = legacy row, still allow login)
         if (user.active === false) return null;
+        // Tenant lifecycle: a suspended/cancelled/pending tenant cannot log in
+        // (data is preserved — this only gates access).
+        if (user.tenantId && !isTenantAccessAllowed(user.organizationRel?.status)) return null;
 
         const valid = await bcrypt.compare(
           credentials.password,
@@ -132,10 +137,26 @@ export const authOptions: NextAuthOptions = {
       if (!user && token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { id: true, role: true, active: true, tenantId: true },
+          select: {
+            id: true,
+            role: true,
+            active: true,
+            tenantId: true,
+            organizationRel: { select: { status: true } },
+          },
         });
 
         if (!dbUser || dbUser.active === false) {
+          delete token.id;
+          delete token.role;
+          delete token.tenantId;
+          token.stale = true;
+          return token;
+        }
+
+        // Tenant lifecycle: sign out mid-session if the tenant is suspended/cancelled.
+        // Skipped while impersonating so the platform owner is never locked out.
+        if (!token.impersonating && dbUser.tenantId && !isTenantAccessAllowed(dbUser.organizationRel?.status)) {
           delete token.id;
           delete token.role;
           delete token.tenantId;
