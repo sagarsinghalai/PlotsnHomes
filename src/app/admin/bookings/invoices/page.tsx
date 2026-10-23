@@ -2,9 +2,12 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { InvoicesTable } from "@/components/admin/invoices-table";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function BrokerageInvoicesPage() {
+  const tenantId = await getServerTenantId();
   const invoices = await prisma.brokerageInvoice.findMany({
+    where: { tenantId },
     orderBy: { createdAt: "desc" },
     take: 100,
   });

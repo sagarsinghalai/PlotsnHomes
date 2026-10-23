@@ -4,6 +4,7 @@ import { LoansManager } from "@/components/admin/loans-manager";
 import { LoanRatesPanel, BankRate } from "@/components/admin/loan-rates-panel";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_BANKS } from "@/lib/loan-banks";
+import { getServerTenantId } from "@/lib/tenant";
 
 const RATE_PREFIX = "loan_rate_";
 const BANKS_KEY = "loan_rate_banks_list";
@@ -48,8 +49,10 @@ async function getBankRates(): Promise<BankRate[]> {
 }
 
 export default async function AdminLoansPage() {
+  const tenantId = await getServerTenantId();
   const [loans, bankRates] = await Promise.all([
     prisma.loanApplication.findMany({
+      where: { tenantId },
       orderBy: { createdAt: "desc" },
       include: {
         user: { select: { name: true, email: true, phone: true } },

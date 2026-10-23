@@ -3,9 +3,11 @@ export const dynamic = "force-dynamic";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminDashboardOverview } from "@/components/admin/admin-dashboard-overview";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function AdminOverviewPage() {
   const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
+  const tenantId = await getServerTenantId();
 
   const [
     userCount,
@@ -22,52 +24,58 @@ export default async function AdminOverviewPage() {
     recentInq,
     recentDevs,
   ] = await Promise.all([
-    prisma.user.count(),
+    prisma.user.count({ where: { tenantId } }),
     prisma.user.count({
-      where: { active: true, lastActiveAt: { gte: fifteenMinAgo } },
+      where: { active: true, lastActiveAt: { gte: fifteenMinAgo }, tenantId },
     }),
-    prisma.property.count({ where: { status: "ACTIVE" } }),
+    prisma.property.count({ where: { status: "ACTIVE", tenantId } }),
     prisma.transaction.aggregate({
-      where: { status: "COMPLETED" },
+      where: { status: "COMPLETED", tenantId },
       _sum: { amount: true },
     }),
-    prisma.inquiry.count(),
+    prisma.inquiry.count({ where: { tenantId } }),
     prisma.property.aggregate({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       _avg: { yieldRate: true, changeYtd: true },
     }),
     prisma.inquiry.findMany({
+      where: { tenantId },
       take: 6,
       orderBy: { createdAt: "desc" },
       include: { property: { select: { title: true, symbol: true } } },
     }),
     prisma.property.findMany({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       orderBy: { changeYtd: "desc" },
       take: 5,
       select: { id: true, symbol: true, title: true, changeYtd: true, price: true },
     }),
     prisma.user.findMany({
+      where: { tenantId },
       take: 10,
       orderBy: { createdAt: "desc" },
       select: { id: true, name: true, email: true, role: true, createdAt: true },
     }),
     prisma.property.findMany({
+      where: { tenantId },
       take: 10,
       orderBy: { createdAt: "desc" },
       select: { id: true, title: true, symbol: true, submittedBy: { select: { name: true, role: true } }, createdAt: true },
     }),
     prisma.transaction.findMany({
+      where: { tenantId },
       take: 10,
       orderBy: { createdAt: "desc" },
       include: { user: { select: { name: true, role: true } } },
     }),
     prisma.inquiry.findMany({
+      where: { tenantId },
       take: 10,
       orderBy: { createdAt: "desc" },
       include: { property: { select: { symbol: true } } },
     }),
     prisma.developer.findMany({
+      where: { tenantId },
       take: 10,
       orderBy: { createdAt: "desc" },
       select: { id: true, name: true, createdAt: true },

@@ -1,8 +1,11 @@
 import { InquiriesManager } from "@/components/admin/inquiries-manager";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function AdminInquiriesPage() {
+  const tenantId = await getServerTenantId();
   const inquiries = await prisma.inquiry.findMany({
+    where: { tenantId },
     orderBy: { createdAt: "desc" },
     take: 100,
     include: {

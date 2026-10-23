@@ -9,21 +9,25 @@ import {
 import { CHART_COLORS } from "@/lib/admin-reports";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function ListingsReportPage() {
+  const tenantId = await getServerTenantId();
   const [byStatus, topYield, topInquiries, aggregates] = await Promise.all([
-    prisma.property.groupBy({ by: ["status"], _count: { id: true } }),
+    prisma.property.groupBy({ by: ["status"], where: { tenantId }, _count: { id: true } }),
     prisma.property.findMany({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       orderBy: { yieldRate: "desc" },
       take: 10,
       select: { symbol: true, title: true, yieldRate: true, price: true, city: true },
     }),
     prisma.inquiry.groupBy({
       by: ["propertyId"],
+      where: { tenantId },
       _count: { id: true },
     }),
     prisma.property.aggregate({
+      where: { tenantId },
       _avg: { yieldRate: true, price: true, changeYtd: true },
       _count: true,
     }),
@@ -36,7 +40,7 @@ export default async function ListingsReportPage() {
   const props =
     propertyIds.length > 0
       ? await prisma.property.findMany({
-          where: { id: { in: propertyIds } },
+          where: { id: { in: propertyIds }, tenantId },
           select: { id: true, symbol: true, title: true },
         })
       : [];

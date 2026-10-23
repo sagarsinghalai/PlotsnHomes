@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { ProjectManager } from "@/components/admin/project-manager";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function ProjectsPage() {
+  const tenantId = await getServerTenantId();
   const [projects, developers] = await Promise.all([
     prisma.project.findMany({
+      where: { tenantId },
       include: {
         developer: {
           select: {
@@ -23,6 +26,7 @@ export default async function ProjectsPage() {
       orderBy: { createdAt: "desc" },
     }),
     prisma.developer.findMany({
+      where: { tenantId },
       select: {
         id: true,
         name: true,

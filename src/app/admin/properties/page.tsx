@@ -9,9 +9,11 @@ import { hasAddPermissionServer } from "@/lib/permissions";
 export default async function AdminPropertiesPage() {
   const session = await getSession();
   const canAdd = await hasAddPermissionServer(session?.user, "/admin/properties");
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
 
   const [properties, total, active] = await Promise.all([
     prisma.property.findMany({
+      where: { tenantId },
       orderBy: { createdAt: "desc" },
       take: 300,
       select: {
@@ -30,8 +32,8 @@ export default async function AdminPropertiesPage() {
         images: true,
       },
     }),
-    prisma.property.count(),
-    prisma.property.count({ where: { status: "ACTIVE" } }),
+    prisma.property.count({ where: { tenantId } }),
+    prisma.property.count({ where: { tenantId, status: "ACTIVE" } }),
   ]);
 
   return (

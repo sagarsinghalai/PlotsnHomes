@@ -1,8 +1,11 @@
 import { isEmailConfigured } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function AdminEmailsPage() {
+  const tenantId = await getServerTenantId();
   const emails = await prisma.emailLog.findMany({
+    where: { tenantId },
     orderBy: { createdAt: "desc" },
     take: 100,
   });

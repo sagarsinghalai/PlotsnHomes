@@ -1,10 +1,12 @@
 import { TradesManager } from "@/components/admin/trades-manager";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function AdminTradesPage() {
+  const tenantId = await getServerTenantId();
   // Query investment transactions which function as secondary/primary market trades
   const transactions = await prisma.transaction.findMany({
-    where: { type: "INVESTMENT" },
+    where: { type: "INVESTMENT", tenantId },
     orderBy: { createdAt: "desc" },
     include: {
       user: { select: { name: true, email: true } },

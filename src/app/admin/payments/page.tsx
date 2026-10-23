@@ -1,10 +1,13 @@
 import { PaymentsManager } from "@/components/admin/payments-manager";
 import { prisma } from "@/lib/prisma";
 import { TransactionStatus, TransactionType } from "@prisma/client";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function AdminPaymentsPage() {
+  const tenantId = await getServerTenantId();
   const [dbTransactions, dbUsers] = await Promise.all([
     prisma.transaction.findMany({
+      where: { tenantId },
       orderBy: { createdAt: "desc" },
       take: 15,
       include: {
@@ -12,6 +15,7 @@ export default async function AdminPaymentsPage() {
       },
     }),
     prisma.user.findMany({
+      where: { tenantId },
       take: 15,
       orderBy: { createdAt: "desc" },
       select: { id: true, name: true, email: true, createdAt: true },

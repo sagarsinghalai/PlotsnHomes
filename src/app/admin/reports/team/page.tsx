@@ -7,9 +7,12 @@ import {
 } from "@/components/admin/reports/charts";
 import { CHART_COLORS } from "@/lib/admin-reports";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function TeamPerformanceReportPage() {
+  const tenantId = await getServerTenantId();
   const leads = await prisma.lead.findMany({
+    where: { tenantId },
     select: { ownerId: true, stage: true, owner: { select: { name: true } } },
   });
 

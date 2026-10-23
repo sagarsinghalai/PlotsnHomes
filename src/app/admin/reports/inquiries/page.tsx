@@ -7,12 +7,14 @@ import {
 } from "@/components/admin/reports/charts";
 import { groupCountByMonth } from "@/lib/admin-reports";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function InquiriesReportPage() {
+  const tenantId = await getServerTenantId();
   const [inquiries, withLead, showingsPending] = await Promise.all([
-    prisma.inquiry.findMany({ select: { createdAt: true, propertyId: true } }),
-    prisma.inquiry.count({ where: { lead: { isNot: null } } }),
-    prisma.propertyShowing.count({ where: { status: "REQUESTED" } }),
+    prisma.inquiry.findMany({ where: { tenantId }, select: { createdAt: true, propertyId: true } }),
+    prisma.inquiry.count({ where: { lead: { isNot: null }, tenantId } }),
+    prisma.propertyShowing.count({ where: { status: "REQUESTED", tenantId } }),
   ]);
 
   const trend = groupCountByMonth(inquiries.map((i) => i.createdAt));
@@ -30,7 +32,7 @@ export default async function InquiriesReportPage() {
     .slice(0, 8);
 
   const props = await prisma.property.findMany({
-    where: { id: { in: topIds.map(([id]) => id) } },
+    where: { id: { in: topIds.map(([id]) => id) }, tenantId },
     select: { id: true, symbol: true },
   });
   const propMap = Object.fromEntries(props.map((p) => [p.id, p.symbol]));

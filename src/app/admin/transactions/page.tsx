@@ -8,12 +8,14 @@ export const dynamic = "force-dynamic";
 export default async function AdminTransactionsPage() {
   const session = await getServerSession(authOptions);
   const user = session?.user;
+  const tenantId = user?.tenantId || "__no_tenant__";
 
-  let whereClause: any = {};
+  let whereClause: any = { tenantId };
 
   // If user is AGENT, scope transactions strictly to their own transactions & assigned customer deals
   if (user?.role === "AGENT") {
     whereClause = {
+      tenantId,
       OR: [
         { userId: user.id },
         { property: { agentId: user.id } },

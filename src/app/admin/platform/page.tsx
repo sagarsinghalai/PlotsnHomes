@@ -22,11 +22,12 @@ export default async function PlatformSettingsPage() {
   const permissions = await getRolePermissions();
   const group = session?.user ? getPermissionGroup(session.user) : "BUYER";
   const userRole = session?.user?.role || "";
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
 
   const [userCount, leadCount, activeUsers] = await Promise.all([
-    prisma.user.count(),
-    prisma.lead.count(),
-    prisma.user.count({ where: { active: true } }),
+    prisma.user.count({ where: { tenantId } }),
+    prisma.lead.count({ where: { tenantId } }),
+    prisma.user.count({ where: { active: true, tenantId } }),
   ]);
 
   const cards = [

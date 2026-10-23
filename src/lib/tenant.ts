@@ -25,6 +25,16 @@ export async function getCurrentTenantId(): Promise<string | null> {
 }
 
 /**
+ * Fail-closed tenant id for server-rendered admin pages: the session tenant, or
+ * the impossible-match sentinel "__no_tenant__" so a page with no tenant leaks
+ * nothing. Use in a `where: { tenantId }` on tenant-owned reads.
+ */
+export async function getServerTenantId(): Promise<string> {
+  const session = await getServerSession(authOptions);
+  return session?.user?.tenantId || "__no_tenant__";
+}
+
+/**
  * The platform's PRIMARY tenant — the home org for data that arrives with no
  * session (public website leads, inquiries, checkout, telephony webhooks) and
  * cannot be attributed to a white-label tenant by a parent row.

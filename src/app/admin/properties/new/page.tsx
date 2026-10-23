@@ -12,15 +12,17 @@ export default async function NewPropertyPage() {
   if (!canAdd) {
     redirect("/admin/properties?error=Access+Denied");
   }
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
   const [agents, bhkConfigurations, developers, projects] = await Promise.all([
     prisma.user.findMany({
-      where: { role: { in: ["SUPERADMIN", "EMPLOYEE", "AGENT"] }, active: true },
+      where: { role: { in: ["SUPERADMIN", "EMPLOYEE", "AGENT"] }, active: true, tenantId },
       select: { id: true, name: true, email: true },
       orderBy: { name: "asc" },
     }),
     getBhkConfigurations(),
-    prisma.developer.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.developer.findMany({ where: { tenantId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     prisma.project.findMany({
+      where: { tenantId },
       select: { id: true, name: true, developerId: true },
       orderBy: { name: "asc" },
     }),

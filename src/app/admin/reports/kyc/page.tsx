@@ -9,14 +9,17 @@ import { groupCountByMonth } from "@/lib/admin-reports";
 import { AreaLineChart } from "@/components/admin/reports/charts";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function KycComplianceReportPage() {
+  const tenantId = await getServerTenantId();
   const [profiles, totalUsers] = await Promise.all([
     prisma.kycProfile.findMany({
+      where: { tenantId },
       select: { status: true, createdAt: true, fullName: true, user: { select: { email: true } } },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.user.count(),
+    prisma.user.count({ where: { tenantId } }),
   ]);
 
   const byStatus = new Map<string, number>();

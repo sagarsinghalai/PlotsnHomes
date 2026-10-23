@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { TeamsManager, type TeamRow } from "@/components/admin/teams-manager";
+import { getServerTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
 export default async function TeamsPage() {
+  const tenantId = await getServerTenantId();
   const [teams, departments, leaders] = await Promise.all([
     prisma.team.findMany({
+      where: { tenantId },
       include: {
         department: { select: { id: true, name: true } },
         teamLeader: { select: { id: true, name: true, email: true } },
@@ -13,8 +16,8 @@ export default async function TeamsPage() {
       },
       orderBy: { name: "asc" },
     }),
-    prisma.department.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
-    prisma.user.findMany({ select: { id: true, name: true, email: true }, orderBy: { name: "asc" } }),
+    prisma.department.findMany({ where: { tenantId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.user.findMany({ where: { tenantId }, select: { id: true, name: true, email: true }, orderBy: { name: "asc" } }),
   ]);
 
   const serialized: TeamRow[] = teams.map((t) => ({

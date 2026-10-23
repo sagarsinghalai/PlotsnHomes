@@ -1,8 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { PricingSharesManager, PropertyPricingItem } from "@/components/admin/pricing-shares-manager";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function AdminPricingPage() {
+  const tenantId = await getServerTenantId();
   const properties = await prisma.property.findMany({
+    where: { tenantId },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,

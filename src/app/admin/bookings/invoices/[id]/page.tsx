@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function InvoiceDetailPage({
   params,
@@ -13,7 +14,8 @@ export default async function InvoiceDetailPage({
   params: { id: string };
   searchParams: { copy?: string };
 }) {
-  const inv = await prisma.brokerageInvoice.findUnique({ where: { id: params.id } });
+  const tenantId = await getServerTenantId();
+  const inv = await prisma.brokerageInvoice.findFirst({ where: { id: params.id, tenantId } });
   if (!inv) notFound();
 
   const receipt = mapInvoiceToReceipt(inv);

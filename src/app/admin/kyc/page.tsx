@@ -1,9 +1,12 @@
 import { KycManager } from "@/components/admin/kyc-manager";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function AdminKycPage() {
+  const tenantId = await getServerTenantId();
   const profiles = await prisma.kycProfile.findMany({
+    where: { tenantId },
     orderBy: { createdAt: "desc" },
     include: { user: { select: { id: true, name: true, email: true, phone: true } } },
   });

@@ -2,9 +2,12 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { DevelopersList } from "@/components/admin/developers-list";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function DevelopersPage() {
+  const tenantId = await getServerTenantId();
   const developers = await prisma.developer.findMany({
+    where: { tenantId },
     orderBy: { name: "asc" },
     take: 100,
   });

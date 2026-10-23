@@ -1,8 +1,11 @@
 import { MeetingsList } from "@/components/admin/meetings-list";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function AdminMeetingsPage() {
+  const tenantId = await getServerTenantId();
   const meetings = await prisma.meetingInvite.findMany({
+    where: { tenantId },
     orderBy: { createdAt: "desc" },
     take: 100,
     include: {

@@ -8,13 +8,15 @@ import {
 } from "@/components/admin/reports/charts";
 import { CHART_COLORS } from "@/lib/admin-reports";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function LeadSourcesReportPage() {
+  const tenantId = await getServerTenantId();
   const [bySource, wonBySource] = await Promise.all([
-    prisma.lead.groupBy({ by: ["source"], _count: { id: true }, orderBy: { _count: { id: "desc" } } }),
+    prisma.lead.groupBy({ by: ["source"], where: { tenantId }, _count: { id: true }, orderBy: { _count: { id: "desc" } } }),
     prisma.lead.groupBy({
       by: ["source"],
-      where: { stage: "WON" },
+      where: { stage: "WON", tenantId },
       _count: { id: true },
     }),
   ]);

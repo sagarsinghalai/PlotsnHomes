@@ -1,8 +1,11 @@
 import { PlatformSettingsNav } from "@/components/admin/platform-settings-nav";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function BulkJobsPage() {
+  const tenantId = await getServerTenantId();
   const jobs = await prisma.bulkJob.findMany({
+    where: { tenantId },
     orderBy: { createdAt: "desc" },
     take: 50,
     include: { createdBy: { select: { name: true } } },

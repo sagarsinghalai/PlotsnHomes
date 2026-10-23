@@ -1,8 +1,11 @@
 import { ShowingsManager } from "@/components/admin/showings-manager";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function AdminShowingsPage() {
+  const tenantId = await getServerTenantId();
   const showings = await prisma.propertyShowing.findMany({
+    where: { tenantId },
     orderBy: { tourDate: "desc" },
     take: 100,
     include: {

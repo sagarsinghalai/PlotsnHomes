@@ -8,10 +8,13 @@ import {
 } from "@/components/admin/reports/charts";
 import { STAGE_COLORS, STAGE_LABELS } from "@/lib/admin-reports";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function PipelineReportPage() {
   const now = new Date();
+  const tenantId = await getServerTenantId();
   const leads = await prisma.lead.findMany({
+    where: { tenantId },
     select: { stage: true, nextFollowUpAt: true, score: true },
   });
 

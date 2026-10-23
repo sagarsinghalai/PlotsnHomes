@@ -9,26 +9,28 @@ import {
 import { CHART_COLORS, groupSumByMonth } from "@/lib/admin-reports";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function RevenueReportPage() {
+  const tenantId = await getServerTenantId();
   const [completed, pending, byType, monthly] = await Promise.all([
     prisma.transaction.findMany({
-      where: { status: "COMPLETED" },
+      where: { status: "COMPLETED", tenantId },
       select: { amount: true, type: true, createdAt: true },
     }),
     prisma.transaction.aggregate({
-      where: { status: "PENDING" },
+      where: { status: "PENDING", tenantId },
       _sum: { amount: true },
       _count: true,
     }),
     prisma.transaction.groupBy({
       by: ["type"],
-      where: { status: "COMPLETED" },
+      where: { status: "COMPLETED", tenantId },
       _sum: { amount: true },
       _count: true,
     }),
     prisma.transaction.findMany({
-      where: { status: "COMPLETED" },
+      where: { status: "COMPLETED", tenantId },
       select: { amount: true, createdAt: true },
       orderBy: { createdAt: "asc" },
     }),

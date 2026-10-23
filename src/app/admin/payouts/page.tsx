@@ -1,12 +1,14 @@
 import { PayoutsManager } from "@/components/admin/payouts-manager";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPayoutsPage() {
+  const tenantId = await getServerTenantId();
   // 1. Query active properties to schedule dividends
   const properties = await prisma.property.findMany({
-    where: { status: "ACTIVE" },
+    where: { status: "ACTIVE", tenantId },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -35,6 +37,7 @@ export default async function AdminPayoutsPage() {
 
   // 2. Query eligible agent commissions from DB
   const dbCommissions = await prisma.agentCommission.findMany({
+    where: { tenantId },
     orderBy: { createdAt: "desc" },
     take: 100,
     include: {

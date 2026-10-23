@@ -3,16 +3,18 @@ import { ReportsCatalog } from "@/components/admin/reports/reports-catalog";
 import { OverviewPerformanceChart } from "@/components/admin/reports/overview-performance-chart";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function ReportsHubPage() {
+  const tenantId = await getServerTenantId();
   const [leads, revenue, users, inquiries] = await Promise.all([
-    prisma.lead.count(),
+    prisma.lead.count({ where: { tenantId } }),
     prisma.transaction.aggregate({
-      where: { status: "COMPLETED" },
+      where: { status: "COMPLETED", tenantId },
       _sum: { amount: true },
     }),
-    prisma.user.count(),
-    prisma.inquiry.count(),
+    prisma.user.count({ where: { tenantId } }),
+    prisma.inquiry.count({ where: { tenantId } }),
   ]);
 
   const kpis = [

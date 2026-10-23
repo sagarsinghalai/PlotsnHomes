@@ -1,9 +1,12 @@
 import { GoalsManager } from "@/components/admin/goals-manager";
 import { PlatformSettingsNav } from "@/components/admin/platform-settings-nav";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function GoalsPage() {
+  const tenantId = await getServerTenantId();
   const goals = await prisma.crmGoal.findMany({
+    where: { tenantId },
     orderBy: { createdAt: "desc" },
     include: { owner: { select: { name: true } } },
   });

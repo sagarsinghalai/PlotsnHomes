@@ -3,14 +3,16 @@ import { FunnelChart, ReportKpiGrid } from "@/components/admin/reports/charts";
 import { getPipelineConfig } from "@/lib/pipeline-settings";
 import { STAGE_COLORS, STAGE_LABELS } from "@/lib/admin-reports";
 import { prisma } from "@/lib/prisma";
+import { getServerTenantId } from "@/lib/tenant";
 
 export default async function LeadFunnelReportPage() {
+  const tenantId = await getServerTenantId();
   const [config, byStage, total, won, lost] = await Promise.all([
     getPipelineConfig(),
-    prisma.lead.groupBy({ by: ["stage"], _count: { id: true } }),
-    prisma.lead.count(),
-    prisma.lead.count({ where: { stage: "WON" } }),
-    prisma.lead.count({ where: { stage: "LOST" } }),
+    prisma.lead.groupBy({ by: ["stage"], where: { tenantId }, _count: { id: true } }),
+    prisma.lead.count({ where: { tenantId } }),
+    prisma.lead.count({ where: { stage: "WON", tenantId } }),
+    prisma.lead.count({ where: { stage: "LOST", tenantId } }),
   ]);
 
   const countMap = Object.fromEntries(byStage.map((r) => [r.stage, r._count.id]));
