@@ -31,7 +31,7 @@ export async function GET() {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
 
-  const config = await getMessagingIntegrations();
+  const config = await getMessagingIntegrations(auth.tenantId);
   return NextResponse.json({
     ...config,
     gmailSmtpPass: config.gmailSmtpPass ? "••••••••" : "",
@@ -48,7 +48,7 @@ export async function PATCH(req: Request) {
   try {
     const body = await req.json();
     const data = schema.parse(body);
-    const current = await getMessagingIntegrations();
+    const current = await getMessagingIntegrations(auth.tenantId);
 
     await saveMessagingIntegrations({
       ...data,
@@ -68,7 +68,7 @@ export async function PATCH(req: Request) {
         data.gmailSmtpPass && data.gmailSmtpPass !== "••••••••"
           ? data.gmailSmtpPass
           : current.gmailSmtpPass,
-    });
+    }, auth.tenantId);
 
     return NextResponse.json({ ok: true });
   } catch (e) {

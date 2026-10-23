@@ -83,7 +83,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Message body template is required." }, { status: 400 });
     }
 
-    const config = await getMessagingIntegrations();
+    const config = await getMessagingIntegrations(auth.tenantId);
     const results: { name: string; phone: string; email: string; status: string; log: string }[] = [];
 
     // Process in sequential order

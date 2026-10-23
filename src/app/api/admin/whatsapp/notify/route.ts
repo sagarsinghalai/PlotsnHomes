@@ -62,7 +62,7 @@ export async function POST(req: Request) {
 
   // Single/test send.
   if (phone) {
-    const result = await sendCentralWhatsApp(phone, message);
+    const result = await sendCentralWhatsApp(phone, message, auth.tenantId);
     return NextResponse.json(
       { ok: result.ok, mode: "single", result },
       { status: result.ok ? 200 : 400 },

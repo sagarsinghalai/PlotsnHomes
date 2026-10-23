@@ -9,7 +9,7 @@ import { getWhatsAppConfig } from "@/lib/whatsapp-settings";
 export async function GET() {
   const auth = await requireCrmApi();
   if (auth.error) return auth.error;
-  const cfg = await getWhatsAppConfig();
+  const cfg = await getWhatsAppConfig(auth.tenantId);
   return NextResponse.json({ apiConfigured: !!(cfg.accessToken && cfg.phoneNumberId) });
 }
 
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   const auth = await requireCrmApi();
   if (auth.error) return auth.error;
 
-  const cfg = await getWhatsAppConfig();
+  const cfg = await getWhatsAppConfig(auth.tenantId);
   const token = cfg.accessToken;
   const phoneId = cfg.phoneNumberId;
   const version = cfg.apiVersion || "v20.0";

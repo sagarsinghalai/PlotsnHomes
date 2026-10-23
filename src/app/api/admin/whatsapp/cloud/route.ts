@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
   // Fall back to already-saved credentials when a field is left blank (e.g. the
   // token was masked in the UI and the admin only edited the phone number ID).
-  const current = await getMessagingIntegrations();
+  const current = await getMessagingIntegrations(auth.tenantId);
   const token = parsed.data.token?.trim() || current.whatsappApiToken;
   const phoneNumberId = parsed.data.phoneNumberId?.trim() || current.whatsappPhoneNumberId;
 
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const info = await connectWhatsAppCloud(token, phoneNumberId);
+    const info = await connectWhatsAppCloud(token, phoneNumberId, auth.tenantId);
     return NextResponse.json({ ok: true, info });
   } catch (e) {
     return NextResponse.json(
@@ -60,6 +60,6 @@ export async function GET() {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
 
-  const info = await getWhatsAppCloudInfo();
+  const info = await getWhatsAppCloudInfo(auth.tenantId);
   return NextResponse.json(info);
 }

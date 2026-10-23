@@ -9,6 +9,6 @@ export async function GET() {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
 
-  const status = await getCentralStatus();
+  const status = await getCentralStatus(auth.tenantId);
   return NextResponse.json(status);
 }

@@ -30,6 +30,8 @@ const { getWhatsAppConfig, saveWhatsAppConfig, resolveTenantByPhoneNumberId } = 
 const { getBotConfig, saveBotConfig, DEFAULT_BOT_CONFIG } = await import("@/lib/whatsapp-bot");
 const { getChannel, saveLeadChannels, getLeadChannels, resolveTenantByChannelSecret } = await import("@/lib/lead-channels");
 const { getCrmSettings, saveCrmSettings } = await import("@/lib/crm-settings");
+const { getMessagingIntegrations, saveMessagingIntegrations } = await import("@/lib/messaging-settings");
+const { getCentralMethod, setCentralMethod } = await import("@/lib/whatsapp-central");
 
 let pass = 0, fail = 0;
 const queue: Array<[string, () => void | Promise<void>]> = [];
@@ -128,6 +130,22 @@ test("each tenant has its own campaign/message templates", async () => {
   assert.equal(a.messageTemplates[0]?.id, "a1");
   assert.equal(b.messageTemplates[0]?.id, "b1");
   assert.notDeepEqual(a.messageTemplates, b.messageTemplates, "templates must differ per tenant");
+});
+
+test("outbound central sends: messaging integrations & method are per-tenant", async () => {
+  await saveMessagingIntegrations({ whatsappMode: "api", whatsappApiToken: "tokA", whatsappPhoneNumberId: "pnA" }, orgAId);
+  await saveMessagingIntegrations({ whatsappMode: "api", whatsappApiToken: "tokB", whatsappPhoneNumberId: "pnB" }, orgBId);
+  const a = await getMessagingIntegrations(orgAId);
+  const b = await getMessagingIntegrations(orgBId);
+  assert.equal(a.whatsappApiToken, "tokA", "A's send token is its own");
+  assert.equal(a.whatsappPhoneNumberId, "pnA");
+  assert.equal(b.whatsappApiToken, "tokB");
+  assert.notEqual(a.whatsappPhoneNumberId, b.whatsappPhoneNumberId, "send numbers differ per tenant");
+
+  await setCentralMethod("web", orgAId);
+  await setCentralMethod("cloud", orgBId);
+  assert.equal(await getCentralMethod(orgAId), "web");
+  assert.equal(await getCentralMethod(orgBId), "cloud");
 });
 
 try {

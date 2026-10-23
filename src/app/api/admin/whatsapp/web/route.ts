@@ -38,7 +38,7 @@ export async function POST(req: Request) {
   try {
     if (parsed.data.action === "connect") {
       const status = await startWhatsAppWeb();
-      await setCentralMethod("web");
+      await setCentralMethod("web", auth.tenantId);
       return NextResponse.json({ ok: true, status });
     }
     const status = await stopWhatsAppWeb();

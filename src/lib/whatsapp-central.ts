@@ -8,7 +8,7 @@ import {
   saveMessagingIntegrations,
   whatsAppWebUrl,
 } from "@/lib/messaging-settings";
-import { getSetting, setSetting } from "@/lib/system-settings";
+import { getSetting, setSetting, getTenantSetting, setTenantSetting } from "@/lib/system-settings";
 import { getWhatsAppWebStatus, sendViaWhatsAppWeb } from "@/lib/whatsapp-web-session";
 
 /**
@@ -92,7 +92,7 @@ export async function verifyWhatsAppCloud(token: string, phoneNumberId: string) 
 /**
  * Verify + persist a Cloud API connection and make it the active central method.
  */
-export async function connectWhatsAppCloud(token: string, phoneNumberId: string) {
+export async function connectWhatsAppCloud(token: string, phoneNumberId: string, tenantId?: string | null) {
   const info = await verifyWhatsAppCloud(token, phoneNumberId);
 
   await saveMessagingIntegrations({
@@ -100,26 +100,26 @@ export async function connectWhatsAppCloud(token: string, phoneNumberId: string)
     whatsappApiToken: token,
     whatsappPhoneNumberId: phoneNumberId,
     whatsappFromNumber: info.displayNumber || undefined,
-  });
+  }, tenantId);
 
   await Promise.all([
-    setSetting(CENTRAL_KEYS.METHOD, "cloud"),
-    setSetting(CENTRAL_KEYS.CLOUD_VERIFIED_NAME, info.verifiedName),
-    setSetting(CENTRAL_KEYS.CLOUD_DISPLAY_NUMBER, info.displayNumber),
-    setSetting(CENTRAL_KEYS.CLOUD_QUALITY, info.qualityRating),
-    setSetting(CENTRAL_KEYS.CLOUD_CONNECTED_AT, new Date().toISOString()),
+    setTenantSetting(CENTRAL_KEYS.METHOD, "cloud", tenantId),
+    setTenantSetting(CENTRAL_KEYS.CLOUD_VERIFIED_NAME, info.verifiedName, tenantId),
+    setTenantSetting(CENTRAL_KEYS.CLOUD_DISPLAY_NUMBER, info.displayNumber, tenantId),
+    setTenantSetting(CENTRAL_KEYS.CLOUD_QUALITY, info.qualityRating, tenantId),
+    setTenantSetting(CENTRAL_KEYS.CLOUD_CONNECTED_AT, new Date().toISOString(), tenantId),
   ]);
 
   return info;
 }
 
-export async function getWhatsAppCloudInfo(): Promise<WhatsAppCloudInfo> {
-  const config = await getMessagingIntegrations();
+export async function getWhatsAppCloudInfo(tenantId?: string | null): Promise<WhatsAppCloudInfo> {
+  const config = await getMessagingIntegrations(tenantId);
   const [verifiedName, displayNumber, qualityRating, connectedAt] = await Promise.all([
-    getSetting(CENTRAL_KEYS.CLOUD_VERIFIED_NAME),
-    getSetting(CENTRAL_KEYS.CLOUD_DISPLAY_NUMBER),
-    getSetting(CENTRAL_KEYS.CLOUD_QUALITY),
-    getSetting(CENTRAL_KEYS.CLOUD_CONNECTED_AT),
+    getTenantSetting(CENTRAL_KEYS.CLOUD_VERIFIED_NAME, tenantId),
+    getTenantSetting(CENTRAL_KEYS.CLOUD_DISPLAY_NUMBER, tenantId),
+    getTenantSetting(CENTRAL_KEYS.CLOUD_QUALITY, tenantId),
+    getTenantSetting(CENTRAL_KEYS.CLOUD_CONNECTED_AT, tenantId),
   ]);
 
   return {
@@ -131,12 +131,12 @@ export async function getWhatsAppCloudInfo(): Promise<WhatsAppCloudInfo> {
   };
 }
 
-export async function getCentralMethod(): Promise<CentralMethod> {
-  return (await getSetting(CENTRAL_KEYS.METHOD)) as CentralMethod;
+export async function getCentralMethod(tenantId?: string | null): Promise<CentralMethod> {
+  return (await getTenantSetting(CENTRAL_KEYS.METHOD, tenantId)) as CentralMethod;
 }
 
-export async function setCentralMethod(method: CentralMethod) {
-  await setSetting(CENTRAL_KEYS.METHOD, method);
+export async function setCentralMethod(method: CentralMethod, tenantId?: string | null) {
+  await setTenantSetting(CENTRAL_KEYS.METHOD, method, tenantId);
 }
 
 export type CentralStatus = {
@@ -147,8 +147,8 @@ export type CentralStatus = {
   ready: boolean;
 };
 
-export async function getCentralStatus(): Promise<CentralStatus> {
-  const [activeMethod, cloud] = await Promise.all([getCentralMethod(), getWhatsAppCloudInfo()]);
+export async function getCentralStatus(tenantId?: string | null): Promise<CentralStatus> {
+  const [activeMethod, cloud] = await Promise.all([getCentralMethod(tenantId), getWhatsAppCloudInfo(tenantId)]);
   const web = getWhatsAppWebStatus();
   const ready = cloud.connected || web.status === "ready";
   return { activeMethod, cloud, web, ready };
@@ -170,12 +170,13 @@ export type CentralSendResult = {
 export async function sendCentralWhatsApp(
   toPhone: string,
   body: string,
+  tenantId?: string | null,
 ): Promise<CentralSendResult> {
   const phone = (toPhone || "").trim();
   if (!phone) return { ok: false, method: "none", error: "No phone number for recipient." };
   if (!body.trim()) return { ok: false, method: "none", error: "Message body is empty." };
 
-  const [activeMethod, config] = await Promise.all([getCentralMethod(), getMessagingIntegrations()]);
+  const [activeMethod, config] = await Promise.all([getCentralMethod(tenantId), getMessagingIntegrations(tenantId)]);
   const cloudReady = Boolean(config.whatsappApiToken && config.whatsappPhoneNumberId);
   const webReady = getWhatsAppWebStatus().status === "ready";
 
@@ -285,7 +286,7 @@ export async function broadcastToRecipients(
   const senderTenant = await resolveTenantForOwnerOrProperty(sentById);
   for (const r of recipients) {
     const personalized = personalize(body, { name: r.name });
-    const result = await sendCentralWhatsApp(r.phone, personalized);
+    const result = await sendCentralWhatsApp(r.phone, personalized, senderTenant);
     if (result.ok) {
       sent += 1;
       method = result.method;
@@ -405,7 +406,7 @@ export async function notifyAgentNewLead(leadId: string): Promise<void> {
       budget +
       (lead.notes ? `\nNotes: ${lead.notes.slice(0, 200)}` : "");
 
-    const result = await sendCentralWhatsApp(lead.owner.phone, body);
+    const result = await sendCentralWhatsApp(lead.owner.phone, body, lead.tenantId);
 
     await prisma.messageLog
       .create({

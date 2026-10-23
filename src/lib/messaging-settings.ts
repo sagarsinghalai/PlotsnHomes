@@ -1,5 +1,5 @@
 import { normalizePhoneE164 } from "@/lib/phone-utils";
-import { getSetting, setSetting } from "@/lib/system-settings";
+import { getTenantSetting, setTenantSetting } from "@/lib/system-settings";
 
 export const INTEGRATION_KEYS = {
   WHATSAPP_MODE: "whatsapp_mode",
@@ -43,9 +43,9 @@ export type MessagingIntegrations = {
   companyName: string;
 };
 
-export async function getMessagingIntegrations(): Promise<MessagingIntegrations> {
+export async function getMessagingIntegrations(tenantId?: string | null): Promise<MessagingIntegrations> {
   const keys = Object.values(INTEGRATION_KEYS);
-  const values = await Promise.all(keys.map((k) => getSetting(k)));
+  const values = await Promise.all(keys.map((k) => getTenantSetting(k, tenantId)));
   const map = Object.fromEntries(keys.map((k, i) => [k, values[i] ?? ""]));
 
   return {
@@ -70,7 +70,7 @@ export async function getMessagingIntegrations(): Promise<MessagingIntegrations>
   };
 }
 
-export async function saveMessagingIntegrations(data: Partial<MessagingIntegrations>) {
+export async function saveMessagingIntegrations(data: Partial<MessagingIntegrations>, tenantId?: string | null) {
   const entries: [string, string][] = [];
   if (data.whatsappMode !== undefined)
     entries.push([INTEGRATION_KEYS.WHATSAPP_MODE, data.whatsappMode]);
@@ -109,7 +109,7 @@ export async function saveMessagingIntegrations(data: Partial<MessagingIntegrati
   if (data.companyName !== undefined)
     entries.push([INTEGRATION_KEYS.COMPANY_NAME, data.companyName]);
 
-  await Promise.all(entries.map(([k, v]) => setSetting(k, v)));
+  await Promise.all(entries.map(([k, v]) => setTenantSetting(k, v, tenantId)));
 }
 
 export function normalizePhone(phone: string): string {

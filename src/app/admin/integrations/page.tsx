@@ -2,9 +2,13 @@ import { IntegrationsForm } from "@/components/admin/integrations-form";
 import { EmailSendersManager } from "@/components/admin/email-senders-manager";
 import { getCrmSettings } from "@/lib/crm-settings";
 import { getMessagingIntegrations } from "@/lib/messaging-settings";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 export default async function AdminIntegrationsPage() {
-  const [config, crm] = await Promise.all([getMessagingIntegrations(), getCrmSettings()]);
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  const [config, crm] = await Promise.all([getMessagingIntegrations(tenantId), getCrmSettings(tenantId)]);
   const whatsappTemplates = crm.messageTemplates
     .filter((t) => t.channel === "whatsapp")
     .map((t) => ({ id: t.id, name: t.name, body: t.body }));

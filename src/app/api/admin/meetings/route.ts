@@ -41,7 +41,7 @@ export async function POST(req: Request) {
 
   try {
     const data = createSchema.parse(await req.json());
-    const config = await getMessagingIntegrations();
+    const config = await getMessagingIntegrations(auth.tenantId);
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001";
 
     let user = await prisma.user.findUnique({ where: { id: data.userId } });

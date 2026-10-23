@@ -76,7 +76,7 @@ export async function POST(req: Request) {
     });
 
     // Notify the admin via email about this incoming message
-    const integrations = await getMessagingIntegrations();
+    const integrations = await getMessagingIntegrations(auth.tenantId);
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001";
     const emailSubject = `[BrickVest Alert] New ${channel.toUpperCase()} message from ${sender.name}`;
     const emailHtml = `

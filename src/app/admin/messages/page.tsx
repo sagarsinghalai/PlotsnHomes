@@ -15,26 +15,29 @@ export default async function AdminMessagesPage({
 }) {
   const session = await getServerSession(authOptions);
   const currentUserId = session?.user?.id ?? "";
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
 
   const [dbUsers, dbLeads, dbDevelopers, config, defaultCountry, crmSettings, properties] = await Promise.all([
     prisma.user.findMany({
-      where: { role: { in: ["BUYER", "SELLER", "DEMO", "AGENT"] } },
+      where: { role: { in: ["BUYER", "SELLER", "DEMO", "AGENT"] }, tenantId },
       orderBy: { name: "asc" },
       select: { id: true, userId: true, name: true, email: true, phone: true, role: true, country: true },
     }),
     prisma.lead.findMany({
+      where: { tenantId },
       orderBy: { name: "asc" },
       select: { id: true, name: true, email: true, phone: true },
     }),
     prisma.developer.findMany({
+      where: { tenantId },
       orderBy: { name: "asc" },
       select: { id: true, name: true, email: true, phone: true, country: true },
     }),
-    getMessagingIntegrations(),
+    getMessagingIntegrations(tenantId),
     getCompanyCountry(),
-    getCrmSettings(),
+    getCrmSettings(tenantId),
     prisma.property.findMany({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       orderBy: { title: "asc" },
       select: { id: true, title: true, symbol: true },
     }),
