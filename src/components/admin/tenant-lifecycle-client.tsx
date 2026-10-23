@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Building2, Search, ShieldAlert, Play, Pause, Ban, AlertTriangle } from "lucide-react";
+import { Loader2, Building2, Search, ShieldAlert, Play, Pause, Ban, AlertTriangle, CalendarClock, Clock } from "lucide-react";
 
 type Org = {
   id: string;
@@ -10,6 +10,8 @@ type Org = {
   status: string;
   domain: string | null;
   createdAt: string;
+  subscriptionEndsAt: string | null;
+  planId: string | null;
   whiteLabelAdmin: { id: string; name: string; email: string } | null;
   _count: { users: number; franchises: number };
 };
@@ -60,6 +62,11 @@ export function TenantLifecycleClient() {
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState("");
   const [confirm, setConfirm] = useState<{ org: Org; to: string } | null>(null);
+  const [grantFor, setGrantFor] = useState<Org | null>(null);
+  const [grantBusy, setGrantBusy] = useState(false);
+  const [grantAmt, setGrantAmt] = useState(30);
+  const [grantUnit, setGrantUnit] = useState<"minutes" | "hours" | "days">("days");
+  const [grantExtend, setGrantExtend] = useState(true);
 
   async function load() {
     setLoading(true);
@@ -109,6 +116,35 @@ export function TenantLifecycleClient() {
     else transition(org, to);
   }
 
+  async function grant(mode: "renew" | "grant") {
+    if (!grantFor) return;
+    setGrantBusy(true);
+    setError("");
+    try {
+      const minutes = grantUnit === "minutes" ? grantAmt : grantUnit === "hours" ? grantAmt * 60 : grantAmt * 1440;
+      const res = await fetch("/api/admin/platform/tenants/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(mode === "renew" ? { orgId: grantFor.id, mode: "renew" } : { orgId: grantFor.id, mode: "grant", minutes, extend: grantExtend }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || "Could not update subscription");
+      setOrgs((prev) => prev.map((o) => (o.id === grantFor.id ? { ...o, status: "ACTIVE", subscriptionEndsAt: data.endsAt } : o)));
+      setGrantFor(null);
+    } catch (e: any) {
+      setError(e.message || "Could not update subscription");
+    } finally {
+      setGrantBusy(false);
+    }
+  }
+
+  function endsLabel(o: Org): { text: string; tone: string } {
+    if (!o.subscriptionEndsAt) return { text: "No expiry", tone: "text-slate-500" };
+    const end = new Date(o.subscriptionEndsAt);
+    const lapsed = end.getTime() <= Date.now();
+    return { text: `${lapsed ? "Lapsed " : "Ends "}${end.toLocaleString()}`, tone: lapsed ? "text-rose-600" : "text-slate-600" };
+  }
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
@@ -147,6 +183,7 @@ export function TenantLifecycleClient() {
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Users</th>
                 <th className="px-4 py-3">Admin</th>
+                <th className="px-4 py-3">Subscription</th>
                 <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
@@ -172,33 +209,46 @@ export function TenantLifecycleClient() {
                       ) : <span className="text-slate-400">—</span>}
                     </td>
                     <td className="px-4 py-3">
+                      <span className={`inline-flex items-center gap-1 text-xs ${endsLabel(o).tone}`}>
+                        <CalendarClock className="h-3.5 w-3.5" /> {endsLabel(o).text}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
                         {busyId === o.id ? (
                           <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                        ) : options.length === 0 ? (
-                          <span className="text-xs text-slate-400">No actions</span>
-                        ) : options.map((to) => {
-                          const Icon = ACTION_ICON[to] || Play;
-                          const danger = DESTRUCTIVE.has(to);
-                          return (
+                        ) : (
+                          <>
+                            {options.map((to) => {
+                              const Icon = ACTION_ICON[to] || Play;
+                              const danger = DESTRUCTIVE.has(to);
+                              return (
+                                <button
+                                  key={to}
+                                  onClick={() => onAction(o, to)}
+                                  className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium ${
+                                    danger ? "bg-rose-50 text-rose-700 hover:bg-rose-100" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                  }`}
+                                >
+                                  <Icon className="h-3.5 w-3.5" /> {LABELS[to]}
+                                </button>
+                              );
+                            })}
                             <button
-                              key={to}
-                              onClick={() => onAction(o, to)}
-                              className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium ${
-                                danger ? "bg-rose-50 text-rose-700 hover:bg-rose-100" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                              }`}
+                              onClick={() => { setGrantFor(o); setError(""); }}
+                              className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
                             >
-                              <Icon className="h-3.5 w-3.5" /> {LABELS[to]}
+                              <Clock className="h-3.5 w-3.5" /> Grant / extend
                             </button>
-                          );
-                        })}
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">No tenants match your search.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">No tenants match your search.</td></tr>
               )}
             </tbody>
           </table>
@@ -225,6 +275,62 @@ export function TenantLifecycleClient() {
                 className="inline-flex items-center gap-1 rounded-md bg-rose-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-rose-700"
               >
                 {LABELS[confirm.to]}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {grantFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => !grantBusy && setGrantFor(null)}>
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+              <Clock className="h-5 w-5 text-indigo-600" /> Grant / extend “{grantFor.name}”
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">{endsLabel(grantFor).text}. Granting reactivates the tenant.</p>
+
+            {grantFor.planId && (
+              <button
+                onClick={() => grant("renew")}
+                disabled={grantBusy}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-60"
+              >
+                <CalendarClock className="h-4 w-4" /> Renew a fresh term from the current plan
+              </button>
+            )}
+
+            <div className="mt-4 rounded-lg border border-slate-200 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Manual grant</p>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="number" min={1} value={grantAmt}
+                  onChange={(e) => setGrantAmt(Math.max(1, Number(e.target.value) || 1))}
+                  className="w-24 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                <select
+                  value={grantUnit}
+                  onChange={(e) => setGrantUnit(e.target.value as any)}
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                >
+                  <option value="minutes">minutes</option>
+                  <option value="hours">hours</option>
+                  <option value="days">days</option>
+                </select>
+              </div>
+              <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
+                <input type="checkbox" checked={grantExtend} onChange={(e) => setGrantExtend(e.target.checked)} />
+                Add on top of the current term (if still active)
+              </label>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => !grantBusy && setGrantFor(null)} className="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100">Cancel</button>
+              <button
+                onClick={() => grant("grant")}
+                disabled={grantBusy}
+                className="inline-flex items-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+              >
+                {grantBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Clock className="h-4 w-4" />} Grant {grantAmt} {grantUnit}
               </button>
             </div>
           </div>

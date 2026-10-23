@@ -23,6 +23,8 @@ export async function GET() {
           status: true,
           domain: true,
           createdAt: true,
+          subscriptionEndsAt: true,
+          planId: true,
           whiteLabelAdmin: { select: { id: true, name: true, email: true } },
           _count: { select: { users: true, franchises: true } },
         },

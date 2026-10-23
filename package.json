@@ -12,7 +12,7 @@
     "schema:mysql": "node scripts/generate-mysql-schema.mjs",
     "build:hostinger": "node scripts/generate-mysql-schema.mjs && prisma generate --schema prisma/schema.mysql.prisma && prisma db push --schema prisma/schema.mysql.prisma && next build",
     "lint": "next lint",
-    "test": "tsx tests/lead-channels-security.test.mts && tsx tests/tenant-isolation.test.mts && tsx tests/tenant-settings.test.mts && tsx tests/tenant-lifecycle.test.mts && tsx tests/public-tenant.test.mts && tsx tests/signup-provision.test.mts && tsx tests/user-management.test.mts && tsx tests/cron-sweep.test.mts && tsx tests/security-gate.test.mts",
+    "test": "tsx tests/lead-channels-security.test.mts && tsx tests/tenant-isolation.test.mts && tsx tests/tenant-settings.test.mts && tsx tests/tenant-lifecycle.test.mts && tsx tests/public-tenant.test.mts && tsx tests/signup-provision.test.mts && tsx tests/user-management.test.mts && tsx tests/cron-sweep.test.mts && tsx tests/subscription-grant.test.mts && tsx tests/security-gate.test.mts",
     "db:push": "prisma db push",
     "db:seed": "prisma db push && tsx prisma/seed.ts",
     "db:studio": "prisma studio",
