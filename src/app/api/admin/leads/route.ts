@@ -117,6 +117,7 @@ export async function POST(req: Request) {
 
     await prisma.leadActivity.create({
       data: {
+        tenantId: auth.tenantId,
         leadId: lead.id,
         userId: auth.session.user.id,
         type: "CREATED",

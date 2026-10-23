@@ -4,17 +4,25 @@ import { SMART_LISTS, type SmartListId } from "@/lib/smart-list-defs";
 
 export { SMART_LISTS, type SmartListId };
 
-export async function countSmartList(listId: SmartListId, ownerId?: string): Promise<number> {
-  const where = await smartListWhere(listId, ownerId);
+export async function countSmartList(
+  listId: SmartListId,
+  ownerId?: string,
+  tenantId?: string | null
+): Promise<number> {
+  const where = await smartListWhere(listId, ownerId, tenantId);
   return prisma.lead.count({ where });
 }
 
 export async function smartListWhere(
   listId: SmartListId,
-  ownerId?: string
+  ownerId?: string,
+  tenantId?: string | null
 ): Promise<Prisma.LeadWhereInput> {
   const now = new Date();
-  const base: Prisma.LeadWhereInput = ownerId ? { ownerId } : {};
+  const base: Prisma.LeadWhereInput = {
+    ...(tenantId !== undefined ? { tenantId: tenantId || "__no_tenant__" } : {}),
+    ...(ownerId ? { ownerId } : {}),
+  };
 
   switch (listId) {
     case "new_enquiries":

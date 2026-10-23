@@ -44,6 +44,7 @@ async function main() {
     where: { code: "FR-NORTH-01" },
     update: {},
     create: {
+      tenantId: org.id,
       name: "North Region Franchise",
       code: "FR-NORTH-01",
       organizationId: org.id,
@@ -56,6 +57,7 @@ async function main() {
     where: { code: "BR-DEL-CENTRAL" },
     update: {},
     create: {
+      tenantId: org.id,
       name: "Delhi Central Branch",
       code: "BR-DEL-CENTRAL",
       franchiseId: franchise.id,
@@ -68,6 +70,7 @@ async function main() {
     where: { code: "DEPT-SALES-CRM" },
     update: {},
     create: {
+      tenantId: org.id,
       name: "Sales & CRM Department",
       code: "DEPT-SALES-CRM",
       branchId: branch.id,
@@ -79,6 +82,7 @@ async function main() {
     where: { code: "TEAM-ALPHA" },
     update: {},
     create: {
+      tenantId: org.id,
       name: "Alpha Sales Team",
       code: "TEAM-ALPHA",
       departmentId: dept.id,

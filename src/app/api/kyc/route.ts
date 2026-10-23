@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
+import { getPrimaryTenantId } from "@/lib/tenant";
 import { validateFullName, validateNationality, validateIdNumber } from "@/lib/kyc-validation";
 
 const schema = z.object({
@@ -82,7 +83,7 @@ export async function POST(req: Request) {
 
     const kyc = await prisma.kycProfile.upsert({
       where:  { userId: session.user.id },
-      create: { userId: session.user.id, ...data },
+      create: { tenantId: session.user.tenantId ?? (await getPrimaryTenantId()), userId: session.user.id, ...data },
       update: { ...data, status: "PENDING" },
     });
     return NextResponse.json({ ok: true, kyc });

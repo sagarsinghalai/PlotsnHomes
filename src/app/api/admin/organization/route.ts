@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/roles";
 import { getFieldPrivacyConfig, saveFieldPrivacyConfig, FieldPrivacyMatrix } from "@/lib/field-privacy";
+import { getPrimaryTenantId } from "@/lib/tenant";
 
 export async function GET() {
   try {
@@ -89,13 +90,14 @@ export async function POST(req: Request) {
       const { id, name, code, organizationId, franchiseAdminId, location, status } = data;
       if (!name || !code) return NextResponse.json({ error: "Franchise Name and Code are required" }, { status: 400 });
       
+      const franchiseTenant = organizationId || (await getPrimaryTenantId());
       const franchise = id
         ? await prisma.franchise.update({
             where: { id },
             data: { name, code, organizationId: organizationId || null, franchiseAdminId: franchiseAdminId || null, location: location || null, status: status || "ACTIVE" },
           })
         : await prisma.franchise.create({
-            data: { name, code, organizationId: organizationId || null, franchiseAdminId: franchiseAdminId || null, location: location || null, status: status || "ACTIVE" },
+            data: { tenantId: franchiseTenant, name, code, organizationId: organizationId || null, franchiseAdminId: franchiseAdminId || null, location: location || null, status: status || "ACTIVE" },
           });
 
       if (franchiseAdminId) {
@@ -108,13 +110,17 @@ export async function POST(req: Request) {
       const { id, name, code, franchiseId, branchManagerId, city, status } = data;
       if (!name || !code) return NextResponse.json({ error: "Branch Name and Code are required" }, { status: 400 });
 
+      const branchTenant =
+        (franchiseId
+          ? (await prisma.franchise.findUnique({ where: { id: franchiseId }, select: { tenantId: true } }))?.tenantId
+          : null) || (await getPrimaryTenantId());
       const branch = id
         ? await prisma.branch.update({
             where: { id },
             data: { name, code, franchiseId: franchiseId || null, branchManagerId: branchManagerId || null, city: city || null, status: status || "ACTIVE" },
           })
         : await prisma.branch.create({
-            data: { name, code, franchiseId: franchiseId || null, branchManagerId: branchManagerId || null, city: city || null, status: status || "ACTIVE" },
+            data: { tenantId: branchTenant, name, code, franchiseId: franchiseId || null, branchManagerId: branchManagerId || null, city: city || null, status: status || "ACTIVE" },
           });
 
       if (branchManagerId) {
@@ -127,13 +133,17 @@ export async function POST(req: Request) {
       const { id, name, code, branchId, departmentHeadId, status } = data;
       if (!name || !code) return NextResponse.json({ error: "Department Name and Code are required" }, { status: 400 });
 
+      const deptTenant =
+        (branchId
+          ? (await prisma.branch.findUnique({ where: { id: branchId }, select: { tenantId: true } }))?.tenantId
+          : null) || (await getPrimaryTenantId());
       const department = id
         ? await prisma.department.update({
             where: { id },
             data: { name, code, branchId: branchId || null, departmentHeadId: departmentHeadId || null, status: status || "ACTIVE" },
           })
         : await prisma.department.create({
-            data: { name, code, branchId: branchId || null, departmentHeadId: departmentHeadId || null, status: status || "ACTIVE" },
+            data: { tenantId: deptTenant, name, code, branchId: branchId || null, departmentHeadId: departmentHeadId || null, status: status || "ACTIVE" },
           });
 
       if (departmentHeadId) {
@@ -146,13 +156,17 @@ export async function POST(req: Request) {
       const { id, name, code, departmentId, teamLeaderId, status } = data;
       if (!name || !code) return NextResponse.json({ error: "Team Name and Code are required" }, { status: 400 });
 
+      const teamTenant =
+        (departmentId
+          ? (await prisma.department.findUnique({ where: { id: departmentId }, select: { tenantId: true } }))?.tenantId
+          : null) || (await getPrimaryTenantId());
       const team = id
         ? await prisma.team.update({
             where: { id },
             data: { name, code, departmentId: departmentId || null, teamLeaderId: teamLeaderId || null, status: status || "ACTIVE" },
           })
         : await prisma.team.create({
-            data: { name, code, departmentId: departmentId || null, teamLeaderId: teamLeaderId || null, status: status || "ACTIVE" },
+            data: { tenantId: teamTenant, name, code, departmentId: departmentId || null, teamLeaderId: teamLeaderId || null, status: status || "ACTIVE" },
           });
 
       if (teamLeaderId) {

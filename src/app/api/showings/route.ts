@@ -32,6 +32,7 @@ export async function POST(req: Request) {
 
     const showing = await prisma.propertyShowing.create({
       data: {
+        tenantId: property.tenantId,
         propertyId: data.propertyId,
         userId: session?.user?.id,
         name: data.name,

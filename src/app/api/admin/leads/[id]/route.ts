@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { leadScopeForUser, requireCrmApi } from "@/lib/crm-access";
 import { prisma } from "@/lib/prisma";
+import { noTenantResponse } from "@/lib/data-access";
 import { calculateLeadScore, refreshLeadScore } from "@/lib/lead-scoring";
 
 const patchSchema = z.object({
@@ -41,6 +42,7 @@ async function getLeadIfAllowed(id: string, auth: NonNullable<Awaited<ReturnType
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const auth = await requireCrmApi();
   if (auth.error) return auth.error;
+  if (!auth.tenantId) return noTenantResponse();
   try {
     const existing = await getLeadIfAllowed(params.id, auth);
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -97,6 +99,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (data.stage !== undefined) {
       await prisma.leadActivity.create({
         data: {
+          tenantId: auth.tenantId,
           leadId: params.id,
           userId: auth.session.user.id,
           type: "STAGE",
@@ -118,6 +121,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const auth = await requireCrmApi();
   if (auth.error) return auth.error;
+  if (!auth.tenantId) return noTenantResponse();
   try {
     const existing = await getLeadIfAllowed(params.id, auth);
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -130,6 +134,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       const activityType = data.action === "call" ? "CALL" : data.action === "meeting" ? "MEETING" : data.action === "email" ? "EMAIL" : "NOTE";
       const activity = await prisma.leadActivity.create({
         data: {
+          tenantId: auth.tenantId,
           leadId: params.id,
           userId: auth.session.user.id,
           type: activityType,
@@ -145,6 +150,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
     const task = await prisma.leadTask.create({
       data: {
+        tenantId: auth.tenantId,
         leadId: params.id,
         userId: auth.session.user.id,
         title: data.title.trim(),

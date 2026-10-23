@@ -53,6 +53,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
 
     await prisma.leadActivity.create({
       data: {
+        tenantId: auth.tenantId,
         leadId: lead.id,
         userId: auth.session.user.id,
         type: "CONVERTED",

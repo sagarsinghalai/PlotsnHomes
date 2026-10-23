@@ -200,7 +200,7 @@ model User {
 // HubSpot-style CRM activity timeline attached to a User (contact):
 // notes, emails, calls, tasks and meetings.
 model UserActivity {
-  tenantId      String?
+  tenantId      String
   id           String   @id @default(cuid())
   contactId    String
   contact      User     @relation("ContactActivities", fields: [contactId], references: [id], onDelete: Cascade)
@@ -247,7 +247,7 @@ model ActivityComment {
 }
 
 model Property {
-  tenantId      String?
+  tenantId      String
   id                 String         @id @default(cuid())
   symbol             String         @unique
   title              String
@@ -348,7 +348,7 @@ model Property {
 }
 
 model Lead {
-  tenantId      String?
+  tenantId      String
   id            String      @id @default(cuid())
   name          String
   email         String      @default("")
@@ -389,7 +389,7 @@ model Lead {
 }
 
 model LeadActivity {
-  tenantId      String?
+  tenantId      String
   id        String   @id @default(cuid())
   leadId     String
   lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
@@ -402,7 +402,7 @@ model LeadActivity {
 }
 
 model LeadTask {
-  tenantId      String?
+  tenantId      String
   id          String   @id @default(cuid())
   leadId      String
   lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
@@ -416,7 +416,7 @@ model LeadTask {
 }
 
 model Transaction {
-  tenantId      String?
+  tenantId      String
   id              String            @id @default(cuid())
   userId          String
   user            User              @relation(fields: [userId], references: [id])
@@ -454,7 +454,7 @@ model Transaction {
 }
 
 model Inquiry {
-  tenantId      String?
+  tenantId      String
   id         String    @id @default(cuid())
   propertyId String
   property   Property  @relation(fields: [propertyId], references: [id])
@@ -481,7 +481,7 @@ model Favorite {
 }
 
 model EmailLog {
-  tenantId      String?
+  tenantId      String
   id        String   @id @default(cuid())
   to        String
   subject   String
@@ -500,7 +500,7 @@ model SystemSetting {
 }
 
 model InboundLeadLog {
-  tenantId      String?
+  tenantId      String
   id        String   @id @default(cuid())
   channel   String
   status    String   @default("RECEIVED") // RECEIVED | CREATED | DUPLICATE | IGNORED | ERROR
@@ -529,7 +529,7 @@ model RatingSlab {
 }
 
 model MessageLog {
-  tenantId      String?
+  tenantId      String
   id          String         @id @default(cuid())
   channel     MessageChannel
   recipientId String?
@@ -552,7 +552,7 @@ model MessageLog {
 }
 
 model MeetingInvite {
-  tenantId      String?
+  tenantId      String
   id          String        @id @default(cuid())
   token       String        @unique @default(cuid())
   userId      String
@@ -575,7 +575,7 @@ model MeetingInvite {
 }
 
 model KycProfile {
-  tenantId      String?
+  tenantId      String
   id                  String    @id @default(cuid())
   userId              String    @unique
   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -606,7 +606,7 @@ model KycProfile {
 }
 
 model LoanApplication {
-  tenantId      String?
+  tenantId      String
   id                  String     @id @default(cuid())
   userId              String
   user                User       @relation(fields: [userId], references: [id])
@@ -637,7 +637,7 @@ model LoanApplication {
 }
 
 model PropertyShowing {
-  tenantId      String?
+  tenantId      String
   id         String        @id @default(cuid())
   propertyId String
   property   Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
@@ -658,7 +658,7 @@ model PropertyShowing {
 }
 
 model CrmGoal {
-  tenantId      String?
+  tenantId      String
   id        String   @id @default(cuid())
   title     String
   target    Int
@@ -672,7 +672,7 @@ model CrmGoal {
 }
 
 model BulkJob {
-  tenantId      String?
+  tenantId      String
   id          String   @id @default(cuid())
   type        String
   status      String   @default("PENDING")
@@ -686,7 +686,7 @@ model BulkJob {
 }
 
 model Developer {
-  tenantId      String?
+  tenantId      String
   id              String          @id @default(cuid())
   name            String          @unique
   projectCount    Int             @default(0)
@@ -715,7 +715,7 @@ model Developer {
 }
 
 model Project {
-  tenantId      String?
+  tenantId      String
   id                    String     @id @default(cuid())
   name                  String
   code                  String?
@@ -880,7 +880,7 @@ model DeveloperTask {
 }
 
 model BrokerageInvoice {
-  tenantId      String?
+  tenantId      String
   id              String    @id @default(cuid())
   invoiceNumber   String?   @unique
   bookingId       String?
@@ -970,7 +970,7 @@ enum CommissionStatus {
 }
 
 model AgentCommission {
-  tenantId      String?
+  tenantId      String
   id               String           @id @default(cuid())
   agentId          String
   agent            User             @relation("AgentCommissions", fields: [agentId], references: [id], onDelete: Cascade)
@@ -1044,7 +1044,7 @@ model Organization {
 }
 
 model Franchise {
-  tenantId      String?
+  tenantId      String
   id               String        @id @default(cuid())
   name             String
   code             String        @unique
@@ -1062,7 +1062,7 @@ model Franchise {
 }
 
 model Branch {
-  tenantId      String?
+  tenantId      String
   id              String      @id @default(cuid())
   name            String
   code            String      @unique
@@ -1080,7 +1080,7 @@ model Branch {
 }
 
 model Department {
-  tenantId      String?
+  tenantId      String
   id               String     @id @default(cuid())
   name             String
   code             String     @unique
@@ -1097,7 +1097,7 @@ model Department {
 }
 
 model Team {
-  tenantId      String?
+  tenantId      String
   id           String      @id @default(cuid())
   name         String
   code         String      @unique
@@ -1129,7 +1129,7 @@ model PasswordResetToken {
 // Log of bulk WhatsApp/marketing campaigns: who launched, when, the audience
 // size, success/failed counts, and the per-contact results for download.
 model WhatsAppCampaign {
-  tenantId      String?
+  tenantId      String
   id            String   @id @default(cuid())
   name          String
   templateName  String?

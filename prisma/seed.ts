@@ -140,11 +140,20 @@ async function main() {
     console.log("Seed running in preserve mode (SEED_RESET!=1): existing users/properties will not be deleted.");
   }
 
+  // Primary tenant for all seeded, tenant-owned rows (multi-tenant isolation).
+  const primaryOrg = await prisma.organization.upsert({
+    where: { code: "BRICKVEST" },
+    create: { name: "BrickVest Demo", code: "BRICKVEST" },
+    update: {},
+  });
+  const TENANT_ID = primaryOrg.id;
+
   const passwordHash = await bcrypt.hash("demo1234", 12);
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@brickvest.com" },
     create: {
+      tenantId: TENANT_ID,
       email: "admin@brickvest.com",
       name: "Admin User",
       phone: "+91 98765 40100",
@@ -179,6 +188,7 @@ async function main() {
       prisma.user.upsert({
         where: { email: `agent${i + 1}@brickvest.com` },
         create: {
+          tenantId: TENANT_ID,
           email: `agent${i + 1}@brickvest.com`,
           name,
           phone: agentPhones[i],
@@ -200,6 +210,7 @@ async function main() {
   const investor = await prisma.user.upsert({
     where: { email: "investor@brickvest.com" },
     create: {
+      tenantId: TENANT_ID,
       email: "investor@brickvest.com",
       name: "James Kapoor",
       phone: "+91 98200 34567",
@@ -219,6 +230,7 @@ async function main() {
   await prisma.user.upsert({
     where: { email: "buyer@brickvest.com" },
     create: {
+      tenantId: TENANT_ID,
       email: "buyer@brickvest.com",
       name: "Emily Sharma",
       phone: "+91 97654 32100",
@@ -302,6 +314,7 @@ async function main() {
     const description = descriptionMap[category] ?? `Investment-grade ${category.toLowerCase()} in ${area}, ${loc.city}. Symbol ${symbol} tracks live yield, cap rate, and market performance on the BrickVest exchange.`;
 
       batch.push({
+      tenantId: TENANT_ID,
       symbol,
       title,
       slug,
@@ -385,6 +398,7 @@ async function main() {
   if (firstProperty && (RESET_DB || transactionCount === 0)) {
     await prisma.transaction.create({
       data: {
+        tenantId: firstProperty.tenantId,
         userId: investor.id,
         propertyId: firstProperty.id,
         amount: Math.round(firstProperty.price * 0.1),
@@ -397,6 +411,7 @@ async function main() {
   if (firstProperty && (RESET_DB || inquiryCount === 0)) {
     await prisma.inquiry.create({
         data: {
+          tenantId: firstProperty.tenantId,
           propertyId: firstProperty.id,
           userId: investor.id,
           name: investor.name,
@@ -461,6 +476,7 @@ async function main() {
       const nameIdx = i % leadNames.length;
       const lead = await prisma.lead.create({
         data: {
+          tenantId: TENANT_ID,
           name: leadNames[nameIdx],
           email: leadEmails[nameIdx],
           phone: `+91 9${[8,7,6,9][i % 4]}${String(10000000 + i * 137).slice(-8)}`,
@@ -488,6 +504,7 @@ async function main() {
       ];
       await prisma.leadActivity.create({
         data: {
+          tenantId: TENANT_ID,
           leadId: lead.id,
           userId: owner.id,
           type: ["NOTE", "CALL", "MEETING", "NOTE"][i % 4],
@@ -496,6 +513,7 @@ async function main() {
       });
       await prisma.leadTask.create({
         data: {
+          tenantId: TENANT_ID,
           leadId: lead.id,
           userId: owner.id,
           title: ["Call lead and schedule site visit", "Send payment plan brochure", "Follow up after site visit", "Share EOI form with lead"][i % 4],
@@ -557,7 +575,7 @@ async function main() {
     for (const name of devNames) {
       await prisma.developer.upsert({
         where: { name },
-        create: { name, projectCount: Math.floor(Math.random() * 4) },
+        create: { tenantId: TENANT_ID, name, projectCount: Math.floor(Math.random() * 4) },
         update: {},
       });
     }
@@ -647,6 +665,7 @@ async function main() {
   ) {
     await prisma.brokerageInvoice.create({
       data: {
+        tenantId: TENANT_ID,
         invoiceNumber: `BV-INV-${year}-${String(seq).padStart(5, "0")}`,
         bookingId: data.bookingId,
         bookingName: data.bookingName,
@@ -970,10 +989,10 @@ async function main() {
   const goalCount = await prisma.crmGoal.count();
   if (RESET_DB || goalCount === 0) {
     await prisma.crmGoal.create({
-      data: { title: "Monthly site visits", target: 20, current: 5, period: "monthly", ownerId: admin.id },
+      data: { tenantId: TENANT_ID, title: "Monthly site visits", target: 20, current: 5, period: "monthly", ownerId: admin.id },
     });
     await prisma.crmGoal.create({
-      data: { title: "Leads qualified", target: 50, current: 12, period: "monthly" },
+      data: { tenantId: TENANT_ID, title: "Leads qualified", target: 50, current: 12, period: "monthly" },
     });
   }
 
@@ -992,7 +1011,7 @@ async function main() {
         if (projects.length === 0) {
           for (let i = 0; i < 2; i++) {
             const p = await prisma.project.create({
-              data: { name: `${dev.name} ${suffixes[(di + i) % suffixes.length]}`, developerId: dev.id },
+              data: { tenantId: TENANT_ID, name: `${dev.name} ${suffixes[(di + i) % suffixes.length]}`, developerId: dev.id },
               select: { id: true },
             });
             projects.push(p);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
+import { noTenantResponse } from "@/lib/data-access";
 
 const createSchema = z.object({
   name: z.string().min(2).regex(/^[a-zA-Z\s]+$/, "Name can only contain alphabets and spaces"),
@@ -32,13 +33,14 @@ const createSchema = z.object({
 export async function POST(req: Request) {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
+  if (!auth.tenantId) return noTenantResponse();
 
   try {
     const body = await req.json();
     const data = createSchema.parse(body);
 
-    const exists = await prisma.developer.findUnique({
-      where: { name: data.name },
+    const exists = await prisma.developer.findFirst({
+      where: { name: data.name, tenantId: auth.tenantId },
     });
     if (exists) {
       return NextResponse.json(
@@ -49,6 +51,7 @@ export async function POST(req: Request) {
 
     const developer = await prisma.developer.create({
       data: {
+        tenantId: auth.tenantId,
         name: data.name,
         projectCount: data.projectCount ?? 0,
         email: data.email || null,

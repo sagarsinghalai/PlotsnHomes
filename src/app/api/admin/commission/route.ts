@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
+import { getPrimaryTenantId, resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 
 const updateAgentRateSchema = z.object({
   action: z.literal("UPDATE_AGENT_RATE"),
@@ -57,6 +58,7 @@ export async function GET(req: Request) {
         email: true,
         role: true,
         commissionRate: true,
+        tenantId: true,
       },
     });
 
@@ -64,6 +66,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
+    const agentTenant = agent.tenantId || (await getPrimaryTenantId());
     const defaultAgentRate = agent.commissionRate ?? 3.0;
 
     // Fetch properties assigned to agent
@@ -132,6 +135,7 @@ export async function GET(req: Request) {
 
           const created = await prisma.agentCommission.create({
             data: {
+              tenantId: agentTenant,
               agentId,
               leadId: lead.id,
               propertyId: linkedProp?.id || null,
@@ -163,6 +167,7 @@ export async function GET(req: Request) {
 
           const created = await prisma.agentCommission.create({
             data: {
+              tenantId: agentTenant,
               agentId,
               propertyId: prop.id,
               propertyTitle: prop.title,
@@ -407,8 +412,10 @@ export async function POST(req: Request) {
 
     if (parsed.action === "CREATE_COMMISSION") {
       const commAmount = (parsed.propertyValue * parsed.commissionPct) / 100;
+      const commissionTenant = await resolveTenantForOwnerOrProperty(parsed.agentId, parsed.propertyId || null);
       const created = await prisma.agentCommission.create({
         data: {
+          tenantId: commissionTenant,
           agentId: parsed.agentId,
           propertyId: parsed.propertyId || null,
           leadId: parsed.leadId || null,

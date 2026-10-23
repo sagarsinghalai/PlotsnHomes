@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
+import { getPrimaryTenantId } from "@/lib/tenant";
 import { sendEmail } from "@/lib/email";
 
 export async function GET(req: Request) {
@@ -72,6 +73,7 @@ export async function POST(req: Request) {
     // Create Message Log
     const message = await prisma.messageLog.create({
       data: {
+        tenantId: session.user.tenantId ?? (await getPrimaryTenantId()),
         channel: "PLATFORM",
         sentById: session.user.id,
         recipientId,

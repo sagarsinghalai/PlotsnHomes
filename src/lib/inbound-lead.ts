@@ -4,6 +4,7 @@ import { assignLeadOwner } from "@/lib/lead-routing";
 import { calculateLeadScore } from "@/lib/lead-scoring";
 import { notifyAgentNewLead } from "@/lib/whatsapp-central";
 import { getChannel, type LeadChannelConfig } from "@/lib/lead-channels";
+import { resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 
 const teamRoundRobin: Record<string, number> = {};
 
@@ -52,8 +53,9 @@ export async function createInboundLead(input: InboundLeadInput): Promise<Inboun
 
   async function log(status: string, extra: { leadId?: string; error?: string } = {}) {
     try {
+      const logTenant = await resolveTenantForOwnerOrProperty(null, input.propertyId ?? null);
       await prisma.inboundLeadLog.create({
-        data: { channel, status, name: name || null, phone: phone || null, payload: payloadStr, leadId: extra.leadId ?? null, error: extra.error ?? null },
+        data: { tenantId: logTenant, channel, status, name: name || null, phone: phone || null, payload: payloadStr, leadId: extra.leadId ?? null, error: extra.error ?? null },
       });
     } catch { /* logging must never break ingestion */ }
   }
@@ -91,8 +93,11 @@ export async function createInboundLead(input: InboundLeadInput): Promise<Inboun
       propertyId = prop?.id ?? null;
     }
 
+    const tenantId = await resolveTenantForOwnerOrProperty(ownerId, propertyId);
+
     const lead = await prisma.lead.create({
       data: {
+        tenantId,
         name: name || "Unknown",
         email: (input.email || "").trim().toLowerCase(),
         phone: phone || null,
@@ -108,7 +113,7 @@ export async function createInboundLead(input: InboundLeadInput): Promise<Inboun
     });
 
     await prisma.leadActivity.create({
-      data: { leadId: lead.id, type: "CREATED", message: `New lead received from ${source}.` },
+      data: { tenantId, leadId: lead.id, type: "CREATED", message: `New lead received from ${source}.` },
     });
 
     if (lead.ownerId) void notifyAgentNewLead(lead.id);

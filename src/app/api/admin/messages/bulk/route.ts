@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireCrmApi } from "@/lib/crm-access";
 import { prisma } from "@/lib/prisma";
+import { getPrimaryTenantId } from "@/lib/tenant";
 import {
   getMessagingIntegrations,
   normalizePhone,
@@ -183,6 +184,7 @@ export async function POST(req: Request) {
         // Persist message log in database
         await prisma.messageLog.create({
           data: {
+            tenantId: auth.tenantId ?? (await getPrimaryTenantId()),
             channel: channelEnum!,
             recipientId: matchedUser?.id || null,
             sentById: auth.session!.user.id,

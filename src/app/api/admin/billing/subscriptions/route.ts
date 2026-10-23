@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
 import { periodEndFromInterval } from "@/lib/subscription";
+import { resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 
 const assignSchema = z.object({
   userId: z.string(),
@@ -58,6 +59,7 @@ export async function POST(req: Request) {
 
     await prisma.transaction.create({
       data: {
+        tenantId: await resolveTenantForOwnerOrProperty(data.userId),
         userId: data.userId,
         amount: plan.price,
         currency: plan.currency,

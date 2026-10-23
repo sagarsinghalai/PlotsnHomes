@@ -80,6 +80,7 @@ export async function POST(req: Request) {
 
       const tx = await prisma.transaction.create({
         data: {
+          tenantId: property.tenantId,
           userId: session.user.id,
           propertyId: property.id,
           amount,
@@ -137,6 +138,7 @@ export async function POST(req: Request) {
 
       const tx = await prisma.transaction.create({
         data: {
+          tenantId: property.tenantId,
           userId: session.user.id,
           propertyId: property.id,
           amount,
@@ -187,6 +189,7 @@ export async function POST(req: Request) {
 
     const tx = await prisma.transaction.create({
       data: {
+        tenantId: property.tenantId,
         userId: session.user.id,
         propertyId: property.id,
         amount,

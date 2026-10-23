@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth-options";
 import { assignLeadOwner } from "@/lib/lead-routing";
 import { calculateLeadScore } from "@/lib/lead-scoring";
 import { prisma } from "@/lib/prisma";
+import { resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 import { notifyAgentNewLead } from "@/lib/whatsapp-central";
 
 // Public lead-capture endpoint used by the website lead-gen forms
@@ -55,8 +56,10 @@ export async function POST(req: Request) {
     if (data.message) requirementParts.push(data.message);
     const requirements = requirementParts.length ? requirementParts.join("\n") : null;
 
+    const leadTenant = await resolveTenantForOwnerOrProperty(ownerId, property?.id ?? null);
     const lead = await prisma.lead.create({
       data: {
+        tenantId: leadTenant,
         name: data.name,
         email: data.email ? data.email.toLowerCase() : "",
         phone: data.phone,
@@ -73,6 +76,7 @@ export async function POST(req: Request) {
 
     await prisma.leadActivity.create({
       data: {
+        tenantId: leadTenant,
         leadId: lead.id,
         userId: session?.user?.id ?? null,
         type: "CREATED",

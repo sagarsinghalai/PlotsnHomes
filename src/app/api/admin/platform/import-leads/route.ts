@@ -3,10 +3,12 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin-api";
 import { assignLeadOwner } from "@/lib/lead-routing";
 import { prisma } from "@/lib/prisma";
+import { noTenantResponse } from "@/lib/data-access";
 
 export async function POST(req: Request) {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
+  if (!auth.tenantId) return noTenantResponse();
 
   const { csv, fileName } = (await req.json()) as { csv: string; fileName?: string };
   const lines = csv.trim().split(/\r?\n/).filter(Boolean);
@@ -27,6 +29,7 @@ export async function POST(req: Request) {
     const ownerId = await assignLeadOwner();
     await prisma.lead.create({
       data: {
+        tenantId: auth.tenantId,
         name,
         email,
         phone: idx("phone") >= 0 ? cols[idx("phone")] || null : null,
@@ -41,6 +44,7 @@ export async function POST(req: Request) {
 
   await prisma.bulkJob.create({
     data: {
+      tenantId: auth.tenantId,
       type: "IMPORT_LEADS",
       status: "COMPLETED",
       fileName: fileName ?? "import.csv",

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireCrmApi } from "@/lib/crm-access";
+import { tenantScope, noTenantResponse } from "@/lib/data-access";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export async function GET() {
   if (auth.error) return auth.error;
   try {
     const campaigns = await prisma.whatsAppCampaign.findMany({
+      where: { ...tenantScope(auth.tenantId) },
       orderBy: { createdAt: "desc" },
       take: 200,
     });
@@ -23,6 +25,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const auth = await requireCrmApi();
   if (auth.error) return auth.error;
+  if (!auth.tenantId) return noTenantResponse();
   try {
     const b = await req.json();
     const results = Array.isArray(b.results) ? b.results : [];
@@ -30,6 +33,7 @@ export async function POST(req: Request) {
     const failedCount = Number(b.failedCount ?? results.filter((r: any) => r.status !== "SENT").length) || 0;
     const campaign = await prisma.whatsAppCampaign.create({
       data: {
+        tenantId: auth.tenantId,
         name: (b.name || "Untitled campaign").toString().slice(0, 200),
         templateName: b.templateName ? String(b.templateName).slice(0, 200) : null,
         channels: Array.isArray(b.channels) ? b.channels.join(",") : (b.channels ? String(b.channels) : null),

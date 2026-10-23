@@ -18,7 +18,7 @@ export default async function AdminLeadsPage({
   const session = await getServerSession(authOptions);
   const tenantId = session?.user?.tenantId || "__no_tenant__";
   const listId = (searchParams.list ?? "all") as SmartListId;
-  const where = { tenantId, ...(await smartListWhere(listId)) };
+  const where = await smartListWhere(listId, undefined, tenantId);
 
   const [leads, pipelineConfig, totalAll, agents, properties, pipelines, ...counts] = await Promise.all([
     prisma.lead.findMany({
@@ -43,7 +43,7 @@ export default async function AdminLeadsPage({
       orderBy: { title: "asc" },
     }),
     getPipelines(),
-    ...SMART_LISTS.map((s) => countSmartList(s.id)),
+    ...SMART_LISTS.map((s) => countSmartList(s.id, undefined, tenantId)),
   ]);
 
   const listCounts = Object.fromEntries(SMART_LISTS.map((s, i) => [s.id, counts[i]]));

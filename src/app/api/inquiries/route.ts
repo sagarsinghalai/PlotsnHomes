@@ -39,6 +39,7 @@ export async function POST(req: Request) {
 
     const inquiry = await prisma.inquiry.create({
       data: {
+        tenantId: property.tenantId,
         propertyId: data.propertyId,
         userId: session?.user?.id,
         name: data.name,

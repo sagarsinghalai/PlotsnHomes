@@ -25,6 +25,7 @@ try {
 const { prisma } = await import("@/lib/prisma");
 const { leadScopeForUser } = await import("@/lib/crm-access");
 const { tenantScope } = await import("@/lib/data-access");
+const { getPrimaryTenantId, resolveTenantForOwnerOrProperty } = await import("@/lib/tenant");
 const { Role } = await import("@prisma/client");
 
 let pass = 0, fail = 0;
@@ -129,6 +130,29 @@ test("superadmin is still tenant-bound (one tenant only)", async () => {
   const got = ids(rows);
   assert.ok(got.includes(leadAMgrId) && got.includes(leadAAgentId), "superadmin sees their tenant");
   assert.ok(!got.includes(leadBId), "superadmin must NOT cross into tenant B");
+});
+
+// ── B5: enforcement (non-null column) + tenant resolver ──────────────────────
+
+test("creating a tenant-owned row without tenantId is rejected (non-null)", async () => {
+  await assert.rejects(
+    // Force past the compiler to prove the DB column itself enforces non-null.
+    () => prisma.lead.create({ data: { name: "no-tenant lead" } as any }),
+    "a lead with no tenantId must fail at the database layer"
+  );
+});
+
+test("resolveTenantForOwnerOrProperty derives tenant from the owning user", async () => {
+  const resolved = await resolveTenantForOwnerOrProperty(mgrAId, null);
+  assert.equal(resolved, orgAId, "owner in tenant A should resolve to tenant A");
+});
+
+test("getPrimaryTenantId returns a stable, existing org id", async () => {
+  const a = await getPrimaryTenantId();
+  const b = await getPrimaryTenantId();
+  assert.equal(a, b, "primary tenant must be stable across calls");
+  const org = await prisma.organization.findUnique({ where: { id: a }, select: { id: true } });
+  assert.ok(org, "primary tenant id must reference a real organization");
 });
 
 try {

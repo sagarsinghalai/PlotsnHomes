@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getPrimaryTenantId } from "@/lib/tenant";
 import { refreshLeadScore } from "@/lib/lead-scoring";
 
 export async function POST(req: Request) {
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
       if (!existingLead) {
         existingLead = await prisma.lead.create({
           data: {
+            tenantId: await getPrimaryTenantId(),
             name: `Inbound Call ${fromVal}`,
             phone: fromVal,
             email: `${cleaned}@plotsnhomes.com`,
@@ -52,8 +54,12 @@ export async function POST(req: Request) {
         message += ` Recording: [Listen here](${recordingUrl})`;
       }
 
+      const callLeadTenant =
+        (await prisma.lead.findUnique({ where: { id: leadId }, select: { tenantId: true } }))?.tenantId
+        ?? (await getPrimaryTenantId());
       await prisma.leadActivity.create({
         data: {
+          tenantId: callLeadTenant,
           leadId,
           userId,
           type: "CALL",
@@ -82,6 +88,7 @@ export async function POST(req: Request) {
             const isCallInbound = direction.toLowerCase().includes("inbound");
             await prisma.messageLog.create({
               data: {
+                tenantId: leadObj.tenantId,
                 channel: "PLATFORM",
                 sentById: isCallInbound ? clientUser.id : (userId || clientUser.id),
                 recipientId: isCallInbound ? (userId || null) : clientUser.id,

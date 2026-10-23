@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminApi } from "@/lib/admin-api";
 import { hasAddPermissionServer } from "@/lib/permissions";
+import { noTenantResponse } from "@/lib/data-access";
 
 // GET — list all teams (with department + leader + member count), plus the
 // departments and candidate team leaders needed by the Teams manager UI and
@@ -52,6 +53,7 @@ export async function POST(req: Request) {
         { status: 403 }
       );
     }
+    if (!auth.tenantId) return noTenantResponse();
 
     const body = await req.json();
     const name = (body.name ?? "").trim();
@@ -73,6 +75,7 @@ export async function POST(req: Request) {
 
     const team = await prisma.team.create({
       data: {
+        tenantId: auth.tenantId,
         name,
         code,
         departmentId: body.departmentId || null,

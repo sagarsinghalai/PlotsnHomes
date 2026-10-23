@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
+import { getPrimaryTenantId } from "@/lib/tenant";
 
 const schema = z.object({
   propertyId:         z.string().optional(),
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
   try {
     const data = schema.parse(await req.json());
     const loan = await prisma.loanApplication.create({
-      data: { userId: session.user.id, ...data },
+      data: { tenantId: session.user.tenantId ?? (await getPrimaryTenantId()), userId: session.user.id, ...data },
     });
     return NextResponse.json({ ok: true, loan });
   } catch (e) {

@@ -1,6 +1,7 @@
 import { MessageChannel, MessageStatus, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendWhatsAppApi } from "@/lib/messaging";
+import { resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 import {
   getMessagingIntegrations,
   normalizePhone,
@@ -281,6 +282,7 @@ export async function broadcastToRecipients(
   let failed = 0;
   let method = "none";
 
+  const senderTenant = await resolveTenantForOwnerOrProperty(sentById);
   for (const r of recipients) {
     const personalized = personalize(body, { name: r.name });
     const result = await sendCentralWhatsApp(r.phone, personalized);
@@ -295,6 +297,7 @@ export async function broadcastToRecipients(
     await prisma.messageLog
       .create({
         data: {
+          tenantId: senderTenant,
           channel: result.method === "web" ? MessageChannel.WHATSAPP_WEB : MessageChannel.WHATSAPP,
           recipientId: r.id ?? null,
           sentById,
@@ -407,6 +410,7 @@ export async function notifyAgentNewLead(leadId: string): Promise<void> {
     await prisma.messageLog
       .create({
         data: {
+          tenantId: lead.tenantId,
           channel:
             result.method === "web" ? MessageChannel.WHATSAPP_WEB : MessageChannel.WHATSAPP,
           recipientId: lead.owner.id,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
+import { resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 import { MessageChannel, MessageStatus } from "@prisma/client";
 import { sendEmail } from "@/lib/email";
 import { getMessagingIntegrations } from "@/lib/messaging-settings";
@@ -60,6 +61,7 @@ export async function POST(req: Request) {
     // Create the incoming message log in the DB
     const log = await prisma.messageLog.create({
       data: {
+        tenantId: await resolveTenantForOwnerOrProperty(sender.id),
         channel: dbChannel,
         recipientId: adminId, // admin receives the message
         sentById: sender.id,  // sender is the client user

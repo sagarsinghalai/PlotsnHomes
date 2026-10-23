@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSetting, setSetting } from "@/lib/system-settings";
 import { sendWhatsAppText } from "@/lib/whatsapp-cloud";
+import { getPrimaryTenantId, resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 
 /**
  * Rule-based WhatsApp auto-reply bot ("recorded responses"). Replies within the
@@ -98,6 +99,7 @@ async function logBotMessage(leadId: string | null | undefined, phone: string, b
     if (!sentById) return; // cannot satisfy the required sender; skip logging
     await prisma.messageLog.create({
       data: {
+        tenantId: await resolveTenantForOwnerOrProperty(sentById),
         channel: "WHATSAPP",
         sentById,
         recipientId,
@@ -125,8 +127,11 @@ export async function runBot({ leadId, phone, text }: RunInput): Promise<BotResu
     action = "handoff";
     reply = cfg.handoffMessage;
     if (leadId) {
+      const leadTenant =
+        (await prisma.lead.findUnique({ where: { id: leadId }, select: { tenantId: true } }))?.tenantId
+        ?? (await getPrimaryTenantId());
       await prisma.leadActivity.create({
-        data: { leadId, type: "BOT_HANDOFF", message: "Lead requested a human agent on WhatsApp." },
+        data: { tenantId: leadTenant, leadId, type: "BOT_HANDOFF", message: "Lead requested a human agent on WhatsApp." },
       }).catch(() => {});
     }
   } else {

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth-options";
 import { getPlatformRates } from "@/lib/system-settings";
 import { prisma } from "@/lib/prisma";
+import { getPrimaryTenantId } from "@/lib/tenant";
 import { MEDIA_LIMITS } from "@/lib/media-limits";
 import { staffRolesFilter } from "@/lib/roles";
 import { slugify } from "@/lib/utils";
@@ -57,6 +58,7 @@ export async function POST(req: Request) {
 
     const property = await prisma.property.create({
       data: {
+        tenantId: session.user.tenantId ?? (await getPrimaryTenantId()),
         symbol,
         title: data.title,
         slug,

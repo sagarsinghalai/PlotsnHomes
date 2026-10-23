@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/roles";
+import { getPrimaryTenantId } from "@/lib/tenant";
 
 type RowError = { field: string; message: string };
 
@@ -96,17 +97,24 @@ export async function POST(req: Request) {
 
     if (errors.length > 0) { skipped.push({ row: rowNo, name, errors }); continue; }
 
+    // Resolve the tenant from the parent chain (falling back to the primary tenant).
+    const primaryTenant = await getPrimaryTenantId();
+    const parentTenant = async (model: "franchise" | "branch" | "department") =>
+      (parentId
+        ? (await (prisma as any)[model].findUnique({ where: { id: parentId }, select: { tenantId: true } }))?.tenantId
+        : null) || primaryTenant;
+
     try {
       if (actionType === "ORGANIZATION") {
         await prisma.organization.create({ data: { name, code, domain: domain || null, status } });
       } else if (actionType === "FRANCHISE") {
-        await prisma.franchise.create({ data: { name, code, organizationId: parentId, location: location || null, status } });
+        await prisma.franchise.create({ data: { tenantId: parentId || primaryTenant, name, code, organizationId: parentId, location: location || null, status } });
       } else if (actionType === "BRANCH") {
-        await prisma.branch.create({ data: { name, code, franchiseId: parentId, city: city || null, status } });
+        await prisma.branch.create({ data: { tenantId: await parentTenant("franchise"), name, code, franchiseId: parentId, city: city || null, status } });
       } else if (actionType === "DEPARTMENT") {
-        await prisma.department.create({ data: { name, code, branchId: parentId, status } });
+        await prisma.department.create({ data: { tenantId: await parentTenant("branch"), name, code, branchId: parentId, status } });
       } else if (actionType === "TEAM") {
-        await prisma.team.create({ data: { name, code, departmentId: parentId, status } });
+        await prisma.team.create({ data: { tenantId: await parentTenant("department"), name, code, departmentId: parentId, status } });
       }
       existingCodes.add(code.toLowerCase());
       codesInFile.add(code.toLowerCase());

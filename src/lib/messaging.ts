@@ -6,6 +6,7 @@ import {
   whatsAppWebUrl,
 } from "@/lib/messaging-settings";
 import { prisma } from "@/lib/prisma";
+import { getPrimaryTenantId, resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 
 export type SendMessageInput = {
   channel: "whatsapp" | "whatsapp_web" | "email" | "telegram" | "sms" | "platform";
@@ -389,6 +390,7 @@ export async function sendAdminMessage(input: SendMessageInput): Promise<SendMes
 
   const log = await prisma.messageLog.create({
     data: {
+      tenantId: await resolveTenantForOwnerOrProperty(recipient.id),
       channel,
       recipientId: recipient.id,
       sentById: input.sentById,
@@ -518,6 +520,7 @@ export async function receiveIncomingMessage({
     const uniqueEmail = `inbound-${cleaned}@brickvest.com`;
     lead = await prisma.lead.create({
       data: {
+        tenantId: await getPrimaryTenantId(),
         name: `Inbound Lead ${fromPhone}`,
         phone: fromPhone,
         email: uniqueEmail,
@@ -550,6 +553,7 @@ export async function receiveIncomingMessage({
   // Create message log
   const log = await prisma.messageLog.create({
     data: {
+      tenantId: await resolveTenantForOwnerOrProperty(recipientId || user!.id),
       channel,
       recipientId: recipientId || null,
       sentById: user!.id,

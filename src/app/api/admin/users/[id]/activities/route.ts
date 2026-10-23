@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
+import { resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 
 const SCHED_KEY = "crm_scheduling_link";
 const TYPES = ["NOTE", "EMAIL", "CALL", "TASK", "MEETING"] as const;
@@ -86,6 +87,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     const activity = await prisma.userActivity.create({
       data: {
+        tenantId: await resolveTenantForOwnerOrProperty(params.id),
         contactId: params.id,
         type: data.type,
         subject: data.subject || null,

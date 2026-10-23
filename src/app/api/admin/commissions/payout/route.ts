@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireCrmApi } from "@/lib/crm-access";
+import { resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 
 export async function POST(req: Request) {
   const auth = await requireCrmApi();
@@ -70,6 +71,7 @@ export async function POST(req: Request) {
       try {
         dbTransaction = await prisma.transaction.create({
           data: {
+            tenantId: await resolveTenantForOwnerOrProperty(targetUserId, updatedComm?.propertyId || null),
             userId: targetUserId,
             propertyId: updatedComm?.propertyId || null,
             amount: amt,

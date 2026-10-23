@@ -5,6 +5,7 @@ import { requireAdminApi } from "@/lib/admin-api";
 import { assignLeadOwner } from "@/lib/lead-routing";
 import { prisma } from "@/lib/prisma";
 import { notifyAgentNewLead } from "@/lib/whatsapp-central";
+import { tenantScope, noTenantResponse } from "@/lib/data-access";
 
 const patchSchema = z.object({
   status: z.nativeEnum(ShowingStatus).optional(),
@@ -30,9 +31,11 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
 
+  if (!auth.tenantId) return noTenantResponse();
+
   try {
-    const showing = await prisma.propertyShowing.findUnique({
-      where: { id: params.id },
+    const showing = await prisma.propertyShowing.findFirst({
+      where: { id: params.id, ...tenantScope(auth.tenantId) },
       include: {
         property: { select: { id: true, title: true, symbol: true, agentId: true } },
         lead: true,
@@ -46,6 +49,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     const ownerId = await assignLeadOwner(showing.property.agentId);
     const lead = await prisma.lead.create({
       data: {
+        tenantId: showing.tenantId,
         name: showing.name,
         email: showing.email,
         phone: showing.phone,
@@ -62,6 +66,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
 
     await prisma.leadActivity.create({
       data: {
+        tenantId: showing.tenantId,
         leadId: lead.id,
         userId: auth.session.user.id,
         type: "CONVERTED",

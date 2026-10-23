@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
+import { resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 
 export async function POST(req: Request) {
   const auth = await requireAdminApi();
@@ -44,6 +45,7 @@ export async function POST(req: Request) {
     // Create transaction entry in database
     const transaction = await prisma.transaction.create({
       data: {
+        tenantId: await resolveTenantForOwnerOrProperty(targetUserId, dbPropertyId),
         userId: targetUserId,
         propertyId: dbPropertyId,
         amount: Number(amount),

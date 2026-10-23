@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
 import { checkUserExists4Params, validateUserDobAge } from "@/lib/user-validation";
+import { resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 
 const kycSchema = z.object({
   fullName:           z.string().regex(/^([a-zA-Z\s]{2,})?$/, "Name can only contain alphabets and spaces").optional(),
@@ -153,7 +154,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       if (existing) {
         await prisma.kycProfile.update({ where: { userId: params.id }, data: { adminNotes: appendedNotes } });
       } else {
-        await prisma.kycProfile.create({ data: { userId: params.id, fullName: user.name, adminNotes: appendedNotes, status: KycStatus.PENDING } });
+        await prisma.kycProfile.create({ data: { tenantId: await resolveTenantForOwnerOrProperty(params.id), userId: params.id, fullName: user.name, adminNotes: appendedNotes, status: KycStatus.PENDING } });
       }
     }
 
@@ -177,6 +178,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       await prisma.loanApplication.update({ where: { id: loan.id }, data: { adminNotes: appendedLoanNotes } });
     }
 
+    const targetTenant = await resolveTenantForOwnerOrProperty(params.id);
     const updated = await prisma.$transaction(async (tx) => {
       const u = await tx.user.update({
         where: { id: params.id },
@@ -236,6 +238,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         } else if (k.fullName) {
           await tx.kycProfile.create({
             data: {
+              tenantId:         targetTenant,
               userId:           params.id,
               fullName:         k.fullName,
               dateOfBirth:      k.dateOfBirth      ?? null,
@@ -268,6 +271,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
           if (isTemp) {
             await tx.loanApplication.create({
               data: {
+                tenantId:         targetTenant,
                 userId:           params.id,
                 loanAmount:       l.loanAmount,
                 loanType:         l.loanType ?? "Home Loan",

@@ -8,6 +8,14 @@ async function main() {
 
   const passwordHash = await bcrypt.hash("demo1234", 12);
 
+  // Primary tenant for all seeded, tenant-owned rows.
+  const primaryOrg = await prisma.organization.upsert({
+    where: { code: "BRICKVEST" },
+    create: { name: "BrickVest Demo", code: "BRICKVEST" },
+    update: {},
+  });
+  const TENANT_ID = primaryOrg.id;
+
   // 1. Ensure Developers
   const devNames = [
     "Godrej Properties", "DLF Limited", "Tata Value Homes", "DAMAC Properties",
@@ -18,6 +26,7 @@ async function main() {
     const dev = await prisma.developer.upsert({
       where: { name },
       create: {
+        tenantId: TENANT_ID,
         name,
         email: `contact@${name.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`,
         phone: "+91 98000 11223",
@@ -48,6 +57,7 @@ async function main() {
     const proj = await prisma.project.upsert({
       where: { id: `proj-${p.name.toLowerCase().replace(/[^a-z0-9]/g, "-")}` },
       create: {
+        tenantId: TENANT_ID,
         id: `proj-${p.name.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
         name: p.name,
         developerId: developers[p.devIdx].id,
@@ -181,6 +191,7 @@ async function main() {
 
       await prisma.lead.create({
         data: {
+          tenantId: prop.tenantId,
           name: `Lead ${cust.name} ${i + 1}`,
           email: `lead_${i + 1}_${cust.email}`,
           phone: `+91 99${String(10000000 + i * 391).slice(-8)}`,
@@ -216,6 +227,7 @@ async function main() {
 
       const tx = await prisma.transaction.create({
         data: {
+          tenantId: prop.tenantId,
           userId: cust.id,
           propertyId: prop.id,
           amount,
@@ -237,6 +249,7 @@ async function main() {
 
         await prisma.agentCommission.create({
           data: {
+            tenantId: prop.tenantId,
             agentId: ag.id,
             propertyId: prop.id,
             transactionId: tx.id,
@@ -272,6 +285,7 @@ async function main() {
 
       await prisma.propertyShowing.create({
         data: {
+          tenantId: prop.tenantId,
           propertyId: prop.id,
           userId: cust.id,
           name: cust.name,
@@ -293,6 +307,7 @@ async function main() {
   await prisma.crmGoal.upsert({
     where: { id: "goal-annual-revenue" },
     create: {
+      tenantId: TENANT_ID,
       id: "goal-annual-revenue",
       title: "Annual Revenue Target FY26",
       target: 250000000,
@@ -305,6 +320,7 @@ async function main() {
   await prisma.crmGoal.upsert({
     where: { id: "goal-monthly-leads" },
     create: {
+      tenantId: TENANT_ID,
       id: "goal-monthly-leads",
       title: "Monthly Lead Generation Target",
       target: 300,

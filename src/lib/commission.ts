@@ -34,6 +34,7 @@ export async function calculateAndRecordCommission(transactionId: string) {
   // Create commission record
   const commission = await prisma.agentCommission.create({
     data: {
+      tenantId: tx.tenantId,
       agentId: agent.id,
       propertyId: tx.property.id,
       transactionId: tx.id,

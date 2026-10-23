@@ -9,6 +9,7 @@ import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { isSuperAdmin } from "@/lib/roles";
+import { resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 
 // Platform-owner only: these actions create/approve privileged accounts
 // (WHITE_LABEL_ADMIN / SELLER), so they must never be callable by tenants or
@@ -99,6 +100,7 @@ export async function POST(req: Request) {
       try {
         await prisma.messageLog.create({
           data: {
+            tenantId: await resolveTenantForOwnerOrProperty(userId),
             sentById: userId,
             recipientId: userId,
             channel: "EMAIL",

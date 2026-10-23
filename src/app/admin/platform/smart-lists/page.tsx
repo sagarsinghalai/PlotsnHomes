@@ -3,9 +3,13 @@ import { SettingsCardGrid } from "@/components/admin/settings-card-grid";
 import { SMART_LISTS, countSmartList } from "@/lib/smart-lists";
 import { List } from "lucide-react";
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 export default async function SmartListsPage() {
-  const counts = await Promise.all(SMART_LISTS.map((s) => countSmartList(s.id)));
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  const counts = await Promise.all(SMART_LISTS.map((s) => countSmartList(s.id, undefined, tenantId)));
 
   const cards = SMART_LISTS.map((s, i) => ({
     href: `/admin/leads?list=${s.id}`,

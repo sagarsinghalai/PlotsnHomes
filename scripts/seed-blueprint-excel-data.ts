@@ -51,6 +51,7 @@ async function main() {
     where: { code: "FR-NORTH-01" },
     update: {},
     create: {
+      tenantId: org1.id,
       name: "North Region Franchise",
       code: "FR-NORTH-01",
       organizationId: org1.id,
@@ -63,6 +64,7 @@ async function main() {
     where: { code: "FR-SOUTH-02" },
     update: {},
     create: {
+      tenantId: org1.id,
       name: "South Region Franchise",
       code: "FR-SOUTH-02",
       organizationId: org1.id,
@@ -75,6 +77,7 @@ async function main() {
     where: { code: "FR-WEST-03" },
     update: {},
     create: {
+      tenantId: org2.id,
       name: "West Coast Franchise",
       code: "FR-WEST-03",
       organizationId: org2.id,
@@ -89,6 +92,7 @@ async function main() {
     where: { code: "BR-DEL-CENTRAL" },
     update: {},
     create: {
+      tenantId: org1.id,
       name: "Delhi Central Branch",
       code: "BR-DEL-CENTRAL",
       franchiseId: fr1.id,
@@ -101,6 +105,7 @@ async function main() {
     where: { code: "BR-BLR-TECH" },
     update: {},
     create: {
+      tenantId: org1.id,
       name: "Bangalore Tech Hub Branch",
       code: "BR-BLR-TECH",
       franchiseId: fr2.id,
@@ -113,6 +118,7 @@ async function main() {
     where: { code: "BR-MUM-WEST" },
     update: {},
     create: {
+      tenantId: org2.id,
       name: "Mumbai West Coast Branch",
       code: "BR-MUM-WEST",
       franchiseId: fr3.id,
@@ -127,6 +133,7 @@ async function main() {
     where: { code: "DEPT-SALES-CRM" },
     update: {},
     create: {
+      tenantId: org1.id,
       name: "Sales & CRM Department",
       code: "DEPT-SALES-CRM",
       branchId: br1.id,
@@ -138,6 +145,7 @@ async function main() {
     where: { code: "DEPT-MKTG" },
     update: {},
     create: {
+      tenantId: org1.id,
       name: "Digital Marketing & Alliances",
       code: "DEPT-MKTG",
       branchId: br2.id,
@@ -149,6 +157,7 @@ async function main() {
     where: { code: "DEPT-CS" },
     update: {},
     create: {
+      tenantId: org2.id,
       name: "Customer Success & Operations",
       code: "DEPT-CS",
       branchId: br3.id,
@@ -162,6 +171,7 @@ async function main() {
     where: { code: "TEAM-ALPHA" },
     update: {},
     create: {
+      tenantId: org1.id,
       name: "Alpha Sales Team",
       code: "TEAM-ALPHA",
       departmentId: dept1.id,
@@ -173,6 +183,7 @@ async function main() {
     where: { code: "TEAM-BETA" },
     update: {},
     create: {
+      tenantId: org1.id,
       name: "Beta High-Value Deals Team",
       code: "TEAM-BETA",
       departmentId: dept1.id,
@@ -184,6 +195,7 @@ async function main() {
     where: { code: "TEAM-ENT" },
     update: {},
     create: {
+      tenantId: org1.id,
       name: "Enterprise Alliances Team",
       code: "TEAM-ENT",
       departmentId: dept2.id,
@@ -244,6 +256,7 @@ async function main() {
     for (const l of sampleLeads) {
       await prisma.inquiry.create({
         data: {
+          tenantId: prop.tenantId,
           name: l.name,
           email: l.email,
           phone: l.phone,
