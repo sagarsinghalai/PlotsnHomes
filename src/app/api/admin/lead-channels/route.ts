@@ -9,9 +9,9 @@ export async function GET() {
     if (auth.error) return auth.error;
     // Secrets are stripped — only booleans + an isConfigured flag are returned.
     const [channels, users, teams] = await Promise.all([
-      getMaskedLeadChannels(),
-      prisma.user.findMany({ where: { active: true }, select: { id: true, name: true, email: true, role: true }, orderBy: { name: "asc" } }),
-      prisma.team.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+      getMaskedLeadChannels(auth.tenantId),
+      prisma.user.findMany({ where: { active: true, tenantId: auth.tenantId || "__no_tenant__" }, select: { id: true, name: true, email: true, role: true }, orderBy: { name: "asc" } }),
+      prisma.team.findMany({ where: { tenantId: auth.tenantId || "__no_tenant__" }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     ]);
     return NextResponse.json({ success: true, channels, users, teams });
   } catch (e: any) {
@@ -26,9 +26,9 @@ export async function POST(req: Request) {
     const body = (await req.json()) as Partial<LeadChannels>;
     // Preserve existing (encrypted) secrets when a field is blank/omitted;
     // new secrets get encrypted inside saveLeadChannels.
-    const current = await getLeadChannels();
+    const current = await getLeadChannels(auth.tenantId);
     const merged = mergeChannelUpdate(current, body);
-    await saveLeadChannels(merged);
+    await saveLeadChannels(merged, auth.tenantId);
     return NextResponse.json({ success: true });
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });

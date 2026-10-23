@@ -97,7 +97,7 @@ export default async function PropertyDetailPage({
   });
   if (!property) notFound();
 
-  const waNumber = await getPublicWhatsAppNumber();
+  const waNumber = await getPublicWhatsAppNumber(property.tenantId);
 
   const developerName = property.developer?.name || (property as any).developerName || "Emaar Properties";
 

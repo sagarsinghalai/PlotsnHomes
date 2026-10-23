@@ -1,5 +1,6 @@
-import { getSetting, setSetting } from "@/lib/system-settings";
+import { getTenantSetting, setTenantSetting } from "@/lib/system-settings";
 import { encryptSecret, decryptSecret, isEncrypted } from "@/lib/credentials-crypto";
+import { prisma } from "@/lib/prisma";
 
 const KEY = "lead_channels";
 
@@ -53,8 +54,8 @@ export const DEFAULT_LEAD_CHANNELS: LeadChannels = {
   generic: base("Generic Webhook", { name: "name", phone: "phone", email: "email", message: "message" }),
 };
 
-export async function getLeadChannels(): Promise<LeadChannels> {
-  const raw = await getSetting(KEY);
+export async function getLeadChannels(tenantId?: string | null): Promise<LeadChannels> {
+  const raw = await getTenantSetting(KEY, tenantId);
   if (!raw) return structuredCloneSafe(DEFAULT_LEAD_CHANNELS);
   try {
     const saved = JSON.parse(raw) as Partial<LeadChannels>;
@@ -69,17 +70,17 @@ export async function getLeadChannels(): Promise<LeadChannels> {
 }
 
 /** Server-side only: returns a channel config with secrets DECRYPTED for use. */
-export async function getChannel(channel: string): Promise<LeadChannelConfig | null> {
-  const all = await getLeadChannels();
+export async function getChannel(channel: string, tenantId?: string | null): Promise<LeadChannelConfig | null> {
+  const all = await getLeadChannels(tenantId);
   const cfg = (all as any)[channel] as LeadChannelConfig | undefined;
   return cfg ? decryptChannelSecrets(cfg) : null;
 }
 
 /** Persist channels, encrypting any plaintext secret fields (idempotent). */
-export async function saveLeadChannels(value: LeadChannels): Promise<void> {
+export async function saveLeadChannels(value: LeadChannels, tenantId?: string | null): Promise<void> {
   const safe: any = {};
   (Object.keys(value) as LeadChannelKey[]).forEach((k) => { safe[k] = encryptChannelSecrets(value[k]); });
-  await setSetting(KEY, JSON.stringify(safe));
+  await setTenantSetting(KEY, JSON.stringify(safe), tenantId);
 }
 
 /** Encrypt the secret fields of one channel (skips already-encrypted/empty). */
@@ -122,8 +123,8 @@ export function maskChannel(key: LeadChannelKey, cfg: LeadChannelConfig): Masked
 }
 
 /** All channels with secrets removed — safe to return to the browser. */
-export async function getMaskedLeadChannels(): Promise<Record<LeadChannelKey, MaskedChannel>> {
-  const all = await getLeadChannels();
+export async function getMaskedLeadChannels(tenantId?: string | null): Promise<Record<LeadChannelKey, MaskedChannel>> {
+  const all = await getLeadChannels(tenantId);
   const out: any = {};
   (Object.keys(all) as LeadChannelKey[]).forEach((k) => { out[k] = maskChannel(k, all[k]); });
   return out;
@@ -152,4 +153,37 @@ export function mergeChannelUpdate(current: LeadChannels, body: Partial<LeadChan
 
 function structuredCloneSafe<T>(v: T): T {
   return JSON.parse(JSON.stringify(v)) as T;
+}
+
+/**
+ * Resolve which tenant a public lead webhook belongs to, by matching the
+ * presented secret (header/query key, or Meta verify token) against each
+ * tenant's stored channel config. Returns the tenantId + decrypted config, or
+ * null when nothing matches (caller may then fall back to the global config).
+ */
+export async function resolveTenantByChannelSecret(
+  channel: string,
+  presented: string | null | undefined
+): Promise<{ tenantId: string; cfg: LeadChannelConfig } | null> {
+  if (!presented) return null;
+  const rows = await prisma.tenantSetting.findMany({
+    where: { key: KEY },
+    select: { tenantId: true, value: true },
+  });
+  for (const row of rows) {
+    try {
+      const all = JSON.parse(row.value) as Partial<LeadChannels>;
+      const stored = (all as any)[channel] as LeadChannelConfig | undefined;
+      if (!stored) continue;
+      const cfg = decryptChannelSecrets(stored);
+      if (
+        (cfg.secret && cfg.secret === presented) ||
+        (cfg.verifyToken && cfg.verifyToken === presented) ||
+        (cfg.googleKey && cfg.googleKey === presented)
+      ) {
+        return { tenantId: row.tenantId, cfg };
+      }
+    } catch { /* skip malformed */ }
+  }
+  return null;
 }

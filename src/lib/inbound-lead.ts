@@ -34,6 +34,7 @@ export type InboundLeadInput = {
   message?: string;
   sourceLabel?: string;
   propertyId?: string; // link the lead to the property the person enquired about
+  tenantId?: string | null; // owning tenant (resolved by the webhook); falls back to property/owner/primary
   rawPayload?: any;
 };
 
@@ -53,7 +54,7 @@ export async function createInboundLead(input: InboundLeadInput): Promise<Inboun
 
   async function log(status: string, extra: { leadId?: string; error?: string } = {}) {
     try {
-      const logTenant = await resolveTenantForOwnerOrProperty(null, input.propertyId ?? null);
+      const logTenant = input.tenantId ?? (await resolveTenantForOwnerOrProperty(null, input.propertyId ?? null));
       await prisma.inboundLeadLog.create({
         data: { tenantId: logTenant, channel, status, name: name || null, phone: phone || null, payload: payloadStr, leadId: extra.leadId ?? null, error: extra.error ?? null },
       });
@@ -61,7 +62,7 @@ export async function createInboundLead(input: InboundLeadInput): Promise<Inboun
   }
 
   try {
-    const cfg = await getChannel(channel);
+    const cfg = await getChannel(channel, input.tenantId);
     if (!name && !phone) {
       await log("IGNORED", { error: "Missing name and phone" });
       return { status: "IGNORED", error: "Missing name and phone" };
@@ -93,7 +94,7 @@ export async function createInboundLead(input: InboundLeadInput): Promise<Inboun
       propertyId = prop?.id ?? null;
     }
 
-    const tenantId = await resolveTenantForOwnerOrProperty(ownerId, propertyId);
+    const tenantId = input.tenantId ?? (await resolveTenantForOwnerOrProperty(ownerId, propertyId));
 
     const lead = await prisma.lead.create({
       data: {

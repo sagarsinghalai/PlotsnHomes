@@ -1,12 +1,16 @@
 import { CrmSettingsForm } from "@/components/admin/crm-settings-form";
 import { getCrmSettings } from "@/lib/crm-settings";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 export default async function AdminCrmSettingsPage() {
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
   const [settings, agents] = await Promise.all([
-    getCrmSettings(),
+    getCrmSettings(tenantId),
     prisma.user.findMany({
-      where: { role: { in: ["SUPERADMIN", "EMPLOYEE", "AGENT"] }, active: true },
+      where: { role: { in: ["SUPERADMIN", "EMPLOYEE", "AGENT"] }, active: true, tenantId },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),

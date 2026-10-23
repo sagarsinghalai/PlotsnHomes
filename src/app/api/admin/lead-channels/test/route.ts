@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     const auth = await requireAdminApi();
     if (auth.error) return auth.error;
     const { channel } = await req.json();
-    const cfg = await getChannel(channel);
+    const cfg = await getChannel(channel, auth.tenantId);
     if (!cfg) return NextResponse.json({ success: false, error: "Unknown channel" }, { status: 400 });
 
     const stamp = Date.now().toString().slice(-5);
@@ -20,6 +20,7 @@ export async function POST(req: Request) {
       phone: `+9199999${stamp}`,
       email: `test${stamp}@example.com`,
       message: `Sample ${cfg.label} lead created from the admin test button.`,
+      tenantId: auth.tenantId,
       rawPayload: { test: true, channel },
     });
     return NextResponse.json({ success: true, result });

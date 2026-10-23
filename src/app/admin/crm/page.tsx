@@ -6,11 +6,16 @@ import { getCrmSettings } from "@/lib/crm-settings";
 import { getPipelineConfig } from "@/lib/pipeline-settings";
 import { prisma } from "@/lib/prisma";
 import { Suspense } from "react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 export default async function AdminCrmPage() {
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
   const [leads, agents, properties, crmSettings, pipelineConfig] =
     await Promise.all([
       prisma.lead.findMany({
+        where: { tenantId },
         orderBy: [{ score: "desc" }, { createdAt: "desc" }],
         include: {
           property: { select: { title: true, symbol: true } },
@@ -29,17 +34,17 @@ export default async function AdminCrmPage() {
         take: 500,
       }),
       prisma.user.findMany({
-        where: { role: { in: ["SUPERADMIN", "EMPLOYEE", "AGENT"] }, active: true },
+        where: { role: { in: ["SUPERADMIN", "EMPLOYEE", "AGENT"] }, active: true, tenantId },
         orderBy: { name: "asc" },
         select: { id: true, name: true, email: true, userId: true },
       }),
       prisma.property.findMany({
-        where: { status: "ACTIVE" },
+        where: { status: "ACTIVE", tenantId },
         orderBy: { symbol: "asc" },
         take: 100,
         select: { id: true, title: true, symbol: true },
       }),
-      getCrmSettings(),
+      getCrmSettings(tenantId),
       getPipelineConfig(),
     ]);
 

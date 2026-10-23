@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getChannel } from "@/lib/lead-channels";
+import { getChannel, resolveTenantByChannelSecret } from "@/lib/lead-channels";
 import { createInboundLead } from "@/lib/inbound-lead";
 import { exceedsWebhookLimit, safeEqual } from "@/lib/meta-webhook";
 
@@ -50,13 +50,17 @@ export async function POST(req: Request, { params }: { params: { channel: string
   if (exceedsWebhookLimit(Number(req.headers.get("content-length") || 0))) {
     return NextResponse.json({ ok: false, error: "Payload too large" }, { status: 413 });
   }
-  const cfg = await getChannel(channel); // decrypted secret for comparison
-  if (!cfg) return NextResponse.json({ ok: false, error: "Unknown channel" }, { status: 404 });
-
-  // Validate secret when one is configured
+  // Identify the tenant by the presented secret first; fall back to the global
+  // channel config (single-tenant / not-yet-per-tenant).
   const url = new URL(req.url);
   const provided = req.headers.get("x-webhook-secret") || url.searchParams.get("key") || "";
-  if (cfg.secret && !safeEqual(provided, cfg.secret)) {
+  const resolved = await resolveTenantByChannelSecret(channel, provided);
+  const tenantId = resolved?.tenantId ?? null;
+  const cfg = resolved?.cfg ?? (await getChannel(channel)); // decrypted secret for comparison
+  if (!cfg) return NextResponse.json({ ok: false, error: "Unknown channel" }, { status: 404 });
+
+  // When not matched to a tenant by secret, validate against the global secret.
+  if (!resolved && cfg.secret && !safeEqual(provided, cfg.secret)) {
     return NextResponse.json({ ok: false, error: "Invalid secret" }, { status: 401 });
   }
 
@@ -72,6 +76,7 @@ export async function POST(req: Request, { params }: { params: { channel: string
     phone: pick(body, fm.phone || "phone|mobile|mobile_number|phone_number|contact"),
     email: pick(body, fm.email || "email|email_id"),
     message: pick(body, fm.message || "message|requirements|remarks|query"),
+    tenantId,
     rawPayload: body,
   });
 

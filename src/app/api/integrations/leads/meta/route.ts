@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getChannel } from "@/lib/lead-channels";
+import { getChannel, resolveTenantByChannelSecret } from "@/lib/lead-channels";
 import { createInboundLead } from "@/lib/inbound-lead";
 import { checkMetaWebhook, exceedsWebhookLimit, safeEqual, MAX_WEBHOOK_BYTES } from "@/lib/meta-webhook";
 
@@ -14,6 +14,11 @@ export async function GET(req: Request) {
   const mode = url.searchParams.get("hub.mode");
   const token = url.searchParams.get("hub.verify_token");
   const challenge = url.searchParams.get("hub.challenge");
+  // Accept any tenant's verify token (per-tenant Meta subscription), else global.
+  const resolved = await resolveTenantByChannelSecret("meta", token);
+  if (resolved && mode === "subscribe") {
+    return new NextResponse(challenge || "", { status: 200 });
+  }
   const cfg = await getChannel("meta");
   if (mode === "subscribe" && safeEqual(token, cfg?.verifyToken)) {
     return new NextResponse(challenge || "", { status: 200 });

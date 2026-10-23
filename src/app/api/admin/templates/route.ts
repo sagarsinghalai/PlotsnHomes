@@ -7,7 +7,7 @@ export async function GET() {
   const auth = await requireCrmApi();
   if (auth.error) return auth.error;
   try {
-    const crmSettings = await getCrmSettings();
+    const crmSettings = await getCrmSettings(auth.tenantId);
     return NextResponse.json({
       templates: crmSettings.messageTemplates,
     });
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   if (auth.error) return auth.error;
   try {
     const body = await req.json();
-    const crmSettings = await getCrmSettings();
+    const crmSettings = await getCrmSettings(auth.tenantId);
     let currentTemplates = crmSettings.messageTemplates || [];
 
     if (body.template) {
@@ -32,9 +32,9 @@ export async function POST(req: Request) {
       } else {
         currentTemplates.unshift(newOrEdit);
       }
-      await saveCrmSettings({ messageTemplates: currentTemplates });
+      await saveCrmSettings({ messageTemplates: currentTemplates }, auth.tenantId);
     } else if (Array.isArray(body.templates)) {
-      await saveCrmSettings({ messageTemplates: body.templates });
+      await saveCrmSettings({ messageTemplates: body.templates }, auth.tenantId);
     }
 
     return NextResponse.json({ success: true, templates: currentTemplates });
@@ -51,9 +51,9 @@ export async function DELETE(req: Request) {
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-    const crmSettings = await getCrmSettings();
+    const crmSettings = await getCrmSettings(auth.tenantId);
     const filtered = (crmSettings.messageTemplates || []).filter((t) => t.id !== id);
-    await saveCrmSettings({ messageTemplates: filtered });
+    await saveCrmSettings({ messageTemplates: filtered }, auth.tenantId);
 
     return NextResponse.json({ success: true, templates: filtered });
   } catch (error) {

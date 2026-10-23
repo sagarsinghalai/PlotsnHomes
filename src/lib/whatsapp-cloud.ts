@@ -5,8 +5,8 @@ import { getWhatsAppConfig } from "@/lib/whatsapp-settings";
  * config. Best-effort: returns { ok:false } (never throws) when not configured or
  * on error, so callers like the bot engine degrade gracefully.
  */
-export async function sendWhatsAppText(to: string, body: string): Promise<{ ok: boolean; id?: string; error?: string }> {
-  const cfg = await getWhatsAppConfig();
+export async function sendWhatsAppText(to: string, body: string, tenantId?: string | null): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const cfg = await getWhatsAppConfig(tenantId);
   if (!cfg.accessToken || !cfg.phoneNumberId) {
     return { ok: false, error: "WhatsApp Cloud API not configured" };
   }

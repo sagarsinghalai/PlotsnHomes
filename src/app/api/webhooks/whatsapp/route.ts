@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { receiveIncomingMessage } from "@/lib/messaging";
 import { createInboundLead } from "@/lib/inbound-lead";
 import { verifyMetaSignature, exceedsWebhookLimit, safeEqual } from "@/lib/meta-webhook";
-import { getWhatsAppConfig } from "@/lib/whatsapp-settings";
+import { getWhatsAppConfig, resolveTenantByPhoneNumberId } from "@/lib/whatsapp-settings";
 import { runBot } from "@/lib/whatsapp-bot";
 
 export const dynamic = "force-dynamic";
@@ -72,6 +72,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    // Resolve the owning tenant from the business number that received this
+    // message, so the lead, bot config and reply number are all that tenant's.
+    const tenantId = await resolveTenantByPhoneNumberId(value?.metadata?.phone_number_id);
+
     let textBody = message.text?.body || "";
     const fromPhone = message.from || "";
     const messageId = message.id || "";
@@ -100,6 +104,7 @@ export async function POST(req: Request) {
       message: textBody,
       sourceLabel: "WhatsApp",
       propertyId,
+      tenantId,
       rawPayload: { from: fromPhone, name: profileName, messageId, text: textBody },
     });
 
@@ -116,7 +121,7 @@ export async function POST(req: Request) {
     // 3) Rule-based bot auto-reply (within the 24h window). Best-effort: stays
     //    silent once a human agent is engaged, and never breaks the webhook.
     try {
-      await runBot({ leadId: leadResult.leadId, phone: `+${fromPhone}`, text: textBody });
+      await runBot({ leadId: leadResult.leadId, phone: `+${fromPhone}`, text: textBody, tenantId });
     } catch (e) {
       console.warn("[whatsapp] bot run failed:", (e as Error)?.message);
     }

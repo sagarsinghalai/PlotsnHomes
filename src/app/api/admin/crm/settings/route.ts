@@ -36,7 +36,7 @@ const patchSchema = z.object({
 export async function GET() {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
-  const settings = await getCrmSettings();
+  const settings = await getCrmSettings(auth.tenantId);
   return NextResponse.json({ settings });
 }
 
@@ -46,8 +46,8 @@ export async function PATCH(req: Request) {
 
   try {
     const data = patchSchema.parse(await req.json());
-    await saveCrmSettings(data);
-    const settings = await getCrmSettings();
+    await saveCrmSettings(data, auth.tenantId);
+    const settings = await getCrmSettings(auth.tenantId);
     return NextResponse.json({ ok: true, settings });
   } catch (e) {
     if (e instanceof z.ZodError) {

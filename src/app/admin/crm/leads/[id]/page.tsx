@@ -4,11 +4,15 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { getBhkConfigurations } from "@/lib/system-settings";
 import { getPipelines } from "@/lib/pipeline-store";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 export default async function AdminLeadDetailPage({ params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
   const [lead, agents, crmSettings, properties, bhkOptions, pipelines] = await Promise.all([
-    prisma.lead.findUnique({
-      where: { id: params.id },
+    prisma.lead.findFirst({
+      where: { id: params.id, tenantId },
       include: {
         property: { select: { id: true, title: true, symbol: true, slug: true, category: true, type: true } },
         owner: { select: { id: true, name: true } },
@@ -21,13 +25,13 @@ export default async function AdminLeadDetailPage({ params }: { params: { id: st
       },
     }),
     prisma.user.findMany({
-      where: { role: { in: ["SUPERADMIN", "EMPLOYEE", "AGENT"] }, active: true },
+      where: { role: { in: ["SUPERADMIN", "EMPLOYEE", "AGENT"] }, active: true, tenantId },
       orderBy: { name: "asc" },
       select: { id: true, name: true, email: true, userId: true },
     }),
-    getCrmSettings(),
+    getCrmSettings(tenantId),
     prisma.property.findMany({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       orderBy: { symbol: "asc" },
       select: {
         id: true,

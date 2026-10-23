@@ -3,6 +3,8 @@ import { Inbox, Bot, Settings } from "lucide-react";
 import { WhatsAppHub } from "@/components/admin/whatsapp-hub";
 import { getCrmSettings } from "@/lib/crm-settings";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 const HUB_ACTIONS = [
   { href: "/admin/whatsapp/inbox", label: "Inbox", desc: "Assigned conversations", icon: Inbox },
@@ -11,8 +13,11 @@ const HUB_ACTIONS = [
 ];
 
 export default async function AdminWhatsAppPage() {
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
   const [leadsRaw, crmSettings, properties] = await Promise.all([
     prisma.lead.findMany({
+      where: { tenantId },
       orderBy: { name: "asc" },
       select: {
         id: true,
@@ -28,8 +33,9 @@ export default async function AdminWhatsAppPage() {
         property: { select: { title: true } },
       },
     }),
-    getCrmSettings(),
+    getCrmSettings(tenantId),
     prisma.property.findMany({
+      where: { tenantId },
       select: {
         id: true,
         title: true,

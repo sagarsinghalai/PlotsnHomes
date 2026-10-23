@@ -1,5 +1,6 @@
-import { getSetting, setSetting } from "@/lib/system-settings";
+import { getTenantSetting, setTenantSetting } from "@/lib/system-settings";
 import { encryptSecret, decryptSecret, isEncrypted } from "@/lib/credentials-crypto";
+import { prisma } from "@/lib/prisma";
 
 /**
  * WhatsApp Business (Cloud API) configuration, stored in SystemSetting so the
@@ -43,9 +44,9 @@ function envFallback(): Partial<WhatsAppConfig> {
 }
 
 /** Raw stored config (secrets still encrypted), merged over defaults. */
-async function getRaw(): Promise<WhatsAppConfig> {
+async function getRaw(tenantId?: string | null): Promise<WhatsAppConfig> {
   const base = { ...DEFAULTS };
-  const raw = await getSetting(KEY);
+  const raw = await getTenantSetting(KEY, tenantId);
   if (!raw) return base;
   try {
     return { ...base, ...(JSON.parse(raw) as Partial<WhatsAppConfig>) };
@@ -55,8 +56,8 @@ async function getRaw(): Promise<WhatsAppConfig> {
 }
 
 /** Server-side only: decrypted config, with env fallback for any empty field. */
-export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
-  const stored = await getRaw();
+export async function getWhatsAppConfig(tenantId?: string | null): Promise<WhatsAppConfig> {
+  const stored = await getRaw(tenantId);
   const env = envFallback();
   const out: WhatsAppConfig = { ...stored };
   for (const f of SECRET_FIELDS) {
@@ -70,8 +71,8 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
 }
 
 /** Just the public click-to-chat number in digits (for wa.me links). "" if unset. */
-export async function getPublicWhatsAppNumber(): Promise<string> {
-  const cfg = await getWhatsAppConfig();
+export async function getPublicWhatsAppNumber(tenantId?: string | null): Promise<string> {
+  const cfg = await getWhatsAppConfig(tenantId);
   return (cfg.displayNumber || "").replace(/\D/g, "");
 }
 
@@ -81,8 +82,8 @@ export type MaskedWhatsAppConfig = Omit<WhatsAppConfig, "accessToken" | "appSecr
 };
 
 /** Browser-safe config — no secret values, only "is set" booleans. */
-export async function getMaskedWhatsAppConfig(): Promise<MaskedWhatsAppConfig> {
-  const stored = await getRaw();
+export async function getMaskedWhatsAppConfig(tenantId?: string | null): Promise<MaskedWhatsAppConfig> {
+  const stored = await getRaw(tenantId);
   const env = envFallback();
   const flags: Record<string, boolean> = {};
   for (const f of SECRET_FIELDS) flags[`has${f[0].toUpperCase()}${f.slice(1)}`] = !!(stored[f] || (env as any)[f]);
@@ -99,18 +100,38 @@ export async function getMaskedWhatsAppConfig(): Promise<MaskedWhatsAppConfig> {
 }
 
 /** Persist config, encrypting any new plaintext secret values (idempotent). */
-export async function saveWhatsAppConfig(value: WhatsAppConfig): Promise<void> {
+export async function saveWhatsAppConfig(value: WhatsAppConfig, tenantId?: string | null): Promise<void> {
   const out: any = { ...value };
   for (const f of SECRET_FIELDS) {
     const v = (value as any)[f];
     if (v && !isEncrypted(v)) out[f] = encryptSecret(v);
   }
-  await setSetting(KEY, JSON.stringify(out));
+  await setTenantSetting(KEY, JSON.stringify(out), tenantId);
+}
+
+/**
+ * Resolve which tenant owns an incoming WhatsApp message, by matching the Cloud
+ * API `phone_number_id` against each tenant's stored config. Returns null when
+ * no tenant has configured that number (caller falls back to the primary tenant).
+ */
+export async function resolveTenantByPhoneNumberId(phoneNumberId: string | null | undefined): Promise<string | null> {
+  if (!phoneNumberId) return null;
+  const rows = await prisma.tenantSetting.findMany({
+    where: { key: KEY },
+    select: { tenantId: true, value: true },
+  });
+  for (const row of rows) {
+    try {
+      const cfg = JSON.parse(row.value) as Partial<WhatsAppConfig>;
+      if (cfg.phoneNumberId && cfg.phoneNumberId === phoneNumberId) return row.tenantId;
+    } catch { /* skip malformed */ }
+  }
+  return null;
 }
 
 /** Merge a masked UI update onto stored config, preserving omitted/blank secrets. */
-export async function mergeWhatsAppUpdate(body: Partial<WhatsAppConfig>): Promise<WhatsAppConfig> {
-  const current = await getRaw();
+export async function mergeWhatsAppUpdate(body: Partial<WhatsAppConfig>, tenantId?: string | null): Promise<WhatsAppConfig> {
+  const current = await getRaw(tenantId);
   const next: any = { ...current };
   for (const k of ["enabled", "displayNumber", "phoneNumberId", "apiVersion"] as const) {
     if (body[k] !== undefined) next[k] = body[k];

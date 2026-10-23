@@ -499,6 +499,21 @@ model SystemSetting {
   updatedAt DateTime @updatedAt
 }
 
+// Per-tenant settings & integration config (WhatsApp number/bot, lead channels,
+// campaign templates). Falls back to the global SystemSetting of the same key
+// when a tenant has not set its own value yet.
+model TenantSetting {
+  id        String   @id @default(cuid())
+  tenantId  String
+  key       String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
+}
+
 model InboundLeadLog {
   tenantId      String
   id        String   @id @default(cuid())

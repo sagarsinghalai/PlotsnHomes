@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getSetting, setSetting } from "@/lib/system-settings";
+import { getTenantSetting, setTenantSetting } from "@/lib/system-settings";
 import { sendWhatsAppText } from "@/lib/whatsapp-cloud";
 import { getPrimaryTenantId, resolveTenantForOwnerOrProperty } from "@/lib/tenant";
 
@@ -40,8 +40,8 @@ export const DEFAULT_BOT_CONFIG: WhatsAppBotConfig = {
   ],
 };
 
-export async function getBotConfig(): Promise<WhatsAppBotConfig> {
-  const raw = await getSetting(KEY);
+export async function getBotConfig(tenantId?: string | null): Promise<WhatsAppBotConfig> {
+  const raw = await getTenantSetting(KEY, tenantId);
   if (!raw) return { ...DEFAULT_BOT_CONFIG };
   try {
     return { ...DEFAULT_BOT_CONFIG, ...(JSON.parse(raw) as Partial<WhatsAppBotConfig>) };
@@ -50,11 +50,11 @@ export async function getBotConfig(): Promise<WhatsAppBotConfig> {
   }
 }
 
-export async function saveBotConfig(cfg: WhatsAppBotConfig): Promise<void> {
-  await setSetting(KEY, JSON.stringify(cfg));
+export async function saveBotConfig(cfg: WhatsAppBotConfig, tenantId?: string | null): Promise<void> {
+  await setTenantSetting(KEY, JSON.stringify(cfg), tenantId);
 }
 
-type RunInput = { leadId?: string | null; phone: string; text: string };
+type RunInput = { leadId?: string | null; phone: string; text: string; tenantId?: string | null };
 export type BotResult = { action: "silent" | "welcome" | "rule" | "fallback" | "handoff"; reply?: string; sent?: boolean; ruleId?: string };
 
 /** True when a human agent has already stepped into this conversation. */
@@ -112,8 +112,8 @@ async function logBotMessage(leadId: string | null | undefined, phone: string, b
   } catch { /* logging must never break the bot */ }
 }
 
-export async function runBot({ leadId, phone, text }: RunInput): Promise<BotResult> {
-  const cfg = await getBotConfig();
+export async function runBot({ leadId, phone, text, tenantId }: RunInput): Promise<BotResult> {
+  const cfg = await getBotConfig(tenantId);
   if (!cfg.enabled) return { action: "silent" };
 
   if (await humanEngaged(leadId, phone)) return { action: "silent" };
@@ -149,7 +149,7 @@ export async function runBot({ leadId, phone, text }: RunInput): Promise<BotResu
 
   if (!reply?.trim()) return { action: "silent" };
 
-  const sendRes = await sendWhatsAppText(phone, reply);
+  const sendRes = await sendWhatsAppText(phone, reply, tenantId);
   await logBotMessage(leadId, phone, reply, sendRes.ok);
   return { action, reply, sent: sendRes.ok, ruleId };
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getChannel } from "@/lib/lead-channels";
+import { getChannel, resolveTenantByChannelSecret } from "@/lib/lead-channels";
 import { createInboundLead } from "@/lib/inbound-lead";
 import { exceedsWebhookLimit, safeEqual } from "@/lib/meta-webhook";
 
@@ -13,11 +13,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Payload too large" }, { status: 413 });
   }
 
-  const cfg = await getChannel("google");
   let body: any = {};
   try { body = await req.json(); } catch { /* ignore */ }
 
-  if (cfg?.googleKey) {
+  // Resolve the tenant by the presented google_key; fall back to global config.
+  const resolved = await resolveTenantByChannelSecret("google", body?.google_key);
+  const tenantId = resolved?.tenantId ?? null;
+  const cfg = resolved?.cfg ?? (await getChannel("google"));
+
+  if (!resolved && cfg?.googleKey) {
     if (!safeEqual(body?.google_key, cfg.googleKey)) {
       return NextResponse.json({ error: "Invalid google_key" }, { status: 401 });
     }
@@ -35,6 +39,7 @@ export async function POST(req: Request) {
     phone: cols["PHONE_NUMBER"] || cols["PHONE"] || "",
     email: cols["EMAIL"] || "",
     message: cols["CITY"] ? `City: ${cols["CITY"]}` : "",
+    tenantId,
     rawPayload: { lead_id: body?.lead_id, campaign_id: body?.campaign_id, is_test: body?.is_test, cols },
   });
 

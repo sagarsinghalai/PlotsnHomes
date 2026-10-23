@@ -39,6 +39,34 @@ export async function setSetting(key: string, value: string) {
   });
 }
 
+/**
+ * Per-tenant setting read. When a tenantId is given and that tenant has stored
+ * its own value, that wins; otherwise it falls back to the global SystemSetting
+ * (so existing single-tenant config keeps working until a tenant overrides it),
+ * then to the static default. With no tenantId it behaves like getSetting.
+ */
+export async function getTenantSetting(key: string, tenantId?: string | null): Promise<string> {
+  if (tenantId) {
+    const row = await prisma.tenantSetting.findUnique({
+      where: { tenantId_key: { tenantId, key } },
+    });
+    if (row) return row.value;
+  }
+  return getSetting(key);
+}
+
+/** Per-tenant setting write. With a tenantId it writes that tenant's row; without, the global row. */
+export async function setTenantSetting(key: string, value: string, tenantId?: string | null) {
+  if (tenantId) {
+    return prisma.tenantSetting.upsert({
+      where: { tenantId_key: { tenantId, key } },
+      create: { tenantId, key, value },
+      update: { value },
+    });
+  }
+  return setSetting(key, value);
+}
+
 export async function seedDefaultSettings() {
   for (const [key, value] of Object.entries(DEFAULTS)) {
     await prisma.systemSetting.upsert({

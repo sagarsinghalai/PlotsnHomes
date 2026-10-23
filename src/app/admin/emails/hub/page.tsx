@@ -2,18 +2,24 @@ import { prisma } from "@/lib/prisma";
 import { isEmailConfigured } from "@/lib/email";
 import { getCrmSettings } from "@/lib/crm-settings";
 import { EmailHubComposer } from "@/components/admin/email-hub-composer";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 export const dynamic = "force-dynamic";
 
 export default async function EmailHubPage() {
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
   const [users, leads, crmSettings] = await Promise.all([
     prisma.user.findMany({
+      where: { tenantId },
       select: { name: true, email: true, role: true },
     }),
     prisma.lead.findMany({
+      where: { tenantId },
       select: { name: true, email: true },
     }),
-    getCrmSettings(),
+    getCrmSettings(tenantId),
   ]);
 
   const contactsMap = new Map<string, { name: string; email: string; source: string }>();

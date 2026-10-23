@@ -1,4 +1,4 @@
-import { getSetting, setSetting } from "@/lib/system-settings";
+import { getTenantSetting, setTenantSetting } from "@/lib/system-settings";
 import type { MessageTemplate } from "@/lib/crm-template-utils";
 
 export type { MessageTemplate } from "@/lib/crm-template-utils";
@@ -54,13 +54,13 @@ const DEFAULT_TEMPLATES: MessageTemplate[] = [
   },
 ];
 
-export async function getCrmSettings(): Promise<CrmSettings> {
+export async function getCrmSettings(tenantId?: string | null): Promise<CrmSettings> {
   const [routingMode, autoAssign, defaultOwnerId, sourcesRaw, templatesRaw] = await Promise.all([
-    getSetting(CRM_KEYS.ROUTING_MODE),
-    getSetting(CRM_KEYS.AUTO_ASSIGN),
-    getSetting(CRM_KEYS.DEFAULT_OWNER_ID),
-    getSetting(CRM_KEYS.LEAD_SOURCES),
-    getSetting(CRM_KEYS.MESSAGE_TEMPLATES),
+    getTenantSetting(CRM_KEYS.ROUTING_MODE, tenantId),
+    getTenantSetting(CRM_KEYS.AUTO_ASSIGN, tenantId),
+    getTenantSetting(CRM_KEYS.DEFAULT_OWNER_ID, tenantId),
+    getTenantSetting(CRM_KEYS.LEAD_SOURCES, tenantId),
+    getTenantSetting(CRM_KEYS.MESSAGE_TEMPLATES, tenantId),
   ]);
 
   let leadSources = DEFAULT_SOURCES;
@@ -85,7 +85,7 @@ export async function getCrmSettings(): Promise<CrmSettings> {
   };
 }
 
-export async function saveCrmSettings(data: Partial<CrmSettings>) {
+export async function saveCrmSettings(data: Partial<CrmSettings>, tenantId?: string | null) {
   const entries: [string, string][] = [];
   if (data.routingMode !== undefined) entries.push([CRM_KEYS.ROUTING_MODE, data.routingMode]);
   if (data.autoAssign !== undefined) entries.push([CRM_KEYS.AUTO_ASSIGN, String(data.autoAssign)]);
@@ -94,5 +94,5 @@ export async function saveCrmSettings(data: Partial<CrmSettings>) {
   if (data.messageTemplates !== undefined) {
     entries.push([CRM_KEYS.MESSAGE_TEMPLATES, JSON.stringify(data.messageTemplates)]);
   }
-  await Promise.all(entries.map(([k, v]) => setSetting(k, v)));
+  await Promise.all(entries.map(([k, v]) => setTenantSetting(k, v, tenantId)));
 }

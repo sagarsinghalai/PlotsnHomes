@@ -16,7 +16,7 @@ export async function GET() {
   const auth = await requirePlatformApi();
   if (auth.error) return auth.error;
   try {
-    return NextResponse.json({ success: true, config: await getMaskedWhatsAppConfig() });
+    return NextResponse.json({ success: true, config: await getMaskedWhatsAppConfig(auth.tenantId) });
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
   }
@@ -27,8 +27,8 @@ export async function POST(req: Request) {
   if (auth.error) return auth.error;
   try {
     const body = (await req.json()) as Partial<WhatsAppConfig>;
-    const merged = await mergeWhatsAppUpdate(body);
-    await saveWhatsAppConfig(merged);
+    const merged = await mergeWhatsAppUpdate(body, auth.tenantId);
+    await saveWhatsAppConfig(merged, auth.tenantId);
     return NextResponse.json({ success: true });
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });

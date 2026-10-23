@@ -8,7 +8,7 @@ export async function GET() {
   const auth = await requireCrmApi();
   if (auth.error) return auth.error;
   try {
-    return NextResponse.json({ success: true, config: await getBotConfig() });
+    return NextResponse.json({ success: true, config: await getBotConfig(auth.tenantId) });
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
   }
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
             .filter((r) => r.keywords.length && r.reply.trim())
         : [],
     };
-    await saveBotConfig(cfg);
+    await saveBotConfig(cfg, auth.tenantId);
     return NextResponse.json({ success: true });
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message }, { status: 500 });
