@@ -36,6 +36,7 @@ export type UserRow = {
   lastActiveAt: string | null;
   createdAt: string;
   kycStatus: string | null;
+  canManage?: boolean;
   _count: { properties: number; transactions: number };
 };
 
@@ -83,6 +84,7 @@ export function UsersDirectory({
   const [bulkOpen, setBulkOpen] = useState(false);
   const [viewMode, setViewMode] = useViewMode("admin-users", "list");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const exportMenuRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = 5;
@@ -108,6 +110,27 @@ export function UsersDirectory({
     }
   }
 
+
+  async function handleToggleActive(u: UserRow) {
+    const next = !u.active;
+    if (!next && !window.confirm(`Deactivate ${u.name}? They will be signed out and cannot log in until reactivated. No data is deleted.`)) return;
+    setTogglingId(u.id);
+    try {
+      const res = await fetch(`/api/admin/users/${u.id}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: next }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { showToast("err", data.error || "Could not update account."); return; }
+      showToast("ok", `${next ? "Activated" : "Deactivated"} ${u.name}.`);
+      router.refresh();
+    } catch {
+      showToast("err", "Could not update account.");
+    } finally {
+      setTogglingId(null);
+    }
+  }
 
   const { getCellValue, updateCell } = useCustomCellData("users_directory");
 
@@ -491,6 +514,17 @@ export function UsersDirectory({
                     >
                       <Pencil className="h-3.5 w-3.5" /> {canEdit ? "Edit" : "View"}
                     </Link>
+                    {u.canManage && (
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(u)}
+                        disabled={togglingId === u.id}
+                        title={u.active ? "Deactivate account" : "Activate account"}
+                        className={`p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 ${u.active ? "text-slate-500 hover:text-rose-600" : "text-slate-500 hover:text-emerald-600"}`}
+                      >
+                        {togglingId === u.id ? <Loader2 className="h-4 w-4 animate-spin" /> : (u.active ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />)}
+                      </button>
+                    )}
                     {canEdit && (
                       <button
                         type="button"
@@ -699,6 +733,17 @@ export function UsersDirectory({
                           <Pencil className="h-3 w-3" />
                           {canEdit ? "Edit" : "View"}
                         </Link>
+                        {u.canManage && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleToggleActive(u); }}
+                            disabled={togglingId === u.id}
+                            title={u.active ? "Deactivate account" : "Activate account"}
+                            className={`inline-flex items-center justify-center rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-1.5 transition disabled:opacity-50 ${u.active ? "text-slate-500 hover:border-rose-400 hover:text-rose-600" : "text-slate-500 hover:border-emerald-400 hover:text-emerald-600"}`}
+                          >
+                            {togglingId === u.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : (u.active ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />)}
+                          </button>
+                        )}
                         {canEdit && (
                           <button
                             type="button"

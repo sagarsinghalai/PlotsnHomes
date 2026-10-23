@@ -3,13 +3,30 @@ import { UsersDirectory } from "@/components/admin/users-directory";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { isSuperAdmin } from "@/lib/roles";
+import { canManageUser } from "@/lib/user-management";
 
 export default async function AdminUsersPage({
   searchParams,
 }: {
   searchParams: { segment?: string; search?: string };
 }) {
+  const session = await getServerSession(authOptions);
+  const superAdmin = session?.user?.role ? isSuperAdmin(session.user.role) : false;
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+
+  // Platform owner sees everyone; a tenant/parent admin sees only their own tenant.
+  const actor = session?.user?.id
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { id: true, role: true, tenantId: true, franchiseId: true, branchId: true, departmentId: true, teamId: true },
+      })
+    : null;
+
   const users = await prisma.user.findMany({
+    where: superAdmin ? {} : { tenantId },
     orderBy: { createdAt: "desc" },
     include: {
       kycProfile: { select: { status: true } },
@@ -60,6 +77,7 @@ export default async function AdminUsersPage({
           lastActiveAt: u.lastActiveAt?.toISOString() ?? null,
           createdAt: u.createdAt.toISOString(),
           kycStatus: u.kycProfile?.status ?? null,
+          canManage: actor ? canManageUser(actor, u) : false,
           _count: u._count,
         }))}
       />
