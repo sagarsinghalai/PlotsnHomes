@@ -88,6 +88,7 @@ enum SubscriptionInterval {
   QUARTERLY
   YEARLY
   LIFETIME
+  CUSTOM
 }
 
 enum SubscriptionStatus {
@@ -933,6 +934,7 @@ model SubscriptionPlan {
   slug          String               @unique
   description   String?
   interval      SubscriptionInterval
+  durationMinutes Int?               // for CUSTOM interval / short grants (minutes)
   price         Float
   currency      String               @default("usd")
   featuresJson  String?
@@ -949,6 +951,7 @@ model UserSubscription {
   id                 String             @id @default(cuid())
   userId             String
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId     String?            // the tenant/agency this subscription entitles (white-label plans)
   planId             String
   plan               SubscriptionPlan   @relation(fields: [planId], references: [id])
   status             SubscriptionStatus @default(ACTIVE)
@@ -966,6 +969,7 @@ model UserSubscription {
   @@index([userId])
   @@index([planId])
   @@index([status])
+  @@index([organizationId])
 }
 
 model CustomFieldDef {
@@ -1052,6 +1056,8 @@ model Organization {
   whiteLabelAdminId String?
   whiteLabelAdmin   User?       @relation("OrganizationAdmin", fields: [whiteLabelAdminId], references: [id], onDelete: SetNull)
   status            String      @default("ACTIVE")
+  planId            String?     // current subscription plan (white-label SaaS)
+  subscriptionEndsAt DateTime?  // when the current subscription lapses (null = no expiry / lifetime)
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   franchises        Franchise[]

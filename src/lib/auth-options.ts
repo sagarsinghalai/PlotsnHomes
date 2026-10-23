@@ -5,7 +5,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/roles";
 import { writeAudit } from "@/lib/audit";
-import { isTenantAccessAllowed } from "@/lib/tenant-lifecycle";
+import { isOrgAccessAllowed } from "@/lib/subscription-access";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
@@ -24,14 +24,14 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email.toLowerCase() },
-          include: { organizationRel: { select: { status: true } } },
+          include: { organizationRel: { select: { status: true, subscriptionEndsAt: true } } },
         });
         if (!user) return null;
         // Only block when explicitly disabled (undefined = legacy row, still allow login)
         if (user.active === false) return null;
-        // Tenant lifecycle: a suspended/cancelled/pending tenant cannot log in
-        // (data is preserved — this only gates access).
-        if (user.tenantId && !isTenantAccessAllowed(user.organizationRel?.status)) return null;
+        // Tenant lifecycle + subscription: a suspended/cancelled/pending tenant,
+        // or one whose subscription has lapsed, cannot log in (data is preserved).
+        if (user.tenantId && !isOrgAccessAllowed(user.organizationRel)) return null;
 
         const valid = await bcrypt.compare(
           credentials.password,
@@ -142,7 +142,7 @@ export const authOptions: NextAuthOptions = {
             role: true,
             active: true,
             tenantId: true,
-            organizationRel: { select: { status: true } },
+            organizationRel: { select: { status: true, subscriptionEndsAt: true } },
           },
         });
 
@@ -154,9 +154,10 @@ export const authOptions: NextAuthOptions = {
           return token;
         }
 
-        // Tenant lifecycle: sign out mid-session if the tenant is suspended/cancelled.
-        // Skipped while impersonating so the platform owner is never locked out.
-        if (!token.impersonating && dbUser.tenantId && !isTenantAccessAllowed(dbUser.organizationRel?.status)) {
+        // Tenant lifecycle + subscription: sign out mid-session if the tenant is
+        // suspended/cancelled or its subscription lapsed. Skipped while
+        // impersonating so the platform owner is never locked out.
+        if (!token.impersonating && dbUser.tenantId && !isOrgAccessAllowed(dbUser.organizationRel)) {
           delete token.id;
           delete token.role;
           delete token.tenantId;

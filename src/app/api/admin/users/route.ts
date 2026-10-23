@@ -24,6 +24,9 @@ const createSchema = z.object({
   aadhar: z.string().optional().nullable().or(z.literal("")),
   dob: z.string().optional().nullable().or(z.literal("")),
   role: z.nativeEnum(Role).default(Role.BUYER),
+  // Super admins may place the new user in a specific tenant; everyone else
+  // creates within their own tenant.
+  organizationId: z.string().optional().nullable().or(z.literal("")),
 });
 
 export async function POST(req: Request) {
@@ -62,6 +65,11 @@ export async function POST(req: Request) {
     const passwordHash = await bcrypt.hash(data.password, 12);
     const nextUserId = await generateNextUserId();
 
+    // Stamp the tenant: a super admin may target a specific org; everyone else
+    // (e.g. a white-label admin building their team) creates within their own.
+    const isSuper = auth.session?.user?.role === Role.SUPERADMIN;
+    const tenantId = (isSuper && data.organizationId) ? data.organizationId : (auth.tenantId ?? null);
+
     const user = await prisma.user.create({
       data: {
         userId: nextUserId,
@@ -74,6 +82,7 @@ export async function POST(req: Request) {
         aadhar: data.aadhar?.trim() ?? null,
         dob: data.dob ? new Date(data.dob) : null,
         role: data.role,
+        tenantId,
       },
     });
 

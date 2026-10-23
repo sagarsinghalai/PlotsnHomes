@@ -23,6 +23,8 @@ try {
 
 const { prisma } = await import("@/lib/prisma");
 const { isTenantAccessAllowed, canTransition, isTenantStatus } = await import("@/lib/tenant-lifecycle");
+const { isOrgAccessAllowed, markLapsedOrgsPastDue } = await import("@/lib/subscription-access");
+const { periodEndFromInterval } = await import("@/lib/subscription");
 
 let pass = 0, fail = 0;
 const queue: Array<[string, () => void | Promise<void>]> = [];
@@ -97,6 +99,39 @@ test("suspending the tenant blocks its user but preserves data", async () => {
   // Reactivation restores access.
   await prisma.organization.update({ where: { id: orgId }, data: { status: "ACTIVE" } });
   assert.equal(await userCanAccess(userId), true, "reactivated tenant user can access again");
+});
+
+test("CUSTOM interval computes a minute-level expiry; LIFETIME never expires", () => {
+  const start = new Date("2026-01-01T00:00:00Z");
+  const fiveMin = periodEndFromInterval(start, "CUSTOM" as any, 5);
+  assert.ok(fiveMin, "CUSTOM with minutes yields an end date");
+  assert.equal(fiveMin!.getTime() - start.getTime(), 5 * 60 * 1000, "exactly 5 minutes");
+  assert.equal(periodEndFromInterval(start, "LIFETIME" as any), null, "LIFETIME never expires");
+  assert.equal(periodEndFromInterval(start, "CUSTOM" as any, 0), null, "CUSTOM with 0 = no expiry");
+});
+
+test("an expired subscription blocks access even when status is ACTIVE", () => {
+  const past = new Date(Date.now() - 60 * 1000);
+  const future = new Date(Date.now() + 60 * 60 * 1000);
+  assert.equal(isOrgAccessAllowed({ status: "ACTIVE", subscriptionEndsAt: past }), false, "lapsed sub blocks");
+  assert.equal(isOrgAccessAllowed({ status: "ACTIVE", subscriptionEndsAt: future }), true, "active + in-term allows");
+  assert.equal(isOrgAccessAllowed({ status: "ACTIVE", subscriptionEndsAt: null }), true, "no expiry (lifetime) allows");
+  assert.equal(isOrgAccessAllowed({ status: "SUSPENDED", subscriptionEndsAt: future }), false, "suspended blocks regardless");
+});
+
+test("markLapsedOrgsPastDue flips an ACTIVE, expired tenant to PAST_DUE", async () => {
+  await prisma.organization.update({
+    where: { id: orgId },
+    data: { status: "ACTIVE", subscriptionEndsAt: new Date(Date.now() - 60 * 1000) },
+  });
+  const flipped = await markLapsedOrgsPastDue();
+  assert.ok(flipped.includes(orgId), "the lapsed org was transitioned");
+  const after = await prisma.organization.findUnique({ where: { id: orgId }, select: { status: true } });
+  assert.equal(after?.status, "PAST_DUE");
+  // And its user is now blocked (PAST_DUE still allows; expiry is what blocks) —
+  // verify the combined gate via the org shape.
+  const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { status: true, subscriptionEndsAt: true } });
+  assert.equal(isOrgAccessAllowed(org), false, "expired PAST_DUE org is blocked by the subscription gate");
 });
 
 try {
