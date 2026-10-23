@@ -6,6 +6,7 @@ import { CityLandmarkSlider } from "@/components/property/city-landmark-slider";
 import { TestimonialsSection } from "@/components/property/testimonials-section";
 import { prisma } from "@/lib/prisma";
 import { getBhkConfigurations } from "@/lib/system-settings";
+import { getPublicTenantId } from "@/lib/public-tenant";
 import { getSiteSetting, SITE_SETTING_KEYS, HeroStat, HeroCard, FeaturedArea, HeroContent, HowItWorksStep, TestimonialsConfig, TeamMemberItem } from "@/lib/site-settings";
 import { formatCurrency, parseImages } from "@/lib/utils";
 import { ShieldCheck, CreditCard, Home, Coins, TrendingUp, ArrowRight, Check, ArrowDownLeft, ArrowUpRight, BarChart3, Search, Activity, Landmark, Smartphone, Zap, Sparkles, CheckCircle, Wallet } from "lucide-react";
@@ -14,8 +15,9 @@ import { LeadCaptureForm } from "@/components/public/lead-capture-form";
 import { ProjectsShowcase, type ShowcaseProject } from "@/components/public/projects-showcase";
 
 export default async function HomePage() {
+  const tenantId = await getPublicTenantId();
   const [
-    featured, 
+    featured,
     totalCount, 
     priceRange, 
     citiesRaw, 
@@ -32,33 +34,33 @@ export default async function HomePage() {
     siteTeamMembers
   ] = await Promise.all([
     prisma.property.findMany({
-      where: { status: "ACTIVE", featured: true },
+      where: { status: "ACTIVE", featured: true, tenantId },
       take: 6,
       include: { agent: { select: { name: true, email: true, phone: true } } },
       orderBy: { volumeScore: "desc" },
     }),
-    prisma.property.count({ where: { status: "ACTIVE" } }),
+    prisma.property.count({ where: { status: "ACTIVE", tenantId } }),
     prisma.property.aggregate({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       _min: { price: true },
       _max: { price: true },
     }),
     prisma.property.findMany({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       select: { city: true, state: true },
       distinct: ["city", "state"],
       orderBy: { city: "asc" },
       take: 40,
     }),
     prisma.property.findMany({
-      where: { status: "ACTIVE", area: { not: null } },
+      where: { status: "ACTIVE", area: { not: null }, tenantId },
       select: { area: true },
       distinct: ["area"],
       take: 30,
     }),
     prisma.property.groupBy({
       by: ["area"],
-      where: { status: "ACTIVE", area: { not: null } },
+      where: { status: "ACTIVE", area: { not: null }, tenantId },
       _count: { _all: true },
       orderBy: { _count: { area: "desc" } },
       take: 8,
@@ -70,7 +72,7 @@ export default async function HomePage() {
     getSiteSetting<HeroContent>(SITE_SETTING_KEYS.HERO_CONTENT),
     getSiteSetting<HowItWorksStep[]>(SITE_SETTING_KEYS.HOW_IT_WORKS),
     prisma.property.findMany({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       select: { title: true, symbol: true },
       orderBy: { title: "asc" },
       take: 200,
@@ -81,7 +83,7 @@ export default async function HomePage() {
 
   // Developer projects shown on the public home page (lead-gen showcase).
   const projectRows = await prisma.project.findMany({
-    where: { showOnWebsite: true },
+    where: { showOnWebsite: true, tenantId },
     orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
     take: 60,
     select: {
@@ -104,7 +106,7 @@ export default async function HomePage() {
     featured.length >= 6
       ? featured
       : await prisma.property.findMany({
-          where: { status: "ACTIVE" },
+          where: { status: "ACTIVE", tenantId },
           take: 6,
           include: { agent: { select: { name: true, email: true, phone: true } } },
           orderBy: { changeYtd: "desc" },
@@ -112,7 +114,7 @@ export default async function HomePage() {
 
   const areas = areasRaw.map((a) => a.area).filter(Boolean) as string[];
   const agents = await prisma.user.findMany({
-    where: { role: "AGENT", active: true },
+    where: { role: "AGENT", active: true, tenantId },
     take: 4,
     orderBy: { createdAt: "asc" },
   });

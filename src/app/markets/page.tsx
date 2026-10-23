@@ -6,19 +6,21 @@ import { changeColor, marketRatingColor } from "@/lib/market";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { BodyThemeSync } from "@/components/layout/body-theme-sync";
+import { getPublicTenantId } from "@/lib/public-tenant";
 
 export const dynamic = "force-dynamic";
 
 export default async function MarketsPage() {
+  const tenantId = await getPublicTenantId();
   const [properties, stats] = await Promise.all([
     prisma.property.findMany({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       orderBy: { volumeScore: "desc" },
       take: 100,
       include: { agent: { select: { name: true } } },
     }),
     prisma.property.aggregate({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       _avg: { yieldRate: true, capRate: true, changeYtd: true, price: true },
       _count: true,
     }),

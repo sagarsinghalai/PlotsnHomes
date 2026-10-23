@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth-options";
 import { assignLeadOwner } from "@/lib/lead-routing";
 import { calculateLeadScore } from "@/lib/lead-scoring";
 import { prisma } from "@/lib/prisma";
-import { resolveTenantForOwnerOrProperty } from "@/lib/tenant";
+import { resolvePublicTenantId } from "@/lib/public-tenant";
 import { notifyAgentNewLead } from "@/lib/whatsapp-central";
 
 // Public lead-capture endpoint used by the website lead-gen forms
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     const property = data.propertyId
       ? await prisma.property.findUnique({
           where: { id: data.propertyId },
-          select: { id: true, title: true, symbol: true, agentId: true },
+          select: { id: true, title: true, symbol: true, agentId: true, tenantId: true },
         })
       : null;
 
@@ -56,7 +56,9 @@ export async function POST(req: Request) {
     if (data.message) requirementParts.push(data.message);
     const requirements = requirementParts.length ? requirementParts.join("\n") : null;
 
-    const leadTenant = await resolveTenantForOwnerOrProperty(ownerId, property?.id ?? null);
+    // Attribute to the property's tenant when the form came from a listing,
+    // otherwise to the tenant whose domain the visitor is on (per-domain routing).
+    const leadTenant = property?.tenantId ?? (await resolvePublicTenantId(req.headers.get("host")));
     const lead = await prisma.lead.create({
       data: {
         tenantId: leadTenant,

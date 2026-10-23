@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
 import { ProjectGallery } from "@/components/public/project-gallery";
 import { LeadCaptureForm } from "@/components/public/lead-capture-form";
+import { getPublicTenantId } from "@/lib/public-tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -87,8 +88,9 @@ function Fact({ label, value }: { label: string; value: React.ReactNode }) {
 
 /* ───────────────────────── page ───────────────────────── */
 export default async function ProjectDetailPage({ params }: { params: { slug: string } }) {
-  const project = await prisma.project.findUnique({
-    where: { slug: params.slug },
+  const tenantId = await getPublicTenantId();
+  const project = await prisma.project.findFirst({
+    where: { slug: params.slug, tenantId },
     include: { developer: true, _count: { select: { properties: true } } },
   });
   if (!project || project.showOnWebsite === false) notFound();

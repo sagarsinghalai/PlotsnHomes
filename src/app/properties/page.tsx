@@ -11,6 +11,7 @@ import {
 } from "@/lib/property-search";
 import { prisma } from "@/lib/prisma";
 import { getBhkConfigurations } from "@/lib/system-settings";
+import { getPublicTenantId } from "@/lib/public-tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +20,9 @@ export default async function PropertiesPage({
 }: {
   searchParams: PropertySearchParams;
 }) {
+  const tenantId = await getPublicTenantId();
   const filters = parsePropertySearch(searchParams);
-  const where = buildPropertyWhere(filters);
+  const where = { ...buildPropertyWhere(filters), tenantId };
   const orderBy = buildPropertyOrderBy(filters.sort);
 
   const [total, properties, priceRange, citiesRaw, areasRaw, suggestionsRaw, bhkOptions] = await Promise.all([
@@ -33,25 +35,25 @@ export default async function PropertiesPage({
       include: { agent: { select: { name: true, email: true, phone: true } } },
     }),
     prisma.property.aggregate({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       _min: { price: true },
       _max: { price: true },
     }),
     prisma.property.findMany({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       select: { city: true, state: true },
       distinct: ["city", "state"],
       orderBy: { city: "asc" },
       take: 40,
     }),
     prisma.property.findMany({
-      where: { status: "ACTIVE", area: { not: null } },
+      where: { status: "ACTIVE", area: { not: null }, tenantId },
       select: { area: true },
       distinct: ["area"],
       take: 30,
     }),
     prisma.property.findMany({
-      where: { status: "ACTIVE" },
+      where: { status: "ACTIVE", tenantId },
       select: { title: true, symbol: true },
       orderBy: { title: "asc" },
       take: 200,

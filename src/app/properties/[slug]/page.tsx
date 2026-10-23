@@ -16,6 +16,7 @@ import { razorpayConfigured } from "@/lib/razorpay";
 import { CurrencyConverter } from "@/components/property/currency-converter";
 import { PropertyActions } from "@/components/property/property-actions";
 import { getPublicWhatsAppNumber } from "@/lib/whatsapp-settings";
+import { getPublicTenantId } from "@/lib/public-tenant";
 import { PropertyPrintBrochure } from "@/components/property/property-print-brochure";
 import { formatCurrency, parseImages, parseJsonArray } from "@/lib/utils";
 import { Metadata } from "next";
@@ -76,8 +77,9 @@ export default async function PropertyDetailPage({
 }: {
   params: { slug: string };
 }) {
-  const property = await prisma.property.findUnique({
-    where: { slug: params.slug },
+  const tenantId = await getPublicTenantId();
+  const property = await prisma.property.findFirst({
+    where: { slug: params.slug, tenantId },
     include: {
       agent: true,
       developer: { select: { id: true, name: true, city: true } },
