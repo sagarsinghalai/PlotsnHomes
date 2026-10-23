@@ -32,7 +32,7 @@ const postSchema = z.object({
 });
 
 async function getLeadIfAllowed(id: string, auth: NonNullable<Awaited<ReturnType<typeof requireCrmApi>> & { error?: never }>) {
-  const scope = leadScopeForUser(auth.session.user.role, auth.userId);
+  const scope = leadScopeForUser(auth.session.user.role, auth.userId, auth.tenantId);
   return prisma.lead.findFirst({ where: { id, ...scope } });
 }
 

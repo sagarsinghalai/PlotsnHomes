@@ -5,6 +5,8 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { SMART_LISTS, countSmartList, smartListWhere, type SmartListId } from "@/lib/smart-lists";
 import { getPipelineConfig } from "@/lib/pipeline-settings";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 import { getPipelines } from "@/lib/pipeline-store";
 
@@ -13,8 +15,10 @@ export default async function AdminLeadsPage({
 }: {
   searchParams: { list?: string };
 }) {
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
   const listId = (searchParams.list ?? "all") as SmartListId;
-  const where = await smartListWhere(listId);
+  const where = { tenantId, ...(await smartListWhere(listId)) };
 
   const [leads, pipelineConfig, totalAll, agents, properties, pipelines, ...counts] = await Promise.all([
     prisma.lead.findMany({
@@ -27,12 +31,14 @@ export default async function AdminLeadsPage({
       },
     }),
     getPipelineConfig(),
-    prisma.lead.count(),
+    prisma.lead.count({ where: { tenantId } }),
     prisma.user.findMany({
+      where: { tenantId },
       select: { id: true, name: true, email: true, userId: true },
       orderBy: { name: "asc" },
     }),
     prisma.property.findMany({
+      where: { tenantId },
       select: { id: true, title: true, symbol: true },
       orderBy: { title: "asc" },
     }),

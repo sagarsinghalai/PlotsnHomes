@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdminApi } from "@/lib/admin-api";
 import { hasEditPermissionServer, hasDeletePermissionServer } from "@/lib/permissions";
+import { tenantScope } from "@/lib/data-access";
 
 // Valid Project scalar columns — used to drop any UI-only fields the editor
 // sends that are not actual database columns (e.g. relationshipsJson).
@@ -13,8 +14,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const project = await prisma.project.findUnique({
-      where: { id: params.id },
+    const auth = await requireAdminApi();
+    if (auth.error) return auth.error;
+
+    const project = await prisma.project.findFirst({
+      where: { id: params.id, ...tenantScope(auth.tenantId) },
       include: {
         developer: true,
         properties: true,
@@ -52,8 +56,19 @@ export async function PUT(
         { status: 403 }
       );
     }
+    const owned = await prisma.project.findFirst({
+      where: { id: params.id, ...tenantScope(auth.tenantId) },
+      select: { id: true },
+    });
+    if (!owned) {
+      return NextResponse.json(
+        { success: false, error: "Project not found" },
+        { status: 404 }
+      );
+    }
+
     const body = await req.json();
-    
+
     // Clean stringified JSON payload fields
     const dataToUpdate: any = { ...body };
     delete dataToUpdate.id;
@@ -128,6 +143,17 @@ export async function DELETE(
       return NextResponse.json(
         { success: false, error: "Forbidden: You do not have permission to delete projects." },
         { status: 403 }
+      );
+    }
+
+    const owned = await prisma.project.findFirst({
+      where: { id: params.id, ...tenantScope(auth.tenantId) },
+      select: { id: true },
+    });
+    if (!owned) {
+      return NextResponse.json(
+        { success: false, error: "Project not found" },
+        { status: 404 }
       );
     }
 

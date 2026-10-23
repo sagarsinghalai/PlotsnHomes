@@ -19,7 +19,7 @@ export async function PATCH(req: Request, { params }: { params: { taskId: string
       include: { lead: { select: { id: true, ownerId: true } } },
     });
     if (!taskRow) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    const scope = leadScopeForUser(auth.session.user.role, auth.userId);
+    const scope = leadScopeForUser(auth.session.user.role, auth.userId, auth.tenantId);
     if (scope.ownerId && taskRow.lead.ownerId !== auth.userId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -49,7 +49,7 @@ export async function DELETE(_req: Request, { params }: { params: { taskId: stri
       include: { lead: { select: { ownerId: true } } },
     });
     if (!taskRow) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    const scope = leadScopeForUser(auth.session.user.role, auth.userId);
+    const scope = leadScopeForUser(auth.session.user.role, auth.userId, auth.tenantId);
     if (scope.ownerId && taskRow.lead.ownerId !== auth.userId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

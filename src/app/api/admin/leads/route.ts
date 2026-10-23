@@ -2,6 +2,7 @@ import { LeadStage } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { leadScopeForUser, requireCrmApi } from "@/lib/crm-access";
+import { noTenantResponse } from "@/lib/data-access";
 import { assignLeadOwner } from "@/lib/lead-routing";
 import { prisma } from "@/lib/prisma";
 import { calculateLeadScore } from "@/lib/lead-scoring";
@@ -34,7 +35,7 @@ export async function GET(req: Request) {
   const ownerId = searchParams.get("ownerId");
   const source = searchParams.get("source");
 
-  const scope = leadScopeForUser(auth.session.user.role, auth.userId);
+  const scope = leadScopeForUser(auth.session.user.role, auth.userId, auth.tenantId);
   const leads = await prisma.lead.findMany({
     where: {
       ...scope,
@@ -56,6 +57,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const auth = await requireCrmApi();
   if (auth.error) return auth.error;
+  if (!auth.tenantId) return noTenantResponse();
 
   try {
     const data = createSchema.parse(await req.json());
@@ -94,6 +96,7 @@ export async function POST(req: Request) {
 
     const lead = await prisma.lead.create({
       data: {
+        tenantId: auth.tenantId,
         name: data.name,
         email: data.email ? data.email : "",
         phone: data.phone,

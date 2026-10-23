@@ -6,6 +6,7 @@ import { propertyCreateSchema, serializeMediaArrays } from "@/lib/property-admin
 import { getPlatformRates } from "@/lib/system-settings";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/utils";
+import { tenantScope, noTenantResponse } from "@/lib/data-access";
 
 export async function POST(req: Request) {
   const auth = await requireAdminApi();
@@ -19,6 +20,8 @@ export async function POST(req: Request) {
     );
   }
 
+  if (!auth.tenantId) return noTenantResponse();
+
   try {
     const body = await req.json();
     const data = propertyCreateSchema.parse(body);
@@ -28,7 +31,11 @@ export async function POST(req: Request) {
       data.agentId ??
       (
         await prisma.user.findFirst({
-          where: { role: { in: ["SUPERADMIN", "EMPLOYEE", "AGENT"] }, active: true },
+          where: {
+            role: { in: ["SUPERADMIN", "EMPLOYEE", "AGENT"] },
+            active: true,
+            ...tenantScope(auth.tenantId),
+          },
           orderBy: { createdAt: "asc" },
         })
       )?.id;
@@ -39,7 +46,10 @@ export async function POST(req: Request) {
 
     const slug = slugify(`${data.symbol}-${data.title}`);
     const existing = await prisma.property.findFirst({
-      where: { OR: [{ slug }, { symbol: data.symbol.toUpperCase() }] },
+      where: {
+        ...tenantScope(auth.tenantId),
+        OR: [{ slug }, { symbol: data.symbol.toUpperCase() }],
+      },
     });
     if (existing) {
       return NextResponse.json(
@@ -50,6 +60,7 @@ export async function POST(req: Request) {
 
     const property = await prisma.property.create({
       data: {
+        tenantId: auth.tenantId,
         symbol: data.symbol.toUpperCase(),
         title: data.title,
         slug,

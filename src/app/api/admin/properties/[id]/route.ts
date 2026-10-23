@@ -4,6 +4,7 @@ import { requireAdminApi } from "@/lib/admin-api";
 import { hasEditPermissionServer, hasDeletePermissionServer } from "@/lib/permissions";
 import { propertyPatchSchema, serializeMediaArrays } from "@/lib/property-admin-schema";
 import { prisma } from "@/lib/prisma";
+import { tenantScope } from "@/lib/data-access";
 
 export async function GET(
   _req: Request,
@@ -12,8 +13,8 @@ export async function GET(
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
 
-  const property = await prisma.property.findUnique({
-    where: { id: params.id },
+  const property = await prisma.property.findFirst({
+    where: { id: params.id, ...tenantScope(auth.tenantId) },
     include: { agent: { select: { id: true, name: true, email: true } } },
   });
   if (!property) {
@@ -41,7 +42,9 @@ export async function PATCH(
     const body = await req.json();
     const data = propertyPatchSchema.parse(body);
 
-    const existing = await prisma.property.findUnique({ where: { id: params.id } });
+    const existing = await prisma.property.findFirst({
+      where: { id: params.id, ...tenantScope(auth.tenantId) },
+    });
     if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
@@ -144,6 +147,14 @@ export async function DELETE(
       { error: "Forbidden: You do not have permission to delete properties." },
       { status: 403 }
     );
+  }
+
+  const existing = await prisma.property.findFirst({
+    where: { id: params.id, ...tenantScope(auth.tenantId) },
+    select: { id: true },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   try {

@@ -2,16 +2,20 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminApi } from "@/lib/admin-api";
 import { hasAddPermissionServer } from "@/lib/permissions";
+import { tenantScope, noTenantResponse } from "@/lib/data-access";
 
 export async function GET(req: Request) {
   try {
+    const auth = await requireAdminApi();
+    if (auth.error) return auth.error;
+
     const { searchParams } = new URL(req.url);
     const developerId = searchParams.get("developerId");
     const status = searchParams.get("status");
     const city = searchParams.get("city");
     const q = searchParams.get("q");
 
-    const where: any = {};
+    const where: any = { ...tenantScope(auth.tenantId) };
     if (developerId && developerId !== "ALL") {
       where.developerId = developerId;
     }
@@ -217,12 +221,15 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!auth.tenantId) return noTenantResponse();
+
     const generatedSlug = slug
       ? slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-")
       : name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
 
     const project = await prisma.project.create({
       data: {
+        tenantId: auth.tenantId,
         name: name.trim(),
         code: code || `PRJ-${Math.floor(1000 + Math.random() * 9000)}`,
         slug: generatedSlug,

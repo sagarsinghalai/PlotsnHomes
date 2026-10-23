@@ -4,14 +4,17 @@ import { requireAdminApi } from "@/lib/admin-api";
 import { assignLeadOwner } from "@/lib/lead-routing";
 import { prisma } from "@/lib/prisma";
 import { notifyAgentNewLead } from "@/lib/whatsapp-central";
+import { tenantScope, noTenantResponse } from "@/lib/data-access";
 
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
 
+  if (!auth.tenantId) return noTenantResponse();
+
   try {
-    const inquiry = await prisma.inquiry.findUnique({
-      where: { id: params.id },
+    const inquiry = await prisma.inquiry.findFirst({
+      where: { id: params.id, ...tenantScope(auth.tenantId) },
       include: { property: { select: { id: true, title: true, symbol: true, agentId: true } }, lead: true },
     });
     if (!inquiry) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -20,7 +23,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     }
 
     const duplicate = await prisma.lead.findFirst({
-      where: { email: inquiry.email, phone: inquiry.phone ?? undefined },
+      where: { ...tenantScope(auth.tenantId), email: inquiry.email, phone: inquiry.phone ?? undefined },
     });
     if (duplicate) {
       return NextResponse.json({
@@ -34,6 +37,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
     const ownerId = await assignLeadOwner(inquiry.property.agentId);
     const lead = await prisma.lead.create({
       data: {
+        tenantId: auth.tenantId,
         name: inquiry.name,
         email: inquiry.email,
         phone: inquiry.phone,
@@ -72,6 +76,12 @@ export async function DELETE(
   if (auth.error) return auth.error;
 
   try {
+    const owned = await prisma.inquiry.findFirst({
+      where: { id: params.id, ...tenantScope(auth.tenantId) },
+      select: { id: true },
+    });
+    if (!owned) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
     await prisma.inquiry.delete({ where: { id: params.id } });
     return NextResponse.json({ ok: true });
   } catch {

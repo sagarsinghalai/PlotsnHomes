@@ -10,7 +10,7 @@ import { getPipelines } from "@/lib/pipeline-store";
 
 export default async function AgentLeadDetailPage({ params }: { params: { id: string } }) {
   const session = await requireAuth([Role.SUPERADMIN, Role.EMPLOYEE, Role.AGENT]);
-  const scope = leadScopeForUser(session.user.role, session.user.id);
+  const scope = leadScopeForUser(session.user.role, session.user.id, session.user.tenantId);
 
   const [lead, agents, crmSettings, properties, bhkOptions, pipelines] = await Promise.all([
     prisma.lead.findFirst({
