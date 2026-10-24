@@ -132,7 +132,9 @@ export type RolePermissionsConfig = Record<
   Record<string, { view: boolean; add: boolean; edit: boolean; delete: boolean }>
 >;
 
-const fullAdminPerms = {
+type PermCell = { view: boolean; add: boolean; edit: boolean; delete: boolean };
+
+const FULL_ADMIN_BASE: Record<string, PermCell> = {
   overview_dashboard: { view: true, add: true, edit: true, delete: true },
   users_accounts: { view: true, add: true, edit: true, delete: true },
   team_hierarchy: { view: true, add: true, edit: true, delete: true },
@@ -175,12 +177,7 @@ const fullAdminPerms = {
   live_markets: { view: true, add: true, edit: true, delete: true },
 };
 
-const crmStaffPerms = {
-  ...fullAdminPerms,
-  platform: { view: false, add: false, edit: false, delete: false },
-};
-
-const endUserPerms = {
+const END_USER_BASE: Record<string, PermCell> = {
   overview_dashboard: { view: false, add: false, edit: false, delete: false },
   users_accounts: { view: false, add: false, edit: false, delete: false },
   team_hierarchy: { view: false, add: false, edit: false, delete: false },
@@ -219,6 +216,31 @@ const endUserPerms = {
   system_status: { view: false, add: false, edit: false, delete: false },
   live_markets: { view: true, add: true, edit: true, delete: true },
 };
+
+// Every menu item in PERMISSIONS_SCHEMA must appear for every role, so the Roles
+// & Permissions UI never misses an item and route checks never fall through to a
+// missing key. Admin roles default-allow any key not set explicitly above; end
+// users default-deny. Explicit entries in the *_BASE objects always win, and any
+// extra legacy keys they carry are preserved.
+const ALL_PERMISSION_KEYS = PERMISSIONS_SCHEMA.flatMap((h) => h.subheads.map((s) => s.key));
+function fillPermissions(base: Record<string, PermCell>, fallback: PermCell): Record<string, PermCell> {
+  const out: Record<string, PermCell> = {};
+  for (const k of ALL_PERMISSION_KEYS) out[k] = base[k] ? { ...base[k] } : { ...fallback };
+  for (const k of Object.keys(base)) if (!(k in out)) out[k] = { ...base[k] };
+  return out;
+}
+
+const fullAdminPerms = fillPermissions(FULL_ADMIN_BASE, { view: true, add: true, edit: true, delete: true });
+
+// Platform-governance items stay with the platform owner only — a white-label /
+// tenant admin never edits the global role matrix, the platform settings, or the
+// white-label/subscription hub (they'd affect every tenant).
+const PLATFORM_ONLY_KEYS = ["platform", "roles_permissions", "white_label_hub"];
+const NONE: PermCell = { view: false, add: false, edit: false, delete: false };
+const crmStaffPerms: Record<string, PermCell> = { ...fullAdminPerms };
+for (const k of PLATFORM_ONLY_KEYS) crmStaffPerms[k] = { ...NONE };
+
+const endUserPerms = fillPermissions(END_USER_BASE, { ...NONE });
 
 export const DEFAULT_PERMISSIONS: RolePermissionsConfig = {
   ADMIN: fullAdminPerms,
