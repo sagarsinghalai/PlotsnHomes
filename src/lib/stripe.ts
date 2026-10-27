@@ -4,6 +4,13 @@ const stripeSecret = process.env.STRIPE_SECRET_KEY?.trim();
 
 export const stripe = stripeSecret ? new Stripe(stripeSecret) : null;
 
+/** Build a Stripe client from an explicit secret key (tenant/platform-configured). */
+export function stripeClientFor(secretKey: string | null | undefined): Stripe | null {
+  const sk = secretKey?.trim();
+  if (!sk) return null;
+  return new Stripe(sk);
+}
+
 export function stripeConfigured() {
   const sk = process.env.STRIPE_SECRET_KEY?.trim();
   const pk = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim();

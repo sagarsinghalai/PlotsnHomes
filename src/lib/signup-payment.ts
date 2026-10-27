@@ -1,21 +1,26 @@
-import { razorpayConfigured } from "@/lib/razorpay";
 import { createRazorpayOrder, verifyRazorpaySignature } from "@/lib/razorpay-checkout";
-import { stripe, stripeConfigured } from "@/lib/stripe";
+import { stripeClientFor } from "@/lib/stripe";
+import { getResolvedGateway, type ResolvedGateway } from "@/lib/payment-settings";
 
 /**
  * Payment gateway behind self-serve signup / renewal.
  *
- * Razorpay is preferred, then Stripe; with neither configured the flow runs in
- * TEST MODE (payment simulated). Keys come from the environment
- * (RAZORPAY_KEY_ID/SECRET + NEXT_PUBLIC_RAZORPAY_KEY_ID, or STRIPE_SECRET_KEY +
- * NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) — so going live is purely configuration.
+ * The SUBSCRIPTION flow always uses the PLATFORM gateway — the global payment
+ * config (Settings → Payments, saved with no tenant) with an environment-key
+ * fallback. So subscription revenue flows to the platform owner and every
+ * signup invoice is issued in the platform company's name. With neither a
+ * stored config nor env keys the flow runs in TEST MODE (payment simulated).
  */
 export type SignupGateway = "razorpay" | "stripe" | "test";
 
-export function activeSignupGateway(): SignupGateway {
-  if (razorpayConfigured()) return "razorpay";
-  if (stripeConfigured()) return "stripe";
-  return "test";
+/** Resolve the platform (subscription) gateway with live, decrypted credentials. */
+export function resolvePlatformGateway(): Promise<ResolvedGateway> {
+  return getResolvedGateway(null);
+}
+
+/** The active platform gateway kind (async — reads config + env). */
+export async function activeSignupGateway(): Promise<SignupGateway> {
+  return (await resolvePlatformGateway()).provider;
 }
 
 export type SignupOrder =
@@ -26,22 +31,26 @@ export type SignupOrder =
 export type PlanForOrder = { slug: string; name: string; price: number; currency: string };
 
 export async function createSignupOrder(plan: PlanForOrder): Promise<SignupOrder> {
-  const gw = activeSignupGateway();
-  if (gw === "test") return { provider: "test" };
+  const gw = await resolvePlatformGateway();
+  if (gw.provider === "test") return { provider: "test" };
 
-  if (gw === "razorpay") {
+  if (gw.provider === "razorpay") {
     const order = await createRazorpayOrder({
       amountRupees: plan.price, // major units → the helper converts to the smallest unit
       currency: (plan.currency || "INR").toUpperCase(),
       receipt: `signup_${plan.slug}_${Date.now()}`.slice(0, 40),
       notes: { planSlug: plan.slug, kind: "tenant_signup" },
+      creds: { keyId: gw.keyId, keySecret: gw.keySecret },
     });
     return { provider: "razorpay", orderId: order.orderId, amount: order.amount, currency: order.currency, keyId: order.keyId };
   }
 
+  // Stripe
   const amountMinor = Math.round(plan.price * 100);
   const currency = (plan.currency || "usd").toLowerCase();
-  const intent = await stripe!.paymentIntents.create({
+  const client = stripeClientFor(gw.secretKey);
+  if (!client) throw new Error("Stripe is not configured.");
+  const intent = await client.paymentIntents.create({
     amount: amountMinor,
     currency,
     metadata: { planSlug: plan.slug, kind: "tenant_signup" },
@@ -50,7 +59,7 @@ export async function createSignupOrder(plan: PlanForOrder): Promise<SignupOrder
   return {
     provider: "stripe",
     clientSecret: intent.client_secret ?? "",
-    publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "",
+    publishableKey: gw.publishableKey,
     amount: amountMinor,
     currency,
   };
@@ -66,27 +75,31 @@ export type PaymentProof = {
 /**
  * Verify the payment before provisioning. In test mode it always passes (no
  * gateway). With a gateway configured, a missing/invalid proof fails — so no one
- * can provision a paid tenant without paying.
+ * can provision a paid tenant without paying. Verifies against the PLATFORM
+ * gateway's live credentials (config or env).
  */
 export async function verifySignupPayment(proof: PaymentProof): Promise<{ ok: boolean; ref?: string; error?: string }> {
-  const gw = activeSignupGateway();
-  if (gw === "test") return { ok: true, ref: "test-mode" };
+  const gw = await resolvePlatformGateway();
+  if (gw.provider === "test") return { ok: true, ref: "test-mode" };
 
-  if (gw === "razorpay") {
+  if (gw.provider === "razorpay") {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = proof;
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return { ok: false, error: "Payment was not completed." };
     }
-    if (!verifyRazorpaySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
+    if (!verifyRazorpaySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature, gw.keySecret)) {
       return { ok: false, error: "Payment verification failed." };
     }
     return { ok: true, ref: `rzp:${razorpay_payment_id}` };
   }
 
+  // Stripe
   const pi = proof.stripe_payment_intent_id;
   if (!pi) return { ok: false, error: "Payment was not completed." };
+  const client = stripeClientFor(gw.secretKey);
+  if (!client) return { ok: false, error: "Stripe is not configured." };
   try {
-    const intent = await stripe!.paymentIntents.retrieve(pi);
+    const intent = await client.paymentIntents.retrieve(pi);
     if (intent.status !== "succeeded") return { ok: false, error: `Payment not completed (${intent.status}).` };
     return { ok: true, ref: `stripe:${pi}` };
   } catch (e: any) {

@@ -9,7 +9,10 @@
 import crypto from "node:crypto";
 import assert from "node:assert/strict";
 
-// Start from a clean gateway state (ignore any ambient keys).
+// Import prisma FIRST — it loads .env on construction; clear ambient keys AFTER
+// so the env-fallback path is deterministic. Also drop any stored global config.
+const { prisma } = await import("@/lib/prisma");
+await prisma.systemSetting.deleteMany({ where: { key: "payment_gateways" } });
 for (const k of ["RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "NEXT_PUBLIC_RAZORPAY_KEY_ID", "STRIPE_SECRET_KEY", "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"]) {
   delete process.env[k];
 }
@@ -27,7 +30,7 @@ async function runAll() {
 }
 
 test("no gateway configured → test mode, verification passes", async () => {
-  assert.equal(activeSignupGateway(), "test");
+  assert.equal(await activeSignupGateway(), "test");
   const v = await verifySignupPayment({});
   assert.equal(v.ok, true);
   assert.equal(v.ref, "test-mode");
@@ -38,7 +41,7 @@ test("Razorpay configured → requires a valid signed proof", async () => {
   process.env.RAZORPAY_KEY_SECRET = "secret_abcdefghij";
   process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID = "rzp_test_abcdefghij";
   try {
-    assert.equal(activeSignupGateway(), "razorpay", "razorpay becomes the active gateway");
+    assert.equal(await activeSignupGateway(), "razorpay", "razorpay becomes the active gateway");
 
     const missing = await verifySignupPayment({});
     assert.equal(missing.ok, false, "no proof is rejected (no free provisioning)");

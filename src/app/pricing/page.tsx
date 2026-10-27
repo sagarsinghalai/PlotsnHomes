@@ -30,5 +30,6 @@ export default async function PricingPage() {
     features: parseFeatures(p.featuresJson),
   }));
 
-  return <PricingPlans plans={plans} testMode={activeSignupGateway() === "test"} />;
+  const testMode = (await activeSignupGateway()) === "test";
+  return <PricingPlans plans={plans} testMode={testMode} />;
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { createSignupOrder, activeSignupGateway } from "@/lib/signup-payment";
+import { createSignupOrder } from "@/lib/signup-payment";
 
 /**
  * Create a payment order/intent for a signup. Returns the gateway details the
@@ -21,7 +21,8 @@ export async function POST(req: Request) {
 
   try {
     const order = await createSignupOrder({ slug: plan.slug, name: plan.name, price: plan.price, currency: plan.currency });
-    return NextResponse.json({ ok: true, gateway: activeSignupGateway(), order, planName: plan.name });
+    // The gateway the client must drive is exactly the order's provider.
+    return NextResponse.json({ ok: true, gateway: order.provider, order, planName: plan.name });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message || "Could not start checkout." }, { status: 500 });
   }
