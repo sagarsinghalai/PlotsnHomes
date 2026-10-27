@@ -1,8 +1,8 @@
 import type { BrokerageInvoice } from "@prisma/client";
-import type { InvoiceReceiptData } from "@/lib/invoice";
+import type { InvoiceReceiptData, InvoiceIssuer } from "@/lib/invoice";
 import { parseLineItems } from "@/lib/invoice";
 
-export function mapInvoiceToReceipt(inv: BrokerageInvoice): InvoiceReceiptData {
+export function mapInvoiceToReceipt(inv: BrokerageInvoice, issuer?: InvoiceIssuer): InvoiceReceiptData {
   return {
     id: inv.id,
     invoiceNumber: inv.invoiceNumber ?? `BV-INV-${inv.id.slice(0, 8).toUpperCase()}`,
@@ -31,5 +31,6 @@ export function mapInvoiceToReceipt(inv: BrokerageInvoice): InvoiceReceiptData {
     propertyAddress: inv.propertyAddress,
     lineItems: parseLineItems(inv.lineItemsJson),
     notes: inv.notes,
+    issuer,
   };
 }

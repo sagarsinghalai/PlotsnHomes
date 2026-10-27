@@ -1,6 +1,7 @@
 import { InvoiceReceipt } from "@/components/admin/invoice-receipt";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { mapInvoiceToReceipt } from "@/lib/invoice-map";
+import { getInvoiceIssuer } from "@/lib/invoice-issuer";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
 import Link from "next/link";
@@ -18,7 +19,8 @@ export default async function InvoiceDetailPage({
   const inv = await prisma.brokerageInvoice.findFirst({ where: { id: params.id, tenantId } });
   if (!inv) notFound();
 
-  const receipt = mapInvoiceToReceipt(inv);
+  const issuer = await getInvoiceIssuer(inv.tenantId);
+  const receipt = mapInvoiceToReceipt(inv, issuer);
 
   return (
     <div>

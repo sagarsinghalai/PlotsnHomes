@@ -126,7 +126,7 @@ export function InvoiceReceipt({
       >
         <div className="header flex flex-wrap justify-between gap-6 border-b-2 border-brand pb-6 mb-8">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-brand-hover">BrickVest</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand-hover">{invoice.issuer?.companyName ?? "BrickVest"}</p>
             <h1 className="font-display text-2xl font-bold text-slate-900 mt-1">
               {party === "buyer" ? "Payment Receipt" : "Brokerage Invoice"}
             </h1>
@@ -152,10 +152,18 @@ export function InvoiceReceipt({
 
         <div className="grid sm:grid-cols-2 gap-8 mb-8">
           <div>
-            <p className="text-xs font-semibold uppercase text-slate-400 mb-2">From</p>
-            <p className="font-semibold text-slate-900">BrickVest Realty Platform</p>
-            <p className="text-sm text-slate-600 mt-1">support@brickvest.com</p>
-            <p className="text-sm text-slate-600">www.brickvest.com</p>
+            <p className="text-xs font-semibold uppercase text-slate-400 mb-2">From (Merchant of record)</p>
+            <p className="font-semibold text-slate-900">{invoice.issuer?.companyName ?? "BrickVest Realty Platform"}</p>
+            <p className="text-sm text-slate-600 mt-1">{invoice.issuer?.email ?? "support@brickvest.com"}</p>
+            <p className="text-sm text-slate-600">{invoice.issuer?.website ?? "www.brickvest.com"}</p>
+            {invoice.issuer?.address && <p className="text-sm text-slate-600 mt-1">{invoice.issuer.address}</p>}
+            {invoice.issuer?.gstCin && <p className="text-xs text-slate-500 mt-1">{invoice.issuer.gstCin}</p>}
+            {invoice.issuer?.partnerName && (
+              <p className="mt-2 text-xs text-slate-500">
+                Operated by <span className="font-medium text-slate-700">{invoice.issuer.partnerName}</span>
+                {" "}— {invoice.issuer.relationshipLabel} of {invoice.issuer.companyName}
+              </p>
+            )}
           </div>
           <div>
             <p className="text-xs font-semibold uppercase text-slate-400 mb-2">{bill.title}</p>
@@ -266,7 +274,10 @@ export function InvoiceReceipt({
         )}
 
         <p className="mt-10 text-[10px] text-slate-400 text-center">
-          This is a computer-generated document from BrickVest. For queries contact support@brickvest.com
+          This is a computer-generated document issued by {invoice.issuer?.companyName ?? "BrickVest"}
+          {invoice.issuer?.partnerName ? `, operated by ${invoice.issuer.partnerName} (${invoice.issuer.relationshipLabel})` : ""}.
+          {" "}For queries contact {invoice.issuer?.email ?? "support@brickvest.com"}.
+          {invoice.issuer?.copyright ? ` ${invoice.issuer.copyright}` : ""}
         </p>
       </div>
 

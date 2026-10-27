@@ -5,6 +5,22 @@ export type InvoiceLineItem = {
   amount: number;
 };
 
+/**
+ * Who issues the invoice. The platform company is the merchant of record on
+ * every invoice/receipt; the white-label partner that operated the sale is
+ * named as an authorized partner (never as the issuer).
+ */
+export type InvoiceIssuer = {
+  companyName: string; // platform master company (merchant of record)
+  email: string;
+  website: string;
+  address: string;
+  gstCin: string;
+  copyright: string;
+  partnerName: string | null; // the operating white-label partner (tenant org)
+  relationshipLabel: string; // e.g. "Authorized Partner"
+};
+
 export type InvoiceReceiptData = {
   id: string;
   invoiceNumber: string;
@@ -33,6 +49,7 @@ export type InvoiceReceiptData = {
   propertyAddress: string | null;
   lineItems: InvoiceLineItem[];
   notes: string | null;
+  issuer?: InvoiceIssuer;
 };
 
 export function parseLineItems(json: string | null | undefined): InvoiceLineItem[] {
