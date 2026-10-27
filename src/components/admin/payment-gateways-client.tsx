@@ -139,6 +139,26 @@ function GatewaySection({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [err, setErr] = useState("");
+  const [testing, setTesting] = useState<"razorpay" | "stripe" | null>(null);
+  const [testResult, setTestResult] = useState<Record<string, { ok: boolean; text: string }>>({});
+
+  async function runTest(provider: "razorpay" | "stripe") {
+    setTesting(provider);
+    setTestResult((r) => ({ ...r, [provider]: undefined as any }));
+    try {
+      const res = await fetch("/api/admin/payment-settings/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scope, provider }),
+      });
+      const j = await res.json();
+      setTestResult((r) => ({ ...r, [provider]: { ok: !!j.ok, text: j.ok ? j.message : j.error || "Failed" } }));
+    } catch (e: any) {
+      setTestResult((r) => ({ ...r, [provider]: { ok: false, text: e?.message || "Request failed" } }));
+    } finally {
+      setTesting(null);
+    }
+  }
 
   async function save() {
     setSaving(true);
@@ -195,6 +215,7 @@ function GatewaySection({
             <SecretField label="Key Secret" saved={masked.razorpay.hasKeySecret} value={form.razorpay.keySecret} onChange={(v) => setForm({ ...form, razorpay: { ...form.razorpay, keySecret: v } })} />
             <SecretField label="Webhook Secret" saved={masked.razorpay.hasWebhookSecret} value={form.razorpay.webhookSecret} onChange={(v) => setForm({ ...form, razorpay: { ...form.razorpay, webhookSecret: v } })} optional />
           </div>
+          <TestRow provider="razorpay" testing={testing} result={testResult.razorpay} onTest={() => runTest("razorpay")} />
         </div>
 
         {/* Stripe */}
@@ -209,6 +230,7 @@ function GatewaySection({
             <SecretField label="Secret Key" saved={masked.stripe.hasSecretKey} value={form.stripe.secretKey} onChange={(v) => setForm({ ...form, stripe: { ...form.stripe, secretKey: v } })} />
             <SecretField label="Webhook Secret" saved={masked.stripe.hasWebhookSecret} value={form.stripe.webhookSecret} onChange={(v) => setForm({ ...form, stripe: { ...form.stripe, webhookSecret: v } })} optional />
           </div>
+          <TestRow provider="stripe" testing={testing} result={testResult.stripe} onTest={() => runTest("stripe")} />
         </div>
       </div>
 
@@ -303,5 +325,35 @@ function SecretField({ label, saved, value, onChange, optional }: { label: strin
         className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
       />
     </label>
+  );
+}
+
+function TestRow({
+  provider, testing, result, onTest,
+}: {
+  provider: "razorpay" | "stripe";
+  testing: "razorpay" | "stripe" | null;
+  result?: { ok: boolean; text: string };
+  onTest: () => void;
+}) {
+  const busy = testing === provider;
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        onClick={onTest}
+        disabled={busy}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+      >
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+        {busy ? "Testing…" : "Test connection"}
+      </button>
+      {result && (
+        <span className={`inline-flex items-center gap-1 text-xs ${result.ok ? "text-emerald-600" : "text-rose-600"}`}>
+          {result.ok ? <Check className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
+          {result.text}
+        </span>
+      )}
+    </div>
   );
 }
