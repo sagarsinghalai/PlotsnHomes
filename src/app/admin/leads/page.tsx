@@ -7,6 +7,7 @@ import { getPipelineConfig } from "@/lib/pipeline-settings";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { leadScopeForUser } from "@/lib/crm-access";
 
 import { getPipelines } from "@/lib/pipeline-store";
 
@@ -17,8 +18,15 @@ export default async function AdminLeadsPage({
 }) {
   const session = await getServerSession(authOptions);
   const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // Tenant-first, then narrow by the role's data scope: OWN-scope roles
+  // (agents/employees) only see leads they own; leaders see the whole tenant.
+  // Mirrors the API (leadScopeForUser) so the page can't leak more than the API.
+  const scope = session?.user
+    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId, ownerId: "__no_tenant__" as string | undefined };
+  const ownerId = scope.ownerId;
   const listId = (searchParams.list ?? "all") as SmartListId;
-  const where = await smartListWhere(listId, undefined, tenantId);
+  const where = await smartListWhere(listId, ownerId, tenantId);
 
   const [leads, pipelineConfig, totalAll, agents, properties, pipelines, ...counts] = await Promise.all([
     prisma.lead.findMany({
@@ -31,7 +39,7 @@ export default async function AdminLeadsPage({
       },
     }),
     getPipelineConfig(),
-    prisma.lead.count({ where: { tenantId } }),
+    prisma.lead.count({ where: { tenantId, ...(ownerId ? { ownerId } : {}) } }),
     prisma.user.findMany({
       where: { tenantId },
       select: { id: true, name: true, email: true, userId: true },
@@ -43,7 +51,7 @@ export default async function AdminLeadsPage({
       orderBy: { title: "asc" },
     }),
     getPipelines(),
-    ...SMART_LISTS.map((s) => countSmartList(s.id, undefined, tenantId)),
+    ...SMART_LISTS.map((s) => countSmartList(s.id, ownerId, tenantId)),
   ]);
 
   const listCounts = Object.fromEntries(SMART_LISTS.map((s, i) => [s.id, counts[i]]));
