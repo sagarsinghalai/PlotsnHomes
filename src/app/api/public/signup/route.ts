@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { provisionTenantSignup } from "@/lib/signup";
+import { verifySignupPayment } from "@/lib/signup-payment";
 
 /**
- * Public self-serve white-label signup (Stage C). Validates input and delegates
- * to provisionTenantSignup, which creates the tenant + White Label Admin +
- * active subscription. Payment is TEST MODE (simulated — no gateway).
+ * Public self-serve white-label signup. Verifies the payment (real gateway when
+ * configured, simulated in test mode) and then provisions the tenant + White
+ * Label Admin + active subscription.
  */
 const schema = z.object({
   planSlug: z.string().min(1, "Choose a plan"),
@@ -14,6 +15,11 @@ const schema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   companyName: z.string().trim().min(2, "Enter your company / agency name"),
   domain: z.string().trim().optional().or(z.literal("")),
+  // Payment proof (present once a real gateway is configured).
+  razorpay_order_id: z.string().optional(),
+  razorpay_payment_id: z.string().optional(),
+  razorpay_signature: z.string().optional(),
+  stripe_payment_intent_id: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -30,7 +36,13 @@ export async function POST(req: Request) {
   }
 
   try {
-    const result = await provisionTenantSignup(parsed.data);
+    // Verify payment first (passes automatically in test mode).
+    const paid = await verifySignupPayment(parsed.data);
+    if (!paid.ok) {
+      return NextResponse.json({ ok: false, error: paid.error }, { status: 402 });
+    }
+
+    const result = await provisionTenantSignup({ ...parsed.data, paymentRef: paid.ref });
     if (!result.ok) {
       return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
     }

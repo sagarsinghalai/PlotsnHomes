@@ -20,6 +20,7 @@ export type ProvisionInput = {
   password: string;
   companyName: string;
   domain?: string | null;
+  paymentRef?: string | null;
 };
 
 export type ProvisionResult =
@@ -101,7 +102,9 @@ export async function provisionTenantSignup(input: ProvisionInput): Promise<Prov
         status: "ACTIVE",
         currentPeriodStart: now,
         currentPeriodEnd: endsAt,
-        notes: "TEST-MODE signup (no real payment gateway)",
+        notes: input.paymentRef && input.paymentRef !== "test-mode"
+          ? `Signup payment ${input.paymentRef}`
+          : "TEST-MODE signup (no real payment gateway)",
       },
     });
     return { orgId: org.id, adminId: admin.id };

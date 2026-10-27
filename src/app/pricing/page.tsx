@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { PricingPlans, type PricingPlan } from "@/components/public/pricing-plans";
 import { parseFeatures, INTERVAL_LABELS, intervalShort, formatDurationMinutes } from "@/lib/subscription";
+import { activeSignupGateway } from "@/lib/signup-payment";
 
 export const dynamic = "force-dynamic";
 
@@ -29,5 +30,5 @@ export default async function PricingPage() {
     features: parseFeatures(p.featuresJson),
   }));
 
-  return <PricingPlans plans={plans} />;
+  return <PricingPlans plans={plans} testMode={activeSignupGateway() === "test"} />;
 }
