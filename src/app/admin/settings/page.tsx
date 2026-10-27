@@ -1,23 +1,53 @@
+import Link from "next/link";
 import { isEmailConfigured } from "@/lib/email";
-import { stripeConfigured } from "@/lib/stripe";
+import { getMaskedPaymentConfig } from "@/lib/payment-settings";
+import { activeSignupGateway } from "@/lib/signup-payment";
+import { hasEncKey } from "@/lib/credentials-crypto";
 
-export default function AdminSettingsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminSettingsPage() {
+  const [platform, active] = await Promise.all([getMaskedPaymentConfig(null), activeSignupGateway()]);
+
+  const rzpOn = (platform.razorpay.enabled && !!platform.razorpay.keyId && platform.razorpay.hasKeySecret) || platform.envFallback.razorpay;
+  const strOn = (platform.stripe.enabled && !!platform.stripe.publishableKey && platform.stripe.hasSecretKey) || platform.envFallback.stripe;
+  const activeLabel =
+    active === "test" ? "Test mode — subscription payments are simulated" : `Live — subscriptions collected via ${active === "razorpay" ? "Razorpay" : "Stripe"}`;
+
   const checks = [
     {
       name: "Email (Resend)",
       ok: isEmailConfigured(),
-      hint: isEmailConfigured()
-        ? "Real emails will be delivered"
-        : "Emails saved to Admin → Emails (dev log)",
+      hint: isEmailConfigured() ? "Real emails will be delivered" : "Emails saved to Admin → Emails (dev log)",
       env: "RESEND_API_KEY, EMAIL_FROM",
     },
     {
-      name: "Payments (Stripe)",
-      ok: stripeConfigured(),
-      hint: stripeConfigured()
-        ? "Multi-method Checkout: card, ACH, wallets, Cash App, BNPL"
-        : "Demo mode — add keys for real card/bank/wallet payments",
-      env: "STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET",
+      name: "Subscription gateway (platform)",
+      ok: active !== "test",
+      hint: activeLabel,
+      env: "Settings → Payments · platform gateway",
+    },
+    {
+      name: "Razorpay",
+      ok: rzpOn,
+      hint: rzpOn
+        ? `Configured${platform.envFallback.razorpay && !platform.razorpay.enabled ? " via environment" : " in Settings → Payments"}`
+        : "Not configured — add keys in Settings → Payments",
+      env: "keyId + keySecret (encrypted) · env: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET",
+    },
+    {
+      name: "Stripe",
+      ok: strOn,
+      hint: strOn
+        ? `Configured${platform.envFallback.stripe && !platform.stripe.enabled ? " via environment" : " in Settings → Payments"}`
+        : "Not configured — add keys in Settings → Payments",
+      env: "publishableKey + secretKey (encrypted) · env: STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+    },
+    {
+      name: "Secret encryption key",
+      ok: hasEncKey(),
+      hint: hasEncKey() ? "Payment & integration secrets are encrypted at rest" : "Missing — set before storing any live keys",
+      env: "CREDENTIALS_ENC_KEY",
     },
     {
       name: "App URL",
@@ -35,36 +65,38 @@ export default function AdminSettingsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-bold text-slate-900">System status</h1>
-      <p className="mt-1 text-slate-600">Integration health for email and transactions</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl font-bold text-slate-900">System status</h1>
+          <p className="mt-1 text-slate-600">Integration health for email, payments and auth</p>
+        </div>
+        <Link
+          href="/admin/payments"
+          className="rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-hover"
+        >
+          Configure payment gateways →
+        </Link>
+      </div>
 
       <div className="mt-8 grid gap-4">
         {checks.map((c) => (
-          <div
-            key={c.name}
-            className="rounded-2xl border border-slate-200 bg-white p-6 flex items-start gap-4"
-          >
-            <span
-              className={`mt-1 h-3 w-3 rounded-full shrink-0 ${
-                c.ok ? "bg-emerald-500" : "bg-amber-500"
-              }`}
-            />
+          <div key={c.name} className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-6">
+            <span className={`mt-1 h-3 w-3 shrink-0 rounded-full ${c.ok ? "bg-emerald-500" : "bg-amber-500"}`} />
             <div>
               <p className="font-semibold text-slate-900">{c.name}</p>
-              <p className="text-sm text-slate-600 mt-1">{c.hint}</p>
-              <p className="text-xs text-slate-400 mt-2 font-mono">{c.env}</p>
+              <p className="mt-1 text-sm text-slate-600">{c.hint}</p>
+              <p className="mt-2 font-mono text-xs text-slate-400">{c.env}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="mt-8 rounded-xl bg-slate-900 text-white p-6 text-sm">
-        <p className="font-semibold text-brand">Test without API keys</p>
-        <ul className="mt-3 space-y-2 text-slate-300 list-disc list-inside">
-          <li>See <strong className="text-brand">docs/STRIPE-SETUP.md</strong> for real Stripe setup</li>
-          <li>Test card: 4242 4242 4242 4242 — any future expiry, any CVC</li>
-          <li>Submit inquiry → Admin → Emails</li>
-          <li>Add Resend key for real inbox delivery</li>
+      <div className="mt-8 rounded-xl bg-slate-900 p-6 text-sm text-white">
+        <p className="font-semibold text-brand">How payments resolve</p>
+        <ul className="mt-3 list-inside list-disc space-y-2 text-slate-300">
+          <li>Each tenant&apos;s own keys collect their customers&apos; payments; the platform keys collect partner subscriptions.</li>
+          <li>Resolution order: tenant config → environment keys → test mode (simulated).</li>
+          <li>Test cards — Stripe: 4242 4242 4242 4242 · Razorpay: use test-mode keys.</li>
         </ul>
       </div>
     </div>

@@ -1,93 +1,75 @@
-import { PaymentsManager } from "@/components/admin/payments-manager";
+import { PaymentGatewaysClient } from "@/components/admin/payment-gateways-client";
 import { prisma } from "@/lib/prisma";
-import { TransactionStatus, TransactionType } from "@prisma/client";
+import { formatCurrency } from "@/lib/utils";
 import { getServerTenantId } from "@/lib/tenant";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminPaymentsPage() {
   const tenantId = await getServerTenantId();
-  const [dbTransactions, dbUsers] = await Promise.all([
-    prisma.transaction.findMany({
-      where: { tenantId },
-      orderBy: { createdAt: "desc" },
-      take: 15,
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-      },
-    }),
-    prisma.user.findMany({
-      where: { tenantId },
-      take: 15,
-      orderBy: { createdAt: "desc" },
-      select: { id: true, name: true, email: true, createdAt: true },
-    }),
-  ]);
+  const transactions = await prisma.transaction.findMany({
+    where: { tenantId },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+    include: { user: { select: { name: true, email: true } } },
+  });
 
-  const methods = [
-    "UPI - PhonePe",
-    "Razorpay Card",
-    "NEFT",
-    "IMPS",
-    "Stripe",
-    "PayPal",
-    "USDT TRC20",
-    "Bitcoin",
-    "UPI - GPay",
-    "Wire Transfer",
-  ];
-  const gateways = [
-    "Razorpay",
-    "Stripe",
-    "Cashfree",
-    "PhonePe",
-    "Paytm",
-    "Wise",
-    "Coinbase",
-    "Direct",
-  ];
-
-  // Map real database transactions
-  let parsedPayments = dbTransactions.map((p, i) => ({
-    id: p.id,
-    userName: p.user?.name || "Customer",
-    userEmail: p.user?.email || "user@example.com",
-    amount: p.amount,
-    currency: p.currency || "INR",
-    status: p.status,
-    method: p.paymentMethod || methods[i % methods.length],
-    gateway: gateways[i % gateways.length],
-    type: p.type,
-    createdAt: p.createdAt.toISOString(),
-  }));
-
-  // If database transactions are fewer than 10, complement using real database users!
-  if (parsedPayments.length < 10 && dbUsers.length > 0) {
-    const statuses: TransactionStatus[] = ["COMPLETED", "COMPLETED", "PENDING", "COMPLETED", "FAILED", "COMPLETED"];
-    const existingEmails = new Set(parsedPayments.map((p) => p.userEmail));
-    const extraUserTxns = dbUsers
-      .filter((u) => !existingEmails.has(u.email))
-      .map((u, i) => ({
-        id: `PAY-${8000 + i}`,
-        userName: u.name || "Customer",
-        userEmail: u.email,
-        amount: Math.round((25000 + ((i * 37500) % 1500000)) * 100) / 100,
-        currency: "INR",
-        status: statuses[i % statuses.length],
-        method: methods[i % methods.length],
-        gateway: gateways[i % gateways.length],
-        type: (i % 2 === 0 ? "BUY" : "DEPOSIT") as TransactionType,
-        createdAt: u.createdAt.toISOString(),
-      }));
-
-    parsedPayments = [...parsedPayments, ...extraUserTxns].slice(0, 12);
-  }
+  const statusChip: Record<string, string> = {
+    COMPLETED: "bg-emerald-100 text-emerald-800",
+    PENDING: "bg-amber-100 text-amber-800",
+    FAILED: "bg-rose-100 text-rose-800",
+    REFUNDED: "bg-slate-200 text-slate-700",
+  };
 
   return (
-    <div>
-      <h1 className="font-display text-3xl font-bold text-slate-900">Payment Methods</h1>
-      <p className="mt-1 text-slate-600 mb-8">
-        Configure payment gateways, monitor receiver bank accounts, and view recent settlement activity
-      </p>
-      <PaymentsManager recentPayments={parsedPayments} />
+    <div className="space-y-10">
+      <div>
+        <h1 className="font-display text-3xl font-bold text-slate-900">Payment gateways</h1>
+        <p className="mt-1 text-slate-600">
+          Connect your own Razorpay / Stripe keys to collect payments. Secrets are encrypted at rest and never shown back.
+        </p>
+      </div>
+
+      <PaymentGatewaysClient />
+
+      <section>
+        <h2 className="font-display text-xl font-bold text-slate-900">Recent transactions</h2>
+        <p className="mt-1 text-sm text-slate-500">Real settlement activity recorded against your account.</p>
+        <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          {transactions.length === 0 ? (
+            <div className="p-10 text-center text-sm text-slate-500">No transactions yet.</div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-4 py-3">Reference</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3 text-right">Amount</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((t) => (
+                  <tr key={t.id} className="border-b border-slate-50 last:border-0">
+                    <td className="px-4 py-3 font-mono text-xs text-slate-600">{t.id.slice(0, 12)}</td>
+                    <td className="px-4 py-3">{t.user?.name || t.user?.email || "—"}</td>
+                    <td className="px-4 py-3 text-slate-600">{t.type}</td>
+                    <td className="px-4 py-3 text-right font-medium">{formatCurrency(t.amount)}</td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusChip[t.status] ?? "bg-slate-100 text-slate-600"}`}>
+                        {t.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-500">{t.createdAt.toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
