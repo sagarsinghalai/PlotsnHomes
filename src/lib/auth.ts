@@ -2,6 +2,7 @@ import { Role } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth-options";
+import { ADMIN_PANEL_ROLES } from "@/lib/roles";
 
 export async function getSession() {
   return getServerSession(authOptions);
@@ -19,7 +20,12 @@ export async function requireAuth(allowedRoles?: Role[]) {
 }
 
 export async function requireAdmin() {
-  return requireAuth([Role.SUPERADMIN, Role.EMPLOYEE, Role.AGENT, Role.SELLER, Role.BUYER]);
+  // Admin-panel access = the canonical ADMIN_PANEL_ROLES (same list the admin API
+  // guard uses). This first gate just lets legitimate admin roles in — including
+  // the WHITE_LABEL/FRANCHISE/BRANCH/DEPARTMENT/TEAM tiers that were previously
+  // missing here and bounced to /dashboard. The per-route permission check in the
+  // admin layout then does the fine-grained filtering.
+  return requireAuth(ADMIN_PANEL_ROLES);
 }
 
 export async function requireSuperAdmin() {
