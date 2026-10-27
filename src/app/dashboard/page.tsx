@@ -9,7 +9,7 @@ import { getRolePermissions, getPermissionGroup, PERMISSIONS_SCHEMA } from "@/li
 export default async function DashboardPage() {
   const session = await requireAuth();
   const userId = session.user.id;
-  const permissions = await getRolePermissions();
+  const permissions = await getRolePermissions(session.user.tenantId);
   const group = getPermissionGroup(session.user);
   const userRole = session.user.role;
 

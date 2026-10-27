@@ -1,7 +1,8 @@
 "use server";
 
 import { requireAdminApi } from "@/lib/admin-api";
-import { prisma } from "@/lib/prisma";
+import { setTenantSetting } from "@/lib/system-settings";
+import { isSuperAdmin } from "@/lib/roles";
 import { RolePermissionsConfig } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 
@@ -13,11 +14,10 @@ export async function saveRolePermissionsAction(updatedConfig: RolePermissionsCo
 
   try {
     const jsonVal = JSON.stringify(updatedConfig);
-    await prisma.systemSetting.upsert({
-      where: { key: "user_role_permissions" },
-      update: { value: jsonVal },
-      create: { key: "user_role_permissions", value: jsonVal },
-    });
+    // The platform owner edits the global default; a tenant admin edits only
+    // their own tenant's matrix (null tenant writes the global SystemSetting).
+    const targetTenant = isSuperAdmin(auth.session.user.role) ? null : auth.tenantId;
+    await setTenantSetting("user_role_permissions", jsonVal, targetTenant);
 
     revalidatePath("/", "layout");
     revalidatePath("/admin", "layout");

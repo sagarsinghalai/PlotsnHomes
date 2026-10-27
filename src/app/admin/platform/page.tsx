@@ -19,7 +19,7 @@ import {
 
 export default async function PlatformSettingsPage() {
   const session = await getSession();
-  const permissions = await getRolePermissions();
+  const permissions = await getRolePermissions(session?.user?.tenantId);
   const group = session?.user ? getPermissionGroup(session.user) : "BUYER";
   const userRole = session?.user?.role || "";
   const tenantId = session?.user?.tenantId || "__no_tenant__";

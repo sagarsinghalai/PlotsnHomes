@@ -32,7 +32,7 @@ export default async function AdminLayout({
     redirect("/dashboard?error=Access+Denied");
   }
 
-  const permissions = await getRolePermissions();
+  const permissions = await getRolePermissions(session?.user?.tenantId);
   const group = session?.user ? getPermissionGroup(session.user) : "BUYER";
   const userRole = session?.user?.role || "";
 

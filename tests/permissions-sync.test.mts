@@ -39,7 +39,7 @@ test("white-label admin: full CRM + own org hierarchy, but not platform governan
   assert.equal(wl.organization_units.add, true, "WL admin can create org units");
   assert.equal(wl.users_accounts.view, true);
   assert.equal(wl.platform.view, false, "platform-owner settings stay hidden");
-  assert.equal(wl.roles_permissions.view, false, "the global role matrix stays platform-owner only");
+  assert.equal(wl.roles_permissions.view, true, "WL admin may tune roles within their own tenant (per-tenant matrix)");
   assert.equal(wl.white_label_hub.view, false, "the white-label/subscription hub stays platform-owner only");
 });
 

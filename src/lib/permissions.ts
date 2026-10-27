@@ -235,7 +235,10 @@ const fullAdminPerms = fillPermissions(FULL_ADMIN_BASE, { view: true, add: true,
 // Platform-governance items stay with the platform owner only — a white-label /
 // tenant admin never edits the global role matrix, the platform settings, or the
 // white-label/subscription hub (they'd affect every tenant).
-const PLATFORM_ONLY_KEYS = ["platform", "roles_permissions", "white_label_hub"];
+// roles_permissions is now per-tenant, so a white-label admin may tune roles
+// within their own tenant; platform settings and the white-label hub stay
+// platform-owner only.
+const PLATFORM_ONLY_KEYS = ["platform", "white_label_hub"];
 const NONE: PermCell = { view: false, add: false, edit: false, delete: false };
 const crmStaffPerms: Record<string, PermCell> = { ...fullAdminPerms };
 for (const k of PLATFORM_ONLY_KEYS) crmStaffPerms[k] = { ...NONE };
@@ -258,13 +261,29 @@ export const DEFAULT_PERMISSIONS: RolePermissionsConfig = {
   DEMO: endUserPerms,
 };
 
-export async function getRolePermissions(): Promise<RolePermissionsConfig> {
+const ROLE_PERMS_KEY = "user_role_permissions";
+
+/**
+ * Role → permission matrix. When a tenantId is given and that tenant has saved
+ * its own matrix, it wins; otherwise the platform-global matrix is used, then the
+ * built-in DEFAULT_PERMISSIONS. Either way every value is merged over the schema
+ * defaults so no item is ever missing.
+ */
+export async function getRolePermissions(tenantId?: string | null): Promise<RolePermissionsConfig> {
   try {
-    const setting = await prisma.systemSetting.findUnique({
-      where: { key: "user_role_permissions" },
-    });
-    if (setting) {
-      const parsed = JSON.parse(setting.value);
+    let raw: string | null = null;
+    if (tenantId) {
+      const t = await prisma.tenantSetting.findUnique({
+        where: { tenantId_key: { tenantId, key: ROLE_PERMS_KEY } },
+      });
+      raw = t?.value ?? null;
+    }
+    if (raw == null) {
+      const g = await prisma.systemSetting.findUnique({ where: { key: ROLE_PERMS_KEY } });
+      raw = g?.value ?? null;
+    }
+    if (raw) {
+      const parsed = JSON.parse(raw);
       const merged = { ...DEFAULT_PERMISSIONS };
       for (const group of Object.keys(DEFAULT_PERMISSIONS) as PermissionGroup[]) {
         merged[group] = {
@@ -279,6 +298,8 @@ export async function getRolePermissions(): Promise<RolePermissionsConfig> {
   }
   return DEFAULT_PERMISSIONS;
 }
+
+type PermUser = { email: string; role: string; tenantId?: string | null };
 
 export function getPermissionGroup(user: { email: string; role: string }): PermissionGroup {
   if (!user || !user.role) return "BUYER";
@@ -307,12 +328,12 @@ export function matchPermissionKey(route: string): string | null {
 }
 
 export async function getFirstAllowedAdminRoute(
-  user: { email: string; role: string } | null | undefined
+  user: PermUser | null | undefined
 ): Promise<string | null> {
   if (!user) return null;
   if (user.role === "SUPERADMIN") return "/admin";
 
-  const permissions = await getRolePermissions();
+  const permissions = await getRolePermissions(user.tenantId);
   const group = getPermissionGroup(user);
   const userPerms = permissions[group] || {};
 
@@ -327,7 +348,7 @@ export async function getFirstAllowedAdminRoute(
 }
 
 export async function hasPermission(
-  user: { email: string; role: string } | null | undefined,
+  user: PermUser | null | undefined,
   route: string
 ): Promise<boolean> {
   if (!user) return false;
@@ -337,14 +358,14 @@ export async function hasPermission(
   if (!permissionKey) return true;
 
   const group = getPermissionGroup(user);
-  const permissions = await getRolePermissions();
+  const permissions = await getRolePermissions(user.tenantId);
   const perm = permissions[group]?.[permissionKey];
   if (!perm) return false;
   return perm.view;
 }
 
 export async function hasAddPermissionServer(
-  user: { email: string; role: string } | null | undefined,
+  user: PermUser | null | undefined,
   route: string
 ): Promise<boolean> {
   if (!user) return false;
@@ -354,14 +375,14 @@ export async function hasAddPermissionServer(
   if (!permissionKey) return true;
 
   const group = getPermissionGroup(user);
-  const permissions = await getRolePermissions();
+  const permissions = await getRolePermissions(user.tenantId);
   const perm = permissions[group]?.[permissionKey];
   if (!perm) return false;
   return perm.add;
 }
 
 export async function hasEditPermissionServer(
-  user: { email: string; role: string } | null | undefined,
+  user: PermUser | null | undefined,
   route: string
 ): Promise<boolean> {
   if (!user) return false;
@@ -371,14 +392,14 @@ export async function hasEditPermissionServer(
   if (!permissionKey) return true;
 
   const group = getPermissionGroup(user);
-  const permissions = await getRolePermissions();
+  const permissions = await getRolePermissions(user.tenantId);
   const perm = permissions[group]?.[permissionKey];
   if (!perm) return false;
   return perm.edit;
 }
 
 export async function hasDeletePermissionServer(
-  user: { email: string; role: string } | null | undefined,
+  user: PermUser | null | undefined,
   route: string
 ): Promise<boolean> {
   if (!user) return false;
@@ -388,7 +409,7 @@ export async function hasDeletePermissionServer(
   if (!permissionKey) return true;
 
   const group = getPermissionGroup(user);
-  const permissions = await getRolePermissions();
+  const permissions = await getRolePermissions(user.tenantId);
   const perm = permissions[group]?.[permissionKey];
   if (!perm) return false;
   return perm.delete;
