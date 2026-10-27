@@ -132,3 +132,6 @@ __MACOSX/
 .turbo/
 # Database exports (contain user data — never commit)
 db-export/
+
+# local sqlite backups
+prisma/dev.db.bak-*
