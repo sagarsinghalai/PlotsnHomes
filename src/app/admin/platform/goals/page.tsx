@@ -1,12 +1,19 @@
 import { GoalsManager } from "@/components/admin/goals-manager";
 import { PlatformSettingsNav } from "@/components/admin/platform-settings-nav";
 import { prisma } from "@/lib/prisma";
-import { getServerTenantId } from "@/lib/tenant";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { ownerScopeForUser } from "@/lib/crm-access";
 
 export default async function GoalsPage() {
-  const tenantId = await getServerTenantId();
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles only see goals assigned to them; leaders see the whole tenant.
+  const goalWhere = session?.user
+    ? ownerScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const goals = await prisma.crmGoal.findMany({
-    where: { tenantId },
+    where: goalWhere,
     orderBy: { createdAt: "desc" },
     include: { owner: { select: { name: true } } },
   });

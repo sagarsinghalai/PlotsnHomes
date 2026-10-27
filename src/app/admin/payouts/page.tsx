@@ -1,11 +1,19 @@
 import { PayoutsManager } from "@/components/admin/payouts-manager";
 import { prisma } from "@/lib/prisma";
-import { getServerTenantId } from "@/lib/tenant";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { commissionScopeForUser } from "@/lib/crm-access";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPayoutsPage() {
-  const tenantId = await getServerTenantId();
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles only see their own commissions; leaders see the whole tenant.
+  // Properties (shared listings) stay tenant-wide for everyone.
+  const commissionWhere = session?.user
+    ? commissionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId };
   // 1. Query active properties to schedule dividends
   const properties = await prisma.property.findMany({
     where: { status: "ACTIVE", tenantId },
@@ -37,7 +45,7 @@ export default async function AdminPayoutsPage() {
 
   // 2. Query eligible agent commissions from DB
   const dbCommissions = await prisma.agentCommission.findMany({
-    where: { tenantId },
+    where: commissionWhere,
     orderBy: { createdAt: "desc" },
     take: 100,
     include: {

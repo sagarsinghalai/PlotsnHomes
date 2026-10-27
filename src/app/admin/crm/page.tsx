@@ -8,14 +8,20 @@ import { prisma } from "@/lib/prisma";
 import { Suspense } from "react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { leadScopeForUser } from "@/lib/crm-access";
 
 export default async function AdminCrmPage() {
   const session = await getServerSession(authOptions);
   const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles (agents/employees) only see leads they own; leaders see the
+  // whole tenant. Mirrors /admin/leads and the leads API (leadScopeForUser).
+  const leadWhere = session?.user
+    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const [leads, agents, properties, crmSettings, pipelineConfig] =
     await Promise.all([
       prisma.lead.findMany({
-        where: { tenantId },
+        where: leadWhere,
         orderBy: [{ score: "desc" }, { createdAt: "desc" }],
         include: {
           property: { select: { title: true, symbol: true } },

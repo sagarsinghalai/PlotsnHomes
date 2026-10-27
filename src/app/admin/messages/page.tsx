@@ -7,6 +7,7 @@ import { getCrmSettings } from "@/lib/crm-settings";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { leadScopeForUser } from "@/lib/crm-access";
 
 export default async function AdminMessagesPage({
   searchParams,
@@ -16,6 +17,10 @@ export default async function AdminMessagesPage({
   const session = await getServerSession(authOptions);
   const currentUserId = session?.user?.id ?? "";
   const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles can only message leads they own; leaders see the whole tenant.
+  const leadWhere = session?.user
+    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId, ownerId: "__no_tenant__" as string | undefined };
 
   const [dbUsers, dbLeads, dbDevelopers, config, defaultCountry, crmSettings, properties] = await Promise.all([
     prisma.user.findMany({
@@ -24,7 +29,7 @@ export default async function AdminMessagesPage({
       select: { id: true, userId: true, name: true, email: true, phone: true, role: true, country: true },
     }),
     prisma.lead.findMany({
-      where: { tenantId },
+      where: leadWhere,
       orderBy: { name: "asc" },
       select: { id: true, name: true, email: true, phone: true },
     }),

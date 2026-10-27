@@ -5,6 +5,7 @@ import { getCrmSettings } from "@/lib/crm-settings";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { leadScopeForUser } from "@/lib/crm-access";
 
 const HUB_ACTIONS = [
   { href: "/admin/whatsapp/inbox", label: "Inbox", desc: "Assigned conversations", icon: Inbox },
@@ -15,9 +16,13 @@ const HUB_ACTIONS = [
 export default async function AdminWhatsAppPage() {
   const session = await getServerSession(authOptions);
   const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles only see leads they own in WhatsApp; leaders see the tenant.
+  const leadWhere = session?.user
+    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const [leadsRaw, crmSettings, properties] = await Promise.all([
     prisma.lead.findMany({
-      where: { tenantId },
+      where: leadWhere,
       orderBy: { name: "asc" },
       select: {
         id: true,

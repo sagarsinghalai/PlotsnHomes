@@ -5,16 +5,24 @@ import { getCountryByCode } from "@/lib/locale-defaults";
 import { prisma } from "@/lib/prisma";
 import { TelephonySimulator } from "@/components/admin/telephony-simulator";
 import { getMessagingIntegrations } from "@/lib/messaging-settings";
-import { getServerTenantId } from "@/lib/tenant";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { leadScopeForUser } from "@/lib/crm-access";
 
 export default async function TelephonyPage() {
-  const tenantId = await getServerTenantId();
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
   const company = await getCompanySettings();
   const country = getCountryByCode(company.country);
   const integrations = await getMessagingIntegrations(tenantId);
 
+  // OWN-scope roles only get their own leads in the click-to-call list; leaders
+  // see the whole tenant.
+  const leadWhere = session?.user
+    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const leads = await prisma.lead.findMany({
-    where: { tenantId },
+    where: leadWhere,
     select: { id: true, name: true, phone: true },
     orderBy: { name: "asc" }
   });

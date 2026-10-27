@@ -4,19 +4,24 @@ import { getCrmSettings } from "@/lib/crm-settings";
 import { EmailHubComposer } from "@/components/admin/email-hub-composer";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { leadScopeForUser } from "@/lib/crm-access";
 
 export const dynamic = "force-dynamic";
 
 export default async function EmailHubPage() {
   const session = await getServerSession(authOptions);
   const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles only see leads they own as email contacts; leaders see the tenant.
+  const leadWhere = session?.user
+    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const [users, leads, crmSettings] = await Promise.all([
     prisma.user.findMany({
       where: { tenantId },
       select: { name: true, email: true, role: true },
     }),
     prisma.lead.findMany({
-      where: { tenantId },
+      where: leadWhere,
       select: { name: true, email: true },
     }),
     getCrmSettings(tenantId),

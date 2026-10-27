@@ -1,8 +1,19 @@
 import { WalletsManager } from "@/components/admin/wallets-manager";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { walletUserScopeForUser } from "@/lib/crm-access";
 
 export default async function AdminWalletsPage() {
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // Always tenant-scope (was previously unscoped across all tenants). OWN-scope
+  // roles only see their own wallet; leaders see every user in their tenant.
+  const userWhere = session?.user
+    ? walletUserScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId };
   const users = await prisma.user.findMany({
+    where: userWhere,
     orderBy: { createdAt: "desc" },
     include: {
       transactions: {

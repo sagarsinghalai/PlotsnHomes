@@ -1,12 +1,19 @@
 import { TradesManager } from "@/components/admin/trades-manager";
 import { prisma } from "@/lib/prisma";
-import { getServerTenantId } from "@/lib/tenant";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { transactionScopeForUser } from "@/lib/crm-access";
 
 export default async function AdminTradesPage() {
-  const tenantId = await getServerTenantId();
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles only see their own trades; leaders see the whole tenant.
+  const txScope = session?.user
+    ? transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId };
   // Query investment transactions which function as secondary/primary market trades
   const transactions = await prisma.transaction.findMany({
-    where: { type: "INVESTMENT", tenantId },
+    where: { ...txScope, type: "INVESTMENT" },
     orderBy: { createdAt: "desc" },
     include: {
       user: { select: { name: true, email: true } },

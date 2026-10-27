@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { TransactionsManager } from "@/components/admin/transactions-manager";
 import { prisma } from "@/lib/prisma";
+import { transactionScopeForUser } from "@/lib/crm-access";
 
 export const dynamic = "force-dynamic";
 
@@ -10,19 +11,12 @@ export default async function AdminTransactionsPage() {
   const user = session?.user;
   const tenantId = user?.tenantId || "__no_tenant__";
 
-  let whereClause: any = { tenantId };
-
-  // If user is AGENT, scope transactions strictly to their own transactions & assigned customer deals
-  if (user?.role === "AGENT") {
-    whereClause = {
-      tenantId,
-      OR: [
-        { userId: user.id },
-        { property: { agentId: user.id } },
-        { agentCommission: { agentId: user.id } },
-      ],
-    };
-  }
+  // OWN-scope roles (AGENT/EMPLOYEE/EXECUTIVE) see only the deals they are party to
+  // — their own transactions, transactions on a property they list, or ones carrying
+  // their commission; leaders see the whole tenant. Mirrors roleDataScope.
+  const whereClause = user
+    ? transactionScopeForUser(user.role, user.id, user.tenantId)
+    : { tenantId };
 
   const transactions = await prisma.transaction.findMany({
     where: whereClause,

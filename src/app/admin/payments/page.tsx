@@ -1,14 +1,21 @@
 import { PaymentGatewaysClient } from "@/components/admin/payment-gateways-client";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
-import { getServerTenantId } from "@/lib/tenant";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { transactionScopeForUser } from "@/lib/crm-access";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPaymentsPage() {
-  const tenantId = await getServerTenantId();
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles only see transactions they are party to; leaders see the tenant.
+  const txScope = session?.user
+    ? transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId };
   const transactions = await prisma.transaction.findMany({
-    where: { tenantId },
+    where: txScope,
     orderBy: { createdAt: "desc" },
     take: 20,
     include: { user: { select: { name: true, email: true } } },
