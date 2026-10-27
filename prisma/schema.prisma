@@ -972,6 +972,32 @@ model UserSubscription {
   @@index([organizationId])
 }
 
+/// A billed subscription period for a tenant (white-label partner). Persisted so
+/// partners have a durable payment/invoice history (UserSubscription only holds
+/// the current period). Issued in the platform company's name (merchant of
+/// record); the partner org is named on the receipt as an authorized partner.
+model SubscriptionInvoice {
+  id             String    @id @default(cuid())
+  organizationId String // the tenant/partner billed
+  subscriptionId String? // related UserSubscription, if any
+  invoiceNumber  String    @unique
+  planName       String
+  planSlug       String?
+  amount         Float
+  currency       String    @default("usd")
+  periodStart    DateTime  @default(now())
+  periodEnd      DateTime?
+  status         String    @default("PAID") // PAID | DUE | TEST | COMPLIMENTARY
+  kind           String    @default("signup") // signup | renewal | grant
+  provider       String? // razorpay | stripe | test | manual
+  paymentRef     String?
+  issuedAt       DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+
+  @@index([organizationId])
+  @@index([status])
+}
+
 model CustomFieldDef {
   id        String   @id @default(cuid())
   category  String

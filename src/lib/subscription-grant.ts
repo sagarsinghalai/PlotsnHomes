@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { periodEndFromInterval } from "@/lib/subscription";
+import { createSubscriptionInvoice } from "@/lib/subscription-invoice";
 
 /**
  * Renew or grant/extend a tenant's subscription (platform-owner action).
@@ -30,14 +31,18 @@ export async function applyTenantGrant(orgId: string, input: GrantInput): Promis
   const now = new Date();
   let endsAt: Date | null;
 
+  // Plan details for the receipt (also used for the renew term).
+  const plan = org.planId
+    ? await prisma.subscriptionPlan.findUnique({
+        where: { id: org.planId },
+        select: { name: true, slug: true, price: true, currency: true, interval: true, durationMinutes: true },
+      })
+    : null;
+
   if (input.mode === "renew") {
     if (!org.planId) {
       return { ok: false, status: 400, error: "This tenant has no plan to renew — use a manual grant instead." };
     }
-    const plan = await prisma.subscriptionPlan.findUnique({
-      where: { id: org.planId },
-      select: { interval: true, durationMinutes: true },
-    });
     if (!plan) return { ok: false, status: 400, error: "The tenant's plan no longer exists." };
     endsAt = periodEndFromInterval(now, plan.interval, plan.durationMinutes);
   } else {
@@ -64,6 +69,26 @@ export async function applyTenantGrant(orgId: string, input: GrantInput): Promis
         data: { currentPeriodEnd: endsAt, status: "ACTIVE" },
       });
     }
+
+    // Record a receipt for the partner's billing history. Owner grants/renewals
+    // are not in-app charges, so they are COMPLIMENTARY/manual (a renew carries
+    // the plan price for reference; a bare grant carries no amount).
+    await createSubscriptionInvoice(
+      {
+        organizationId: orgId,
+        subscriptionId: sub?.id ?? null,
+        planName: plan?.name ?? "Manual grant",
+        planSlug: plan?.slug ?? null,
+        amount: input.mode === "renew" ? plan?.price ?? 0 : 0,
+        currency: plan?.currency ?? "usd",
+        periodStart: now,
+        periodEnd: endsAt,
+        status: "COMPLIMENTARY",
+        kind: input.mode === "renew" ? "renewal" : "grant",
+        provider: "manual",
+      },
+      tx
+    );
   });
 
   return { ok: true, endsAt };

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { periodEndFromInterval } from "@/lib/subscription";
 import { writeAudit } from "@/lib/audit";
 import { slugify } from "@/lib/utils";
+import { createSubscriptionInvoice, providerFromRef } from "@/lib/subscription-invoice";
 
 /**
  * Self-serve white-label provisioning (Stage C).
@@ -92,7 +93,7 @@ export async function provisionTenantSignup(input: ProvisionInput): Promise<Prov
       },
     });
     await tx.organization.update({ where: { id: org.id }, data: { whiteLabelAdminId: admin.id } });
-    await tx.userSubscription.create({
+    const sub = await tx.userSubscription.create({
       data: {
         userId: admin.id,
         organizationId: org.id,
@@ -107,6 +108,28 @@ export async function provisionTenantSignup(input: ProvisionInput): Promise<Prov
           : "TEST-MODE signup (no real payment gateway)",
       },
     });
+
+    // Persist the signup invoice/receipt for the partner's billing history.
+    const paidForReal = !!input.paymentRef && input.paymentRef !== "test-mode";
+    const invoiceStatus = plan.price <= 0 ? "COMPLIMENTARY" : paidForReal ? "PAID" : "TEST";
+    await createSubscriptionInvoice(
+      {
+        organizationId: org.id,
+        subscriptionId: sub.id,
+        planName: plan.name,
+        planSlug: plan.slug,
+        amount: plan.price,
+        currency: plan.currency,
+        periodStart: now,
+        periodEnd: endsAt,
+        status: invoiceStatus,
+        kind: "signup",
+        provider: providerFromRef(input.paymentRef),
+        paymentRef: paidForReal ? input.paymentRef : null,
+      },
+      tx
+    );
+
     return { orgId: org.id, adminId: admin.id };
   });
 
