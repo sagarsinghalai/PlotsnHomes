@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { markLapsedOrgsPastDue } from "@/lib/subscription-access";
+import { sweepSubscriptionEmails } from "@/lib/subscription-emails";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,10 @@ export async function GET(req: Request) {
   }
   try {
     const flipped = await markLapsedOrgsPastDue();
-    return NextResponse.json({ ok: true, transitioned: flipped.length, ids: flipped });
+    // Notify partners: lapse notices for those just flipped + renewal reminders
+    // for those ending soon (deduped). Best-effort — never fails the sweep.
+    const emails = await sweepSubscriptionEmails(flipped).catch(() => ({ reminders: 0, lapses: 0 }));
+    return NextResponse.json({ ok: true, transitioned: flipped.length, ids: flipped, emails });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message || "Sweep failed" }, { status: 500 });
   }
