@@ -169,3 +169,10 @@ export async function walletUserScopeForUser(
   const ids = await resolveScopeOwnerIds(role, userId, tenantId);
   return ids ? { ...base, id: idClause(ids) } : base;
 }
+
+/**
+ * The Users directory / any User list: a leader sees their org-unit subtree's
+ * users, an agent sees only themselves, a WL/platform admin sees the whole
+ * tenant. Same shape as the wallet user scope (`{ tenantId, id? }`).
+ */
+export const userDirectoryScopeForUser = walletUserScopeForUser;

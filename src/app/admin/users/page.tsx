@@ -7,6 +7,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { isSuperAdmin } from "@/lib/roles";
 import { canManageUser } from "@/lib/user-management";
+import { userDirectoryScopeForUser } from "@/lib/crm-access";
 
 export default async function AdminUsersPage({
   searchParams,
@@ -25,8 +26,17 @@ export default async function AdminUsersPage({
       })
     : null;
 
+  // Platform owner sees everyone; otherwise scope to the viewer's org-unit
+  // subtree (a franchise admin sees their franchise's people, an agent only
+  // themselves), never the whole tenant above them.
+  const userWhere = superAdmin
+    ? {}
+    : session?.user
+      ? await userDirectoryScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+      : { tenantId: "__no_tenant__" };
+
   const users = await prisma.user.findMany({
-    where: superAdmin ? {} : { tenantId },
+    where: userWhere,
     orderBy: { createdAt: "desc" },
     include: {
       kycProfile: { select: { status: true } },

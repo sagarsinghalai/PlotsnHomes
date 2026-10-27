@@ -18,7 +18,7 @@ try {
 } catch { /* ignore */ }
 
 const { prisma } = await import("@/lib/prisma");
-const { resolveScopeOwnerIds, leadScopeForUser } = await import("@/lib/crm-access");
+const { resolveScopeOwnerIds, leadScopeForUser, userDirectoryScopeForUser } = await import("@/lib/crm-access");
 
 let pass = 0, fail = 0;
 const queue: Array<[string, () => void | Promise<void>]> = [];
@@ -105,6 +105,23 @@ test("leadScopeForUser narrows a team leader's leads to their team's", async () 
   const owners = new Set(rows.map((r) => r.ownerId));
   assert.ok(owners.has(U.agent1) && owners.has(U.agent2), "sees team agents' leads");
   assert.ok(!owners.has(U.outsider), "never sees the outsider's lead");
+});
+
+test("user directory: a team leader sees only their team's users, not those above", async () => {
+  const where = await userDirectoryScopeForUser(Role.TEAM_LEADER, U.teamLead, T);
+  const rows = await prisma.user.findMany({ where });
+  const ids = new Set(rows.map((r) => r.id));
+  assert.ok(ids.has(U.teamLead) && ids.has(U.agent1) && ids.has(U.agent2), "sees their team");
+  assert.ok(!ids.has(U.frAdmin) && !ids.has(U.brMgr), "never sees users above the team");
+  assert.ok(!ids.has(U.outsider), "never sees another unit's users");
+});
+
+test("user directory: an agent sees only themselves; a WL admin sees the whole tenant", async () => {
+  const forAgent = await prisma.user.findMany({ where: await userDirectoryScopeForUser(Role.AGENT, U.agent1, T) });
+  assert.deepEqual(forAgent.map((u) => u.id), [U.agent1], "agent sees only their own row");
+
+  const forWl = await prisma.user.findMany({ where: await userDirectoryScopeForUser(Role.WHITE_LABEL_ADMIN, U.frAdmin, T) });
+  assert.ok(forWl.length >= 6, "WL admin sees every user in the tenant");
 });
 
 try {

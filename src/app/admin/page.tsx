@@ -5,18 +5,24 @@ import { AdminDashboardOverview } from "@/components/admin/admin-dashboard-overv
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { transactionScopeForUser } from "@/lib/crm-access";
+import { transactionScopeForUser, resolveScopeOwnerIds } from "@/lib/crm-access";
 
 export default async function AdminOverviewPage() {
   const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
   const session = await getServerSession(authOptions);
   const tenantId = session?.user?.tenantId || "__no_tenant__";
-  // OWN-scope roles see only revenue/transactions from their own deals on the
-  // dashboard; leaders see the whole tenant. Other widgets (users, properties,
-  // inquiries, developers) are tenant-shared and stay tenant-wide.
+  // OWN-scope roles see only revenue/transactions from their own deals; leaders
+  // see their subtree. Property/inquiry/developer widgets are tenant-shared
+  // catalog data and stay tenant-wide.
   const txScope = session?.user
     ? await transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId };
+  // User widgets (counts, recent registrations) are scoped to the viewer's
+  // subtree so a franchise admin never sees the superadmin / other franchises.
+  const userIds = session?.user
+    ? await resolveScopeOwnerIds(session.user.role, session.user.id, session.user.tenantId)
+    : [];
+  const userWhere = userIds === null ? { tenantId } : { tenantId, id: { in: userIds } };
 
   const [
     userCount,
@@ -33,9 +39,9 @@ export default async function AdminOverviewPage() {
     recentInq,
     recentDevs,
   ] = await Promise.all([
-    prisma.user.count({ where: { tenantId } }),
+    prisma.user.count({ where: userWhere }),
     prisma.user.count({
-      where: { active: true, lastActiveAt: { gte: fifteenMinAgo }, tenantId },
+      where: { ...userWhere, active: true, lastActiveAt: { gte: fifteenMinAgo } },
     }),
     prisma.property.count({ where: { status: "ACTIVE", tenantId } }),
     prisma.transaction.aggregate({
@@ -60,7 +66,7 @@ export default async function AdminOverviewPage() {
       select: { id: true, symbol: true, title: true, changeYtd: true, price: true },
     }),
     prisma.user.findMany({
-      where: { tenantId },
+      where: userWhere,
       take: 10,
       orderBy: { createdAt: "desc" },
       select: { id: true, name: true, email: true, role: true, createdAt: true },
