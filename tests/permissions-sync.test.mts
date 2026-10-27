@@ -9,7 +9,7 @@
  */
 import assert from "node:assert/strict";
 
-const { PERMISSIONS_SCHEMA, DEFAULT_PERMISSIONS } = await import("@/lib/permissions");
+const { PERMISSIONS_SCHEMA, DEFAULT_PERMISSIONS, canManageRolePermissions } = await import("@/lib/permissions");
 
 let pass = 0, fail = 0;
 function test(name: string, fn: () => void) {
@@ -41,6 +41,19 @@ test("white-label admin: full CRM + own org hierarchy, but not platform governan
   assert.equal(wl.platform.view, false, "platform-owner settings stay hidden");
   assert.equal(wl.roles_permissions.view, true, "WL admin may tune roles within their own tenant (per-tenant matrix)");
   assert.equal(wl.white_label_hub.view, false, "the white-label/subscription hub stays platform-owner only");
+});
+
+test("the permission editor is owner-only — franchise/branch/team can't reach it", () => {
+  for (const group of ["FRANCHISE_ADMIN", "BRANCH_MANAGER", "DEPARTMENT_HEAD", "TEAM_LEADER", "AGENT"]) {
+    const cfg = (DEFAULT_PERMISSIONS as any)[group];
+    assert.equal(cfg.roles_permissions.view, false, `${group} must NOT see the roles editor`);
+    assert.equal(cfg.roles_permissions.edit, false, `${group} must NOT edit the roles editor`);
+    assert.equal(canManageRolePermissions(group), false, `${group} may not manage role permissions`);
+  }
+  assert.equal(canManageRolePermissions("WHITE_LABEL_ADMIN"), true);
+  assert.equal(canManageRolePermissions("SUPERADMIN"), true);
+  // A sub-leader keeps ordinary CRM access — only the editor is removed.
+  assert.equal((DEFAULT_PERMISSIONS as any).FRANCHISE_ADMIN.all_leads.view, true, "franchise admin still runs CRM");
 });
 
 test("customers (BUYER) have no admin-management items", () => {

@@ -3,13 +3,18 @@
 import { requireAdminApi } from "@/lib/admin-api";
 import { setTenantSetting } from "@/lib/system-settings";
 import { isSuperAdmin } from "@/lib/roles";
-import { RolePermissionsConfig } from "@/lib/permissions";
+import { RolePermissionsConfig, canManageRolePermissions } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 
 export async function saveRolePermissionsAction(updatedConfig: RolePermissionsConfig) {
   const auth = await requireAdminApi();
   if (auth.error) {
     return { ok: false, error: "Unauthorized access" };
+  }
+  // Only the platform owner or a tenant's white-label admin may change the matrix.
+  // A franchise/branch/team leader editing it would be privilege escalation.
+  if (!canManageRolePermissions(auth.session.user.role)) {
+    return { ok: false, error: "You don't have access to manage roles & permissions." };
   }
 
   try {

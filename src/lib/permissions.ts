@@ -239,27 +239,61 @@ const fullAdminPerms = fillPermissions(FULL_ADMIN_BASE, { view: true, add: true,
 // within their own tenant; platform settings and the white-label hub stay
 // platform-owner only.
 const PLATFORM_ONLY_KEYS = ["platform", "white_label_hub"];
+// Tenant-governance: only the tenant OWNER (white-label admin) — and the platform
+// owner — may open/edit the role-permission matrix. A franchise/branch/team leader
+// must never grant permissions (they could escalate their own access), so the
+// permission editor is owner-only, not part of the general staff menu set.
+const TENANT_GOVERNANCE_KEYS = ["roles_permissions"];
 const NONE: PermCell = { view: false, add: false, edit: false, delete: false };
-const crmStaffPerms: Record<string, PermCell> = { ...fullAdminPerms };
-for (const k of PLATFORM_ONLY_KEYS) crmStaffPerms[k] = { ...NONE };
+
+// White-label (tenant) admin: full tenant admin incl. the role matrix for their tenant.
+const wlAdminPerms: Record<string, PermCell> = { ...fullAdminPerms };
+for (const k of PLATFORM_ONLY_KEYS) wlAdminPerms[k] = { ...NONE };
+
+// Franchise / branch / department / team / staff: same, minus tenant-governance
+// (the permission editor). The owner can further restrict them via the matrix.
+const subLeaderPerms: Record<string, PermCell> = { ...wlAdminPerms };
+for (const k of TENANT_GOVERNANCE_KEYS) subLeaderPerms[k] = { ...NONE };
 
 const endUserPerms = fillPermissions(END_USER_BASE, { ...NONE });
 
 export const DEFAULT_PERMISSIONS: RolePermissionsConfig = {
   ADMIN: fullAdminPerms,
   PLATFORM_ADMIN: fullAdminPerms,
-  WHITE_LABEL_ADMIN: crmStaffPerms,
-  FRANCHISE_ADMIN: crmStaffPerms,
-  BRANCH_MANAGER: crmStaffPerms,
-  DEPARTMENT_HEAD: crmStaffPerms,
-  TEAM_LEADER: crmStaffPerms,
-  EXECUTIVE: crmStaffPerms,
-  EMPLOYEE: crmStaffPerms,
-  AGENT: crmStaffPerms,
+  WHITE_LABEL_ADMIN: wlAdminPerms,
+  FRANCHISE_ADMIN: subLeaderPerms,
+  BRANCH_MANAGER: subLeaderPerms,
+  DEPARTMENT_HEAD: subLeaderPerms,
+  TEAM_LEADER: subLeaderPerms,
+  EXECUTIVE: subLeaderPerms,
+  EMPLOYEE: subLeaderPerms,
+  AGENT: subLeaderPerms,
   SELLER: endUserPerms,
   BUYER: endUserPerms,
   DEMO: endUserPerms,
 };
+
+/** Who may OPEN or EDIT the role-permission matrix (defense-in-depth beyond the
+ * matrix itself): the platform owner, or a tenant's white-label admin. */
+export function canManageRolePermissions(role: string | null | undefined): boolean {
+  return role === "SUPERADMIN" || role === "PLATFORM_ADMIN" || role === "WHITE_LABEL_ADMIN" || role === "ADMIN";
+}
+
+/**
+ * Force tenant-governance keys (the permission editor) OFF for any role that may
+ * not manage them — regardless of what a saved matrix says. This makes the lock
+ * self-healing: a stale/over-broad saved matrix can never re-expose the editor to
+ * a franchise/branch/team leader. SUPERADMIN bypasses permission checks elsewhere.
+ */
+function enforceGovernance(config: RolePermissionsConfig): RolePermissionsConfig {
+  const out = { ...config } as Record<string, Record<string, PermCell>>;
+  for (const role of Object.keys(out)) {
+    if (canManageRolePermissions(role)) continue;
+    out[role] = { ...out[role] };
+    for (const k of TENANT_GOVERNANCE_KEYS) out[role][k] = { view: false, add: false, edit: false, delete: false };
+  }
+  return out as RolePermissionsConfig;
+}
 
 const ROLE_PERMS_KEY = "user_role_permissions";
 
@@ -291,12 +325,12 @@ export async function getRolePermissions(tenantId?: string | null): Promise<Role
           ...(parsed[group] || {}),
         };
       }
-      return merged;
+      return enforceGovernance(merged);
     }
   } catch (error) {
     console.error("Failed to read user_role_permissions setting:", error);
   }
-  return DEFAULT_PERMISSIONS;
+  return enforceGovernance(DEFAULT_PERMISSIONS);
 }
 
 type PermUser = { email: string; role: string; tenantId?: string | null };
