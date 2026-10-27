@@ -10,7 +10,7 @@ export default async function AdminWalletsPage() {
   // Always tenant-scope (was previously unscoped across all tenants). OWN-scope
   // roles only see their own wallet; leaders see every user in their tenant.
   const userWhere = session?.user
-    ? walletUserScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await walletUserScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId };
   const users = await prisma.user.findMany({
     where: userWhere,

@@ -17,7 +17,7 @@ export default async function TeamPerformanceReportPage() {
   // OWN-scope roles see only their own scorecard (their single owner row); leaders
   // see every owner in the tenant.
   const leadWhere = session?.user
-    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const leads = await prisma.lead.findMany({
     where: leadWhere,

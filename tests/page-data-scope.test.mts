@@ -125,10 +125,10 @@ test("isOwnScopeRole: individual contributors are OWN-scoped, leaders are not", 
 
 // ── Leads (leadScopeForUser === ownerScopeForUser) ────────────────────────────
 test("leads: an OWN-scope agent sees only their own; a leader sees the whole tenant", async () => {
-  const forAgent = await prisma.lead.findMany({ where: leadScopeForUser(Role.AGENT, agentA, T) });
+  const forAgent = await prisma.lead.findMany({ where: await leadScopeForUser(Role.AGENT, agentA, T) });
   assert.deepEqual(idsOf(forAgent).sort(), [ids.leadA], "agent sees only leadA");
 
-  const forLeader = await prisma.lead.findMany({ where: leadScopeForUser(Role.WHITE_LABEL_ADMIN, leader, T) });
+  const forLeader = await prisma.lead.findMany({ where: await leadScopeForUser(Role.WHITE_LABEL_ADMIN, leader, T) });
   const got = idsOf(forLeader);
   assert.ok(got.includes(ids.leadA) && got.includes(ids.leadB) && got.includes(ids.leadNull), "leader sees all tenant leads");
   assert.ok(!got.includes(ids.leadT2), "leader never crosses tenants");
@@ -136,12 +136,12 @@ test("leads: an OWN-scope agent sees only their own; a leader sees the whole ten
 
 // ── Transactions (userId OR listed-property OR commission) ────────────────────
 test("transactions: agent sees own + listed-property deals; leader sees the tenant", async () => {
-  const forAgent = await prisma.transaction.findMany({ where: transactionScopeForUser(Role.AGENT, agentA, T) });
+  const forAgent = await prisma.transaction.findMany({ where: await transactionScopeForUser(Role.AGENT, agentA, T) });
   const got = idsOf(forAgent).sort();
   assert.deepEqual(got, [ids.txA, ids.txProp].sort(), "agentA sees own tx + tx on their listed property");
   assert.ok(!got.includes(ids.txB), "agentA does not see agentB's tx");
 
-  const forLeader = await prisma.transaction.findMany({ where: transactionScopeForUser(Role.WHITE_LABEL_ADMIN, leader, T) });
+  const forLeader = await prisma.transaction.findMany({ where: await transactionScopeForUser(Role.WHITE_LABEL_ADMIN, leader, T) });
   const gl = idsOf(forLeader);
   assert.ok(gl.includes(ids.txA) && gl.includes(ids.txB) && gl.includes(ids.txProp), "leader sees all tenant tx");
   assert.ok(!gl.includes(ids.txT2), "leader never crosses tenants");
@@ -149,41 +149,41 @@ test("transactions: agent sees own + listed-property deals; leader sees the tena
 
 // ── Commissions ───────────────────────────────────────────────────────────────
 test("commissions: agent sees only their own; leader sees the tenant", async () => {
-  const forAgent = await prisma.agentCommission.findMany({ where: commissionScopeForUser(Role.AGENT, agentA, T) });
+  const forAgent = await prisma.agentCommission.findMany({ where: await commissionScopeForUser(Role.AGENT, agentA, T) });
   assert.deepEqual(idsOf(forAgent).sort(), [ids.commA], "agentA sees only their commission");
 
-  const forLeader = await prisma.agentCommission.findMany({ where: commissionScopeForUser(Role.WHITE_LABEL_ADMIN, leader, T) });
+  const forLeader = await prisma.agentCommission.findMany({ where: await commissionScopeForUser(Role.WHITE_LABEL_ADMIN, leader, T) });
   assert.deepEqual(idsOf(forLeader).sort(), [ids.commA, ids.commB].sort(), "leader sees all tenant commissions");
 });
 
 // ── Goals (ownerScopeForUser) ─────────────────────────────────────────────────
 test("goals: agent sees only goals assigned to them; leader sees the tenant", async () => {
-  const forAgent = await prisma.crmGoal.findMany({ where: ownerScopeForUser(Role.AGENT, agentA, T) });
+  const forAgent = await prisma.crmGoal.findMany({ where: await ownerScopeForUser(Role.AGENT, agentA, T) });
   assert.deepEqual(idsOf(forAgent).sort(), [ids.goalA], "agentA sees only goalA");
 
-  const forLeader = await prisma.crmGoal.findMany({ where: ownerScopeForUser(Role.WHITE_LABEL_ADMIN, leader, T) });
+  const forLeader = await prisma.crmGoal.findMany({ where: await ownerScopeForUser(Role.WHITE_LABEL_ADMIN, leader, T) });
   const got = idsOf(forLeader);
   assert.ok(got.includes(ids.goalA) && got.includes(ids.goalB) && got.includes(ids.goalNull), "leader sees all tenant goals");
 });
 
 // ── Wallets (User list) ───────────────────────────────────────────────────────
 test("wallets: agent sees only their own user row; leader sees every user in the tenant", async () => {
-  const forAgent = await prisma.user.findMany({ where: walletUserScopeForUser(Role.AGENT, agentA, T) });
+  const forAgent = await prisma.user.findMany({ where: await walletUserScopeForUser(Role.AGENT, agentA, T) });
   assert.deepEqual(idsOf(forAgent).sort(), [agentA], "agentA sees only their own wallet");
 
-  const forLeader = await prisma.user.findMany({ where: walletUserScopeForUser(Role.WHITE_LABEL_ADMIN, leader, T) });
+  const forLeader = await prisma.user.findMany({ where: await walletUserScopeForUser(Role.WHITE_LABEL_ADMIN, leader, T) });
   const got = idsOf(forLeader);
   assert.ok(got.includes(leader) && got.includes(agentA) && got.includes(agentB), "leader sees all tenant users");
   assert.ok(!got.includes(agentX), "leader never sees another tenant's users");
 });
 
 // ── Fail-closed on a missing tenant ───────────────────────────────────────────
-test("all helpers fail closed to an impossible tenant when tenantId is null", () => {
-  assert.equal(leadScopeForUser(Role.AGENT, agentA, null).tenantId, "__no_tenant__");
-  assert.equal(ownerScopeForUser(Role.AGENT, agentA, undefined).tenantId, "__no_tenant__");
-  assert.equal((transactionScopeForUser(Role.AGENT, agentA, null) as any).tenantId, "__no_tenant__");
-  assert.equal(commissionScopeForUser(Role.AGENT, agentA, null).tenantId, "__no_tenant__");
-  assert.equal(walletUserScopeForUser(Role.AGENT, agentA, null).tenantId, "__no_tenant__");
+test("all helpers fail closed to an impossible tenant when tenantId is null", async () => {
+  assert.equal((await leadScopeForUser(Role.AGENT, agentA, null)).tenantId, "__no_tenant__");
+  assert.equal((await ownerScopeForUser(Role.AGENT, agentA, undefined)).tenantId, "__no_tenant__");
+  assert.equal((await transactionScopeForUser(Role.AGENT, agentA, null) as any).tenantId, "__no_tenant__");
+  assert.equal((await commissionScopeForUser(Role.AGENT, agentA, null)).tenantId, "__no_tenant__");
+  assert.equal((await walletUserScopeForUser(Role.AGENT, agentA, null)).tenantId, "__no_tenant__");
 });
 
 try {

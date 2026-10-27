@@ -123,7 +123,7 @@ for (const model of SWEEP) {
 }
 
 test("lead scope (role-aware) is tenant-first and never crosses tenants", async () => {
-  const where = leadScopeForUser(Role.SUPERADMIN, "someUser", aId);
+  const where = await leadScopeForUser(Role.SUPERADMIN, "someUser", aId);
   const rows = await prisma.lead.findMany({ where });
   const got = rows.map((r) => r.id);
   assert.ok(got.includes(createdByModel.lead.a));
@@ -143,10 +143,10 @@ test("role gates: CRM access, superadmin, customer, data scope", () => {
   assert.equal(roleDataScope(Role.SUPERADMIN), "GLB");
 });
 
-test("leadScopeForUser always applies a tenant filter (fail-closed on null)", () => {
-  const forNull = leadScopeForUser(Role.AGENT, "u1", null);
+test("leadScopeForUser always applies a tenant filter (fail-closed on null)", async () => {
+  const forNull = await leadScopeForUser(Role.AGENT, "u1", null);
   assert.equal(forNull.tenantId, "__no_tenant__", "null tenant yields an impossible filter");
-  const own = leadScopeForUser(Role.AGENT, "u1", aId);
+  const own = await leadScopeForUser(Role.AGENT, "u1", aId);
   assert.equal(own.tenantId, aId);
   assert.equal(own.ownerId, "u1", "OWN-scope role is also narrowed to its own rows");
 });

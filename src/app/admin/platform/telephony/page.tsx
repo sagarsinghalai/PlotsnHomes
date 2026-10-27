@@ -19,7 +19,7 @@ export default async function TelephonyPage() {
   // OWN-scope roles only get their own leads in the click-to-call list; leaders
   // see the whole tenant.
   const leadWhere = session?.user
-    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const leads = await prisma.lead.findMany({
     where: leadWhere,

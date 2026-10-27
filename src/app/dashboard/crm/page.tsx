@@ -16,7 +16,7 @@ function CrmManagerFallback() {
 
 export default async function AgentCrmPage() {
   const session = await requireAuth([Role.SUPERADMIN, Role.EMPLOYEE, Role.AGENT]);
-  const scope = leadScopeForUser(session.user.role, session.user.id, session.user.tenantId);
+  const scope = await leadScopeForUser(session.user.role, session.user.id, session.user.tenantId);
   const isAdmin =
     session.user.role === Role.SUPERADMIN || session.user.role === Role.EMPLOYEE;
   const now = new Date();

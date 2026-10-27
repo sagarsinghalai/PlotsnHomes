@@ -12,7 +12,7 @@ export default async function AdminPaymentsPage() {
   const tenantId = session?.user?.tenantId || "__no_tenant__";
   // OWN-scope roles only see transactions they are party to; leaders see the tenant.
   const txScope = session?.user
-    ? transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId };
   const transactions = await prisma.transaction.findMany({
     where: txScope,

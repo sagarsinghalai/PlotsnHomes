@@ -35,7 +35,7 @@ export async function GET(req: Request) {
   const ownerId = searchParams.get("ownerId");
   const source = searchParams.get("source");
 
-  const scope = leadScopeForUser(auth.session.user.role, auth.userId, auth.tenantId);
+  const scope = await leadScopeForUser(auth.session.user.role, auth.userId, auth.tenantId);
   const leads = await prisma.lead.findMany({
     where: {
       ...scope,

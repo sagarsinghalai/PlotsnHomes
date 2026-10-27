@@ -4,9 +4,12 @@ import { SMART_LISTS, type SmartListId } from "@/lib/smart-list-defs";
 
 export { SMART_LISTS, type SmartListId };
 
+// Owner scope: a single id, an `in` set (a leader's org-unit subtree), or none.
+type OwnerScope = Prisma.LeadWhereInput["ownerId"];
+
 export async function countSmartList(
   listId: SmartListId,
-  ownerId?: string,
+  ownerId?: OwnerScope,
   tenantId?: string | null
 ): Promise<number> {
   const where = await smartListWhere(listId, ownerId, tenantId);
@@ -15,7 +18,7 @@ export async function countSmartList(
 
 export async function smartListWhere(
   listId: SmartListId,
-  ownerId?: string,
+  ownerId?: OwnerScope,
   tenantId?: string | null
 ): Promise<Prisma.LeadWhereInput> {
   const now = new Date();

@@ -16,7 +16,7 @@ export default async function AdminCrmPage() {
   // OWN-scope roles (agents/employees) only see leads they own; leaders see the
   // whole tenant. Mirrors /admin/leads and the leads API (leadScopeForUser).
   const leadWhere = session?.user
-    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const [leads, agents, properties, crmSettings, pipelineConfig] =
     await Promise.all([

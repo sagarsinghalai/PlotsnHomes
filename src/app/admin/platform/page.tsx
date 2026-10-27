@@ -27,7 +27,7 @@ export default async function PlatformSettingsPage() {
 
   // OWN-scope roles only count their own leads here; leaders count the tenant.
   const leadWhere = session?.user
-    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const [userCount, leadCount, activeUsers] = await Promise.all([
     prisma.user.count({ where: { tenantId } }),

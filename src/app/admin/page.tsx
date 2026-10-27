@@ -15,7 +15,7 @@ export default async function AdminOverviewPage() {
   // dashboard; leaders see the whole tenant. Other widgets (users, properties,
   // inquiries, developers) are tenant-shared and stay tenant-wide.
   const txScope = session?.user
-    ? transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId };
 
   const [

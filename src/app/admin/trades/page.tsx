@@ -9,7 +9,7 @@ export default async function AdminTradesPage() {
   const tenantId = session?.user?.tenantId || "__no_tenant__";
   // OWN-scope roles only see their own trades; leaders see the whole tenant.
   const txScope = session?.user
-    ? transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId };
   // Query investment transactions which function as secondary/primary market trades
   const transactions = await prisma.transaction.findMany({

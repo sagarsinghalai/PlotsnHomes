@@ -18,7 +18,7 @@ export default async function RevenueReportPage() {
   const tenantId = session?.user?.tenantId || "__no_tenant__";
   // OWN-scope roles see only revenue from their own deals; leaders see the tenant.
   const txScope = session?.user
-    ? transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId };
   const [completed, pending, byType, monthly] = await Promise.all([
     prisma.transaction.findMany({

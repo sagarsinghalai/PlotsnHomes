@@ -17,7 +17,7 @@ export default async function LeadSourcesReportPage() {
   const tenantId = session?.user?.tenantId || "__no_tenant__";
   // OWN-scope roles see only their own leads' sources; leaders see the tenant.
   const leadWhere = session?.user
-    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const [bySource, wonBySource] = await Promise.all([
     prisma.lead.groupBy({ by: ["source"], where: leadWhere, _count: { id: true }, orderBy: { _count: { id: "desc" } } }),

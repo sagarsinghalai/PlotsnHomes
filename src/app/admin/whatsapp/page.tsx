@@ -18,7 +18,7 @@ export default async function AdminWhatsAppPage() {
   const tenantId = session?.user?.tenantId || "__no_tenant__";
   // OWN-scope roles only see leads they own in WhatsApp; leaders see the tenant.
   const leadWhere = session?.user
-    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const [leadsRaw, crmSettings, properties] = await Promise.all([
     prisma.lead.findMany({

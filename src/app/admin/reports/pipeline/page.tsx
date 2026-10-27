@@ -18,7 +18,7 @@ export default async function PipelineReportPage() {
   const tenantId = session?.user?.tenantId || "__no_tenant__";
   // OWN-scope roles see only their own pipeline; leaders see the whole tenant.
   const leadWhere = session?.user
-    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const leads = await prisma.lead.findMany({
     where: leadWhere,

@@ -13,10 +13,10 @@ export default async function ReportsHubPage() {
   // OWN-scope roles see only their own leads/revenue; leaders see the whole tenant.
   // Users/inquiries are tenant headcounts (not owner-personal) — left tenant-wide.
   const leadWhere = session?.user
-    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const txScope = session?.user
-    ? transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId };
   const [leads, revenue, users, inquiries] = await Promise.all([
     prisma.lead.count({ where: leadWhere }),

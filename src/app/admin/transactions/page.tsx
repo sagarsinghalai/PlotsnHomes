@@ -15,7 +15,7 @@ export default async function AdminTransactionsPage() {
   // — their own transactions, transactions on a property they list, or ones carrying
   // their commission; leaders see the whole tenant. Mirrors roleDataScope.
   const whereClause = user
-    ? transactionScopeForUser(user.role, user.id, user.tenantId)
+    ? await transactionScopeForUser(user.role, user.id, user.tenantId)
     : { tenantId };
 
   const transactions = await prisma.transaction.findMany({

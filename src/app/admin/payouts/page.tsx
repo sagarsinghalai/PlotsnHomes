@@ -12,7 +12,7 @@ export default async function AdminPayoutsPage() {
   // OWN-scope roles only see their own commissions; leaders see the whole tenant.
   // Properties (shared listings) stay tenant-wide for everyone.
   const commissionWhere = session?.user
-    ? commissionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await commissionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId };
   // 1. Query active properties to schedule dividends
   const properties = await prisma.property.findMany({

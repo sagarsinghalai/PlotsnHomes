@@ -2,6 +2,7 @@ import { Role } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth-options";
+import { prisma } from "@/lib/prisma";
 import { hasCrmAccess, isSuperAdmin, roleDataScope } from "@/lib/roles";
 
 export async function requireCrmApi() {
@@ -37,76 +38,134 @@ const tenantBase = (tenantId: string | null | undefined) => ({
   tenantId: tenantId || "__no_tenant__",
 });
 
+/** The User membership column a mid-level leader scopes their subtree by. */
+type UnitField = "franchiseId" | "branchId" | "departmentId" | "teamId";
+function unitFieldForScope(dataScope: string): UnitField | null {
+  switch (dataScope) {
+    case "FR": return "franchiseId";
+    case "BR": return "branchId";
+    case "DEPT": return "departmentId";
+    case "TEAM": return "teamId";
+    default: return null;
+  }
+}
+
 /**
- * Prisma `where` for any model with an `ownerId` column (Lead, CrmGoal): TENANT-FIRST.
- * The tenant filter is ALWAYS applied (fail-closed to an impossible match when there
- * is no tenant), and the role's data scope only narrows *within* that tenant. A
- * manager can see the whole tenant's records — never another tenant's.
+ * The set of user ids whose owner-owned records a viewer may see WITHIN their
+ * tenant, or `null` for "the whole tenant" (super admins, platform/org and
+ * white-label admins). Narrowing:
+ *   - OWN/SANDBOX roles → just themselves.
+ *   - Mid-level leaders (FR/BR/DEPT/TEAM) → every user in the org unit they
+ *     belong to (their franchise/branch/department/team), plus themselves.
+ * Fail-closed: a mid-level leader with no unit assigned sees only their own.
  */
-export function ownerScopeForUser(
+export async function resolveScopeOwnerIds(
   role: Role,
   userId: string,
   tenantId: string | null | undefined
-): { tenantId: string; ownerId?: string } {
+): Promise<string[] | null> {
+  if (isSuperAdmin(role)) return null;
+  const dataScope = roleDataScope(role);
+  if (dataScope === "OWN" || dataScope === "SANDBOX") return [userId];
+
+  const field = unitFieldForScope(dataScope);
+  if (!field) return null; // GLB/ORG/WL → whole tenant
+
+  const me = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { franchiseId: true, branchId: true, departmentId: true, teamId: true },
+  });
+  const unitId = me?.[field];
+  if (!unitId) return [userId]; // misconfigured leader → own only (fail-closed)
+
+  const members = await prisma.user.findMany({
+    where: { tenantId: tenantId || "__no_tenant__", [field]: unitId },
+    select: { id: true },
+  });
+  const ids = new Set(members.map((m) => m.id));
+  ids.add(userId);
+  return Array.from(ids);
+}
+
+/** An `ownerId`-style clause from a resolved id set (exact for one, `in` for many). */
+function idClause(ids: string[]): string | { in: string[] } {
+  return ids.length === 1 ? ids[0] : { in: ids };
+}
+
+/**
+ * Prisma `where` for any model with an `ownerId` column (Lead, CrmGoal): TENANT-FIRST,
+ * then narrowed by the role's data scope WITHIN that tenant — own records (OWN roles),
+ * the leader's org-unit subtree (FR/BR/DEPT/TEAM), or the whole tenant (WL/owner).
+ */
+export async function ownerScopeForUser(
+  role: Role,
+  userId: string,
+  tenantId: string | null | undefined
+): Promise<Record<string, unknown>> {
   const base = tenantBase(tenantId);
-  return isOwnScopeRole(role) ? { ...base, ownerId: userId } : base;
+  const ids = await resolveScopeOwnerIds(role, userId, tenantId);
+  return ids ? { ...base, ownerId: idClause(ids) } : base;
 }
 
 /** Back-compat alias — leads scope by `ownerId` like every other owner model. */
-export function leadScopeForUser(
+export async function leadScopeForUser(
   role: Role,
   userId: string,
   tenantId: string | null | undefined
-): { tenantId: string; ownerId?: string } {
+): Promise<Record<string, unknown>> {
   return ownerScopeForUser(role, userId, tenantId);
 }
 
 /**
- * Prisma `where` for Transaction: TENANT-FIRST, then narrowed for OWN-scope roles
- * to the deals they are party to — their own transactions, transactions on a
- * property they are the listing agent for, or transactions carrying their
- * commission. Leaders see the whole tenant's transactions.
+ * Prisma `where` for Transaction: TENANT-FIRST, then narrowed to the deals in the
+ * viewer's scope — transactions they (or anyone in their subtree) are party to:
+ * their own, on a property their subtree lists, or carrying their subtree's
+ * commission. Leaders/owners see the whole tenant's transactions.
  */
-export function transactionScopeForUser(
+export async function transactionScopeForUser(
   role: Role,
   userId: string,
   tenantId: string | null | undefined
-): Record<string, unknown> {
+): Promise<Record<string, unknown>> {
   const base = tenantBase(tenantId);
-  if (!isOwnScopeRole(role)) return base;
+  const ids = await resolveScopeOwnerIds(role, userId, tenantId);
+  if (!ids) return base;
+  const c = idClause(ids);
   return {
     ...base,
     OR: [
-      { userId },
-      { property: { agentId: userId } },
-      { agentCommission: { agentId: userId } },
+      { userId: c },
+      { property: { agentId: c } },
+      { agentCommission: { agentId: c } },
     ],
   };
 }
 
 /**
- * Prisma `where` for AgentCommission: TENANT-FIRST, narrowed to the agent's own
- * commissions for OWN-scope roles. Leaders see the whole tenant.
+ * Prisma `where` for AgentCommission: TENANT-FIRST, narrowed to the agent's own (or
+ * their subtree's) commissions. Leaders/owners see the whole tenant.
  */
-export function commissionScopeForUser(
+export async function commissionScopeForUser(
   role: Role,
   userId: string,
   tenantId: string | null | undefined
-): { tenantId: string; agentId?: string } {
+): Promise<Record<string, unknown>> {
   const base = tenantBase(tenantId);
-  return isOwnScopeRole(role) ? { ...base, agentId: userId } : base;
+  const ids = await resolveScopeOwnerIds(role, userId, tenantId);
+  return ids ? { ...base, agentId: idClause(ids) } : base;
 }
 
 /**
  * Prisma `where` for the User list behind the wallet view: TENANT-FIRST, narrowed
- * to the viewer's own user row for OWN-scope roles so an agent can't read other
- * users' balances. Leaders see every user in their tenant.
+ * to the viewer (OWN roles) or their org-unit members (mid-level leaders) so an
+ * agent can't read other users' balances. Leaders/owners see every tenant user.
  */
-export function walletUserScopeForUser(
+export async function walletUserScopeForUser(
   role: Role,
   userId: string,
   tenantId: string | null | undefined
-): { tenantId: string; id?: string } {
+): Promise<Record<string, unknown>> {
   const base = tenantBase(tenantId);
-  return isOwnScopeRole(role) ? { ...base, id: userId } : base;
+  const ids = await resolveScopeOwnerIds(role, userId, tenantId);
+  return ids ? { ...base, id: idClause(ids) } : base;
 }

@@ -84,7 +84,7 @@ const ids = (rows: { id: string }[]) => rows.map((r) => r.id);
 test("EMPLOYEE (OWN scope) in tenant A sees only own A lead, never B's", async () => {
   // EMPLOYEE maps to the OWN data scope in this role model, so it is narrowed
   // to its own leads — and always within its own tenant.
-  const where = leadScopeForUser(Role.EMPLOYEE, mgrAId, orgAId);
+  const where = await leadScopeForUser(Role.EMPLOYEE, mgrAId, orgAId);
   const rows = await prisma.lead.findMany({ where });
   const got = ids(rows);
   assert.ok(got.includes(leadAMgrId), "employee should see their own A lead");
@@ -93,7 +93,7 @@ test("EMPLOYEE (OWN scope) in tenant A sees only own A lead, never B's", async (
 });
 
 test("same manager scoped to tenant B never returns A's leads", async () => {
-  const where = leadScopeForUser(Role.EMPLOYEE, mgrAId, orgBId);
+  const where = await leadScopeForUser(Role.EMPLOYEE, mgrAId, orgBId);
   const rows = await prisma.lead.findMany({ where });
   const got = ids(rows);
   assert.ok(got.includes(leadBId), "scope(B) should see B's lead");
@@ -101,7 +101,7 @@ test("same manager scoped to tenant B never returns A's leads", async () => {
 });
 
 test("OWN-scoped agent sees only their own lead within their tenant", async () => {
-  const where = leadScopeForUser(Role.AGENT, agentAId, orgAId);
+  const where = await leadScopeForUser(Role.AGENT, agentAId, orgAId);
   const rows = await prisma.lead.findMany({ where });
   const got = ids(rows);
   assert.ok(got.includes(leadAAgentId), "agent should see their own A lead");
@@ -110,7 +110,7 @@ test("OWN-scoped agent sees only their own lead within their tenant", async () =
 });
 
 test("null tenant matches none of our leads (fail-closed)", async () => {
-  const where = leadScopeForUser(Role.EMPLOYEE, mgrAId, null);
+  const where = await leadScopeForUser(Role.EMPLOYEE, mgrAId, null);
   const rows = await prisma.lead.findMany({ where });
   const got = ids(rows);
   assert.ok(!got.includes(leadAMgrId) && !got.includes(leadAAgentId) && !got.includes(leadBId),
@@ -125,7 +125,7 @@ test("tenantScope(A) findMany excludes tenant B rows", async () => {
 });
 
 test("superadmin is still tenant-bound (one tenant only)", async () => {
-  const where = leadScopeForUser(Role.SUPERADMIN, mgrAId, orgAId);
+  const where = await leadScopeForUser(Role.SUPERADMIN, mgrAId, orgAId);
   const rows = await prisma.lead.findMany({ where });
   const got = ids(rows);
   assert.ok(got.includes(leadAMgrId) && got.includes(leadAAgentId), "superadmin sees their tenant");

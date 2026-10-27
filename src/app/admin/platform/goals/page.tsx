@@ -10,7 +10,7 @@ export default async function GoalsPage() {
   const tenantId = session?.user?.tenantId || "__no_tenant__";
   // OWN-scope roles only see goals assigned to them; leaders see the whole tenant.
   const goalWhere = session?.user
-    ? ownerScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    ? await ownerScopeForUser(session.user.role, session.user.id, session.user.tenantId)
     : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const goals = await prisma.crmGoal.findMany({
     where: goalWhere,
