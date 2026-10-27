@@ -8,6 +8,7 @@ import { formatCurrency } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { isSuperAdmin } from "@/lib/roles";
+import { DomainStatusCard } from "@/components/admin/domain-status-card";
 import { ArrowRight, Download, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -85,6 +86,10 @@ async function PartnerBilling({ tenantId }: { tenantId: string | null }) {
         <Link href="/pricing" className="ml-auto inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-hover">
           Renew / change plan <ArrowRight className="h-4 w-4" />
         </Link>
+      </div>
+
+      <div className="mb-8">
+        <DomainStatusCard />
       </div>
 
       <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">

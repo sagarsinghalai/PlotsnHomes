@@ -44,6 +44,11 @@ If you host the platform yourself (e.g. Hostinger VPS + Nginx), point the record
 at that server's IP. On a managed host (Vercel/Netlify), point them at the host's
 documented target and add the domain in that host's dashboard.
 
+> **In-app status:** a partner can see their own domain's DNS records and a live
+> resolution check on **Admin → Billing & subscriptions → Custom domain** (backed
+> by `src/lib/domain-status.ts` and `GET /api/admin/domains/check`). "Re-check DNS"
+> re-runs the live lookup after they update their registrar.
+
 ### Subdomain model (no registrar changes per tenant)
 Give every tenant a subdomain of **your** platform domain:
 `acme.yourplatform.com`. Add a **wildcard** DNS record `*.yourplatform.com`
