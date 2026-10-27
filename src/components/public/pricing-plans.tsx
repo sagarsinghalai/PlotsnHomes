@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, Loader2, ShieldCheck, Sparkles, X, CreditCard } from "lucide-react";
 
@@ -33,11 +33,28 @@ export function PricingPlans({ plans, testMode = true }: { plans: PricingPlan[];
   const [form, setForm] = useState({ name: "", email: "", password: "", companyName: "", domain: "" });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  // Stripe inline card step (set once an order comes back on a Stripe deployment).
+  const [stripeStep, setStripeStep] = useState<{ clientSecret: string; publishableKey: string } | null>(null);
+  const [stripePaying, setStripePaying] = useState(false);
+  const stripeRef = useRef<any>(null);
+  const elementsRef = useRef<any>(null);
+  const stripeMountRef = useRef<HTMLDivElement | null>(null);
 
   function openFor(plan: PricingPlan) {
     setSelected(plan);
     setResult(null);
+    setStripeStep(null);
+    stripeRef.current = null;
+    elementsRef.current = null;
     setForm({ name: "", email: "", password: "", companyName: "", domain: "" });
+  }
+
+  function closeModal() {
+    if (loading || stripePaying) return;
+    setSelected(null);
+    setStripeStep(null);
+    stripeRef.current = null;
+    elementsRef.current = null;
   }
 
   function loadScript(src: string): Promise<void> {
@@ -90,6 +107,49 @@ export function PricingPlans({ plans, testMode = true }: { plans: PricingPlan[];
     rzp.open();
   }
 
+  // Load Stripe.js and mount an inline Payment Element once the card step opens.
+  useEffect(() => {
+    if (!stripeStep) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await loadScript("https://js.stripe.com/v3");
+        if (cancelled || !stripeMountRef.current) return;
+        const stripe = (window as any).Stripe(stripeStep.publishableKey);
+        const elements = stripe.elements({ clientSecret: stripeStep.clientSecret });
+        const paymentElement = elements.create("payment");
+        paymentElement.mount(stripeMountRef.current);
+        stripeRef.current = stripe;
+        elementsRef.current = elements;
+      } catch (e: any) {
+        if (!cancelled) setResult({ ok: false, error: e?.message || "Could not load the payment form." });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [stripeStep]);
+
+  async function payWithStripe(e: React.FormEvent) {
+    e.preventDefault();
+    if (!stripeRef.current || !elementsRef.current) return;
+    setStripePaying(true);
+    setResult(null);
+    try {
+      const { error, paymentIntent } = await stripeRef.current.confirmPayment({
+        elements: elementsRef.current,
+        redirect: "if_required",
+      });
+      if (error) throw new Error(error.message || "Payment could not be completed.");
+      if (!paymentIntent || paymentIntent.status !== "succeeded") {
+        throw new Error("Payment was not completed. Please try again.");
+      }
+      await finishSignup({ stripe_payment_intent_id: paymentIntent.id });
+    } catch (err: any) {
+      setResult({ ok: false, error: err?.message || "Payment failed" });
+    } finally {
+      setStripePaying(false);
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!selected) return;
@@ -109,6 +169,12 @@ export function PricingPlans({ plans, testMode = true }: { plans: PricingPlan[];
       if (orderData.gateway === "razorpay") {
         await payWithRazorpay(orderData.order);
         return; // the Razorpay handler finishes + unsets loading
+      }
+      if (orderData.gateway === "stripe") {
+        // Switch the modal to the inline card step; the effect mounts the Payment Element.
+        setStripeStep({ clientSecret: orderData.order.clientSecret, publishableKey: orderData.order.publishableKey });
+        setLoading(false);
+        return;
       }
       if (orderData.gateway === "test") {
         await finishSignup({});
@@ -180,7 +246,7 @@ export function PricingPlans({ plans, testMode = true }: { plans: PricingPlan[];
       </div>
 
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => !loading && setSelected(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closeModal}>
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between">
               <div>
@@ -189,7 +255,7 @@ export function PricingPlans({ plans, testMode = true }: { plans: PricingPlan[];
                   {money(selected.price, selected.currency)}{selected.priceSuffix}
                 </p>
               </div>
-              <button onClick={() => !loading && setSelected(null)} className="rounded-md p-1 text-slate-400 hover:bg-slate-100"><X className="h-5 w-5" /></button>
+              <button onClick={closeModal} className="rounded-md p-1 text-slate-400 hover:bg-slate-100"><X className="h-5 w-5" /></button>
             </div>
 
             {result?.ok ? (
@@ -203,6 +269,36 @@ export function PricingPlans({ plans, testMode = true }: { plans: PricingPlan[];
                   Sign in to your workspace
                 </Link>
               </div>
+            ) : stripeStep ? (
+              <form onSubmit={payWithStripe} className="mt-5 space-y-4">
+                <p className="text-sm text-slate-600">
+                  Enter your card details to complete your subscription.
+                </p>
+                <div ref={stripeMountRef} className="rounded-lg border border-slate-300 p-3" />
+
+                {result && !result.ok && (
+                  <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{result.error}</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={stripePaying}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-60"
+                >
+                  {stripePaying ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                  {stripePaying ? "Processing…" : `Pay ${money(selected.price, selected.currency)}`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { if (!stripePaying) { setStripeStep(null); setResult(null); } }}
+                  className="block w-full text-center text-xs text-slate-400 hover:text-slate-600"
+                >
+                  ← Back to details
+                </button>
+                <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-slate-400">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Secured by Stripe.
+                </p>
+              </form>
             ) : (
               <form onSubmit={submit} className="mt-5 space-y-3">
                 <Field label="Your name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
