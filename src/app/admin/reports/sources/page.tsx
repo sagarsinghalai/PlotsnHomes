@@ -8,15 +8,22 @@ import {
 } from "@/components/admin/reports/charts";
 import { CHART_COLORS } from "@/lib/admin-reports";
 import { prisma } from "@/lib/prisma";
-import { getServerTenantId } from "@/lib/tenant";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { leadScopeForUser } from "@/lib/crm-access";
 
 export default async function LeadSourcesReportPage() {
-  const tenantId = await getServerTenantId();
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles see only their own leads' sources; leaders see the tenant.
+  const leadWhere = session?.user
+    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const [bySource, wonBySource] = await Promise.all([
-    prisma.lead.groupBy({ by: ["source"], where: { tenantId }, _count: { id: true }, orderBy: { _count: { id: "desc" } } }),
+    prisma.lead.groupBy({ by: ["source"], where: leadWhere, _count: { id: true }, orderBy: { _count: { id: "desc" } } }),
     prisma.lead.groupBy({
       by: ["source"],
-      where: { stage: "WON", tenantId },
+      where: { ...leadWhere, stage: "WON" },
       _count: { id: true },
     }),
   ]);

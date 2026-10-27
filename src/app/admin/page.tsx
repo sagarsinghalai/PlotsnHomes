@@ -3,11 +3,20 @@ export const dynamic = "force-dynamic";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminDashboardOverview } from "@/components/admin/admin-dashboard-overview";
 import { prisma } from "@/lib/prisma";
-import { getServerTenantId } from "@/lib/tenant";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { transactionScopeForUser } from "@/lib/crm-access";
 
 export default async function AdminOverviewPage() {
   const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
-  const tenantId = await getServerTenantId();
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles see only revenue/transactions from their own deals on the
+  // dashboard; leaders see the whole tenant. Other widgets (users, properties,
+  // inquiries, developers) are tenant-shared and stay tenant-wide.
+  const txScope = session?.user
+    ? transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId };
 
   const [
     userCount,
@@ -30,7 +39,7 @@ export default async function AdminOverviewPage() {
     }),
     prisma.property.count({ where: { status: "ACTIVE", tenantId } }),
     prisma.transaction.aggregate({
-      where: { status: "COMPLETED", tenantId },
+      where: { ...txScope, status: "COMPLETED" },
       _sum: { amount: true },
     }),
     prisma.inquiry.count({ where: { tenantId } }),
@@ -63,7 +72,7 @@ export default async function AdminOverviewPage() {
       select: { id: true, title: true, symbol: true, submittedBy: { select: { name: true, role: true } }, createdAt: true },
     }),
     prisma.transaction.findMany({
-      where: { tenantId },
+      where: txScope,
       take: 10,
       orderBy: { createdAt: "desc" },
       include: { user: { select: { name: true, role: true } } },

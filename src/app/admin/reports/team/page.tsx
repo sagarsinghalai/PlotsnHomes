@@ -7,12 +7,20 @@ import {
 } from "@/components/admin/reports/charts";
 import { CHART_COLORS } from "@/lib/admin-reports";
 import { prisma } from "@/lib/prisma";
-import { getServerTenantId } from "@/lib/tenant";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { leadScopeForUser } from "@/lib/crm-access";
 
 export default async function TeamPerformanceReportPage() {
-  const tenantId = await getServerTenantId();
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles see only their own scorecard (their single owner row); leaders
+  // see every owner in the tenant.
+  const leadWhere = session?.user
+    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const leads = await prisma.lead.findMany({
-    where: { tenantId },
+    where: leadWhere,
     select: { ownerId: true, stage: true, owner: { select: { name: true } } },
   });
 

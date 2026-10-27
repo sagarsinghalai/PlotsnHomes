@@ -3,14 +3,25 @@ import { ReportsCatalog } from "@/components/admin/reports/reports-catalog";
 import { OverviewPerformanceChart } from "@/components/admin/reports/overview-performance-chart";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
-import { getServerTenantId } from "@/lib/tenant";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { leadScopeForUser, transactionScopeForUser } from "@/lib/crm-access";
 
 export default async function ReportsHubPage() {
-  const tenantId = await getServerTenantId();
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles see only their own leads/revenue; leaders see the whole tenant.
+  // Users/inquiries are tenant headcounts (not owner-personal) — left tenant-wide.
+  const leadWhere = session?.user
+    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId, ownerId: "__no_tenant__" as string | undefined };
+  const txScope = session?.user
+    ? transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId };
   const [leads, revenue, users, inquiries] = await Promise.all([
-    prisma.lead.count({ where: { tenantId } }),
+    prisma.lead.count({ where: leadWhere }),
     prisma.transaction.aggregate({
-      where: { status: "COMPLETED", tenantId },
+      where: { ...txScope, status: "COMPLETED" },
       _sum: { amount: true },
     }),
     prisma.user.count({ where: { tenantId } }),

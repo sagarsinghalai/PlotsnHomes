@@ -3,16 +3,23 @@ import { FunnelChart, ReportKpiGrid } from "@/components/admin/reports/charts";
 import { getPipelineConfig } from "@/lib/pipeline-settings";
 import { STAGE_COLORS, STAGE_LABELS } from "@/lib/admin-reports";
 import { prisma } from "@/lib/prisma";
-import { getServerTenantId } from "@/lib/tenant";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { leadScopeForUser } from "@/lib/crm-access";
 
 export default async function LeadFunnelReportPage() {
-  const tenantId = await getServerTenantId();
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles see only their own funnel; leaders see the whole tenant.
+  const leadWhere = session?.user
+    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const [config, byStage, total, won, lost] = await Promise.all([
     getPipelineConfig(),
-    prisma.lead.groupBy({ by: ["stage"], where: { tenantId }, _count: { id: true } }),
-    prisma.lead.count({ where: { tenantId } }),
-    prisma.lead.count({ where: { stage: "WON", tenantId } }),
-    prisma.lead.count({ where: { stage: "LOST", tenantId } }),
+    prisma.lead.groupBy({ by: ["stage"], where: leadWhere, _count: { id: true } }),
+    prisma.lead.count({ where: leadWhere }),
+    prisma.lead.count({ where: { ...leadWhere, stage: "WON" } }),
+    prisma.lead.count({ where: { ...leadWhere, stage: "LOST" } }),
   ]);
 
   const countMap = Object.fromEntries(byStage.map((r) => [r.stage, r._count.id]));

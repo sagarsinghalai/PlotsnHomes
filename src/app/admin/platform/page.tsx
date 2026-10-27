@@ -2,6 +2,7 @@ import { PlatformSettingsNav } from "@/components/admin/platform-settings-nav";
 import { SettingsCardGrid } from "@/components/admin/settings-card-grid";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { leadScopeForUser } from "@/lib/crm-access";
 import { getRolePermissions, getPermissionGroup, PERMISSIONS_SCHEMA } from "@/lib/permissions";
 import {
   Bell,
@@ -24,9 +25,13 @@ export default async function PlatformSettingsPage() {
   const userRole = session?.user?.role || "";
   const tenantId = session?.user?.tenantId || "__no_tenant__";
 
+  // OWN-scope roles only count their own leads here; leaders count the tenant.
+  const leadWhere = session?.user
+    ? leadScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId, ownerId: "__no_tenant__" as string | undefined };
   const [userCount, leadCount, activeUsers] = await Promise.all([
     prisma.user.count({ where: { tenantId } }),
-    prisma.lead.count({ where: { tenantId } }),
+    prisma.lead.count({ where: leadWhere }),
     prisma.user.count({ where: { active: true, tenantId } }),
   ]);
 

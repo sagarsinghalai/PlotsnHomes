@@ -9,28 +9,35 @@ import {
 import { CHART_COLORS, groupSumByMonth } from "@/lib/admin-reports";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
-import { getServerTenantId } from "@/lib/tenant";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { transactionScopeForUser } from "@/lib/crm-access";
 
 export default async function RevenueReportPage() {
-  const tenantId = await getServerTenantId();
+  const session = await getServerSession(authOptions);
+  const tenantId = session?.user?.tenantId || "__no_tenant__";
+  // OWN-scope roles see only revenue from their own deals; leaders see the tenant.
+  const txScope = session?.user
+    ? transactionScopeForUser(session.user.role, session.user.id, session.user.tenantId)
+    : { tenantId };
   const [completed, pending, byType, monthly] = await Promise.all([
     prisma.transaction.findMany({
-      where: { status: "COMPLETED", tenantId },
+      where: { ...txScope, status: "COMPLETED" },
       select: { amount: true, type: true, createdAt: true },
     }),
     prisma.transaction.aggregate({
-      where: { status: "PENDING", tenantId },
+      where: { ...txScope, status: "PENDING" },
       _sum: { amount: true },
       _count: true,
     }),
     prisma.transaction.groupBy({
       by: ["type"],
-      where: { status: "COMPLETED", tenantId },
+      where: { ...txScope, status: "COMPLETED" },
       _sum: { amount: true },
       _count: true,
     }),
     prisma.transaction.findMany({
-      where: { status: "COMPLETED", tenantId },
+      where: { ...txScope, status: "COMPLETED" },
       select: { amount: true, createdAt: true },
       orderBy: { createdAt: "asc" },
     }),
