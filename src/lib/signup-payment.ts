@@ -32,7 +32,13 @@ export type PlanForOrder = { slug: string; name: string; price: number; currency
 
 export async function createSignupOrder(plan: PlanForOrder): Promise<SignupOrder> {
   const gw = await resolvePlatformGateway();
-  if (gw.provider === "test") return { provider: "test" };
+  // A free plan (or test mode) needs no payment.
+  if (gw.provider === "test" || !(plan.price > 0)) return { provider: "test" };
+
+  // Sanity guard: never open a real checkout for a malformed currency.
+  if (!/^[A-Za-z]{3}$/.test((plan.currency || "").trim())) {
+    throw new Error(`Plan currency "${plan.currency}" is invalid (expected a 3-letter code like INR or USD).`);
+  }
 
   if (gw.provider === "razorpay") {
     const order = await createRazorpayOrder({

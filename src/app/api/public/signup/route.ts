@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 import { provisionTenantSignup } from "@/lib/signup";
 import { verifySignupPayment } from "@/lib/signup-payment";
 
@@ -36,13 +37,20 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Verify payment first (passes automatically in test mode).
-    const paid = await verifySignupPayment(parsed.data);
-    if (!paid.ok) {
-      return NextResponse.json({ ok: false, error: paid.error }, { status: 402 });
+    // Free plans need no payment; otherwise verify first (passes in test mode).
+    const plan = await prisma.subscriptionPlan.findFirst({ where: { slug: parsed.data.planSlug, active: true }, select: { price: true } });
+    const isFree = !plan || plan.price <= 0;
+
+    let paymentRef: string | undefined;
+    if (!isFree) {
+      const paid = await verifySignupPayment(parsed.data);
+      if (!paid.ok) {
+        return NextResponse.json({ ok: false, error: paid.error }, { status: 402 });
+      }
+      paymentRef = paid.ref;
     }
 
-    const result = await provisionTenantSignup({ ...parsed.data, paymentRef: paid.ref });
+    const result = await provisionTenantSignup({ ...parsed.data, paymentRef });
     if (!result.ok) {
       return NextResponse.json({ ok: false, error: result.error }, { status: result.status });
     }
