@@ -261,10 +261,8 @@ export function RolesSettingsClient({
     const moduleDef = allModules.find((m) => m.key === permissionKey);
     const subKeys = moduleDef ? moduleDef.subPermissions.map((s) => s.key) : ["view", "add", "edit", "delete"];
 
-    const targets: PermissionGroup[] =
-      selectedGroup === "ADMIN" || selectedGroup === "EMPLOYEE"
-        ? ["ADMIN", "EMPLOYEE"]
-        : [selectedGroup];
+    // Each role template is independent — editing one never changes another.
+    const targets: PermissionGroup[] = [selectedGroup];
 
     setPermissions((prev) => {
       const next = { ...prev };
@@ -291,10 +289,8 @@ export function RolesSettingsClient({
     if (isLockedGroup) return;
     // Can't check a box the platform owner's ceiling doesn't allow.
     if (value && !ceilingAllows(selectedGroup, permissionKey, field)) return;
-    const targets: PermissionGroup[] =
-      selectedGroup === "ADMIN" || selectedGroup === "EMPLOYEE"
-        ? ["ADMIN", "EMPLOYEE"]
-        : [selectedGroup];
+    // Each role template is independent — editing one never changes another.
+    const targets: PermissionGroup[] = [selectedGroup];
 
     setPermissions((prev) => {
       const next = { ...prev };
