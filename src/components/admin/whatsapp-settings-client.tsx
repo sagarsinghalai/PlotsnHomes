@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Save, Check, MessageCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 type Masked = {
   enabled: boolean;
@@ -34,12 +35,12 @@ function SecretField({ label, value, onChange, configured, hint }: { label: stri
         {label}
         {configured && <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">set</span>}
       </label>
-      <input
+      <Input
         type="password"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={configured ? "•••••••• saved — type to replace" : "Not set"}
-        className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-900"
+        className="rounded-xl text-sm dark:border-slate-700 dark:bg-slate-900"
       />
       {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
     </div>

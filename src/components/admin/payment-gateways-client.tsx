@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, ShieldCheck, Check, AlertTriangle, CreditCard, Building2, KeyRound } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { Input } from "@/components/ui/input";
 
 type MaskedSection = {
   razorpay: { enabled: boolean; keyId: string; hasKeySecret: boolean; hasWebhookSecret: boolean };
@@ -320,13 +321,13 @@ function SecretField({ label, saved, value, onChange, optional }: { label: strin
         {optional && <span className="ml-1 text-slate-400">(optional)</span>}
         {saved && <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700"><Check className="h-3 w-3" /> saved</span>}
       </span>
-      <input
+      <Input
         type="password"
         autoComplete="new-password"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={saved ? "•••••••• (leave blank to keep)" : "Enter secret"}
-        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+        className="mt-1 font-mono text-sm"
       />
     </label>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Mail, Plus, Trash2, Save, Loader2, CheckCircle2, Star } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 type Sender = {
   id?: string;
@@ -115,7 +116,7 @@ export function EmailSendersManager() {
                   </div>
                   <div>
                     <label className="text-[11px] font-bold text-slate-500">Resend API key <span className="font-normal text-slate-400">(optional)</span></label>
-                    <input type="password" value={s.apiKey} onChange={(e) => update(i, { apiKey: e.target.value })}
+                    <Input type="password" value={s.apiKey} onChange={(e) => update(i, { apiKey: e.target.value })}
                       placeholder={s.hasApiKey ? "•••••••• (leave blank to keep)" : "re_… (uses default key if blank)"} className={input} />
                   </div>
                 </div>
