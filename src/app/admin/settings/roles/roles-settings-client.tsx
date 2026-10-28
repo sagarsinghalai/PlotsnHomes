@@ -50,6 +50,8 @@ import {
   Send,
   Mail,
   Plug,
+  Lock,
+  Crown,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -62,8 +64,10 @@ type WebUser = {
   role: string;
 };
 
-// Simplified 5 User Roles requested: Admin, Employee, Agent, Seller, Buyer
+// Super Admin (platform owner) is shown locked/read-only at the top; the editable
+// templates below it are Admin, Employee, Agent, Seller, Buyer.
 const SIMPLE_USER_ROLES = [
+  { value: "SUPERADMIN", label: "Super Admin" },
   { value: "ADMIN", label: "Admin" },
   { value: "EMPLOYEE", label: "Employee" },
   { value: "AGENT", label: "Agent" },
@@ -147,11 +151,29 @@ const MODULES_WITH_ADD = new Set([
 
 export function RolesSettingsClient({
   initialPermissions,
+  isOwner = false,
+  ceiling = null,
 }: {
   initialPermissions: RolePermissionsConfig;
+  isOwner?: boolean;
+  ceiling?: RolePermissionsConfig | null;
 }) {
   const [permissions, setPermissions] = useState<RolePermissionsConfig>(initialPermissions);
   const [selectedGroup, setSelectedGroup] = useState<PermissionGroup>("ADMIN");
+
+  // SUPERADMIN is the platform owner: always full, never editable by anyone.
+  const isLockedGroup = selectedGroup === "SUPERADMIN";
+
+  // Whether a given cell is allowed by the platform owner's ceiling. The owner has
+  // no ceiling (they define it); for everyone else, a cell the owner hasn't granted
+  // is locked off so a tenant admin can never turn it on and surpass the owner.
+  function ceilingAllows(group: PermissionGroup, key: string, field: string): boolean {
+    if (isOwner || group === "SUPERADMIN") return true;
+    if (!ceiling) return true;
+    const cell = (ceiling[group]?.[key] as Record<string, boolean> | undefined);
+    if (!cell || !(field in cell)) return true;
+    return !!cell[field];
+  }
 
   // Web users list fetched live from /api/admin/users
   const [webUsers, setWebUsers] = useState<WebUser[]>([]);
@@ -207,8 +229,11 @@ export function RolesSettingsClient({
   }
 
   function handleToggleModule(permissionKey: string) {
+    // The owner tier is read-only; a tenant admin can't enable past the ceiling.
+    if (isLockedGroup) return;
     const currentlyOn = permissions[selectedGroup]?.[permissionKey]?.view ?? false;
     const nextVal = !currentlyOn;
+    if (nextVal && !ceilingAllows(selectedGroup, permissionKey, "view")) return;
 
     const moduleDef = allModules.find((m) => m.key === permissionKey);
     const subKeys = moduleDef ? moduleDef.subPermissions.map((s) => s.key) : ["view", "add", "edit", "delete"];
@@ -223,7 +248,8 @@ export function RolesSettingsClient({
       targets.forEach((grp) => {
         const updatedObj: Record<string, boolean> = {};
         subKeys.forEach((k) => {
-          updatedObj[k] = nextVal;
+          // Enabling never grants past the ceiling; disabling clears everything.
+          updatedObj[k] = nextVal && ceilingAllows(grp, permissionKey, k);
         });
         next[grp] = {
           ...next[grp],
@@ -239,6 +265,9 @@ export function RolesSettingsClient({
     field: string,
     value: boolean
   ) {
+    if (isLockedGroup) return;
+    // Can't check a box the platform owner's ceiling doesn't allow.
+    if (value && !ceilingAllows(selectedGroup, permissionKey, field)) return;
     const targets: PermissionGroup[] =
       selectedGroup === "ADMIN" || selectedGroup === "EMPLOYEE"
         ? ["ADMIN", "EMPLOYEE"]
@@ -382,7 +411,9 @@ export function RolesSettingsClient({
             </div>
             <h1 className="text-2xl font-bold text-slate-900 mt-1">Roles & Permissions Management</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Control granular sidebar menu access, data visibility, and module permissions for Admin, Employee, Agent, Seller, and Buyer.
+              Control granular sidebar menu access, data visibility, and module permissions. The
+              platform owner&apos;s <b>Super Admin</b> rights are absolute; whatever is granted at the{" "}
+              <b>Admin</b> level is the ceiling no delegated admin can exceed.
             </p>
           </div>
         </div>
@@ -449,6 +480,28 @@ export function RolesSettingsClient({
           </div>
         </div>
       </div>
+
+      {/* Ceiling model explainer */}
+      {isOwner ? (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900">
+          <Crown className="h-5 w-5 shrink-0 text-amber-600" />
+          <span>
+            <b>You are the platform owner, setting the global ceiling.</b> Whatever you grant the{" "}
+            <b>Admin</b> template is the maximum any delegated admin — white-label, franchise, branch,
+            department or team — can ever have, in any tenant. They can tighten their own access, but
+            never exceed yours. Your own <b>Super Admin</b> access is absolute and shown locked below.
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-start gap-3 rounded-xl border border-slate-300 bg-slate-50 p-4 text-xs text-slate-700">
+          <Lock className="h-5 w-5 shrink-0 text-slate-500" />
+          <span>
+            Your changes can only <b>restrict</b> access. Options locked (
+            <Lock className="inline h-3 w-3 align-text-bottom" />) are reserved by the platform owner
+            and can't be enabled here — this guarantees no admin exceeds the owner's rights.
+          </span>
+        </div>
+      )}
 
       {/* Notifications */}
       {saveSuccess && (
@@ -563,13 +616,16 @@ export function RolesSettingsClient({
           {/* Module Settings Grid with Toggle Switches */}
           <div className="space-y-6">
             {filteredModules.map((module) => {
-              const enabled = isModuleEnabled(module.key);
               const subPerms = (permissions[selectedGroup]?.[module.key] as Record<string, boolean>) || {};
+              const moduleLocked = isLockedGroup || !ceilingAllows(selectedGroup, module.key, "view");
+              const enabled = isLockedGroup ? true : isModuleEnabled(module.key);
 
               return (
                 <div
                   key={module.key}
-                  className="rounded-xl border border-slate-200 bg-white p-5 space-y-4 shadow-2xs hover:border-slate-300 transition"
+                  className={`rounded-xl border p-5 space-y-4 shadow-2xs transition ${
+                    moduleLocked ? "border-slate-200 bg-slate-50/70" : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
                 >
                   {/* Module Header with Toggle Switch */}
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -578,9 +634,17 @@ export function RolesSettingsClient({
                       <button
                         type="button"
                         onClick={() => handleToggleModule(module.key)}
-                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          enabled ? "bg-blue-600" : "bg-slate-200"
-                        }`}
+                        disabled={moduleLocked}
+                        title={
+                          isLockedGroup
+                            ? "The platform owner always has full access."
+                            : moduleLocked
+                            ? "Reserved by the platform owner — can't be enabled here."
+                            : undefined
+                        }
+                        className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          moduleLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+                        } ${enabled ? "bg-blue-600" : "bg-slate-200"}`}
                       >
                         <span
                           className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
@@ -595,11 +659,13 @@ export function RolesSettingsClient({
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500 border border-slate-200">
                           {module.groupLabel}
                         </span>
+                        {isLockedGroup && <Crown className="h-3.5 w-3.5 text-amber-500" />}
+                        {!isLockedGroup && moduleLocked && <Lock className="h-3.5 w-3.5 text-slate-400" />}
                       </div>
                     </div>
 
                     <span className={`text-[11px] font-bold ${enabled ? "text-blue-600" : "text-slate-400"}`}>
-                      {enabled ? "ENABLED" : "DISABLED"}
+                      {isLockedGroup ? "ABSOLUTE" : enabled ? "ENABLED" : "DISABLED"}
                     </span>
                   </div>
 
@@ -607,16 +673,24 @@ export function RolesSettingsClient({
                   {enabled && (
                     <div className="pl-14 space-y-2 pt-1 animate-in fade-in-50 duration-150">
                       {module.subPermissions.map((sub, i) => {
-                        const checked = subPerms[sub.key] ?? false;
+                        const cellLocked = isLockedGroup || !ceilingAllows(selectedGroup, module.key, sub.key);
+                        const checked = isLockedGroup ? true : (subPerms[sub.key] ?? false);
                         return (
-                          <label key={i} className="flex items-center gap-2.5 text-xs text-slate-700 font-medium cursor-pointer">
+                          <label
+                            key={i}
+                            className={`flex items-center gap-2.5 text-xs font-medium ${
+                              cellLocked ? "cursor-not-allowed text-slate-400" : "cursor-pointer text-slate-700"
+                            }`}
+                          >
                             <input
                               type="checkbox"
                               checked={checked}
+                              disabled={cellLocked}
                               onChange={(e) => handleSubPermissionChange(module.key, sub.key, e.target.checked)}
-                              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-60"
                             />
                             <span>{sub.label}</span>
+                            {!isLockedGroup && cellLocked && <Lock className="h-3 w-3 text-slate-300" />}
                           </label>
                         );
                       })}

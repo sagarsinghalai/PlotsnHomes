@@ -100,6 +100,7 @@ export const PERMISSIONS_SCHEMA: PermissionHead[] = [
 ];
 
 export type PermissionGroup =
+  | "SUPERADMIN"
   | "ADMIN"
   | "PLATFORM_ADMIN"
   | "WHITE_LABEL_ADMIN"
@@ -115,7 +116,8 @@ export type PermissionGroup =
   | "DEMO";
 
 export const PERMISSION_GROUPS: { value: PermissionGroup; label: string }[] = [
-  { value: "ADMIN", label: "Super Admin (Global Scope)" },
+  { value: "SUPERADMIN", label: "Super Admin / Platform Owner (Absolute)" },
+  { value: "ADMIN", label: "Admin (Global Scope)" },
   { value: "PLATFORM_ADMIN", label: "Platform Admin (Organization Scope)" },
   { value: "WHITE_LABEL_ADMIN", label: "White Label Admin (Tenant Scope)" },
   { value: "FRANCHISE_ADMIN", label: "Franchise Admin (Franchise Scope)" },
@@ -259,6 +261,10 @@ for (const k of TENANT_GOVERNANCE_KEYS) subLeaderPerms[k] = { ...NONE };
 const endUserPerms = fillPermissions(END_USER_BASE, { ...NONE });
 
 export const DEFAULT_PERMISSIONS: RolePermissionsConfig = {
+  // The platform owner. Always full — never clamped, never editable. SUPERADMIN
+  // also bypasses hasPermission() entirely; this row exists so the UI can show
+  // the owner tier and so the type is complete.
+  SUPERADMIN: fullAdminPerms,
   ADMIN: fullAdminPerms,
   PLATFORM_ADMIN: fullAdminPerms,
   WHITE_LABEL_ADMIN: wlAdminPerms,
@@ -273,6 +279,92 @@ export const DEFAULT_PERMISSIONS: RolePermissionsConfig = {
   BUYER: endUserPerms,
   DEMO: endUserPerms,
 };
+
+/**
+ * Owner tiers whose rights are absolute: never capped by any ceiling. SUPERADMIN
+ * also bypasses hasPermission() outright; PLATFORM_ADMIN is the owner's org-level
+ * admin (see SUPERADMIN_ROLES) and edits the GLOBAL matrix, so it sets the ceiling
+ * rather than living under it.
+ */
+const OWNER_GROUPS: PermissionGroup[] = ["SUPERADMIN", "PLATFORM_ADMIN"];
+
+/**
+ * Delegated admin tiers. Whatever the platform owner grants the global ADMIN
+ * template is the HARD CEILING for every one of these — a white-label, franchise,
+ * branch, department or team admin can never see or do more than the owner allows,
+ * in any tenant. "ADMIN" itself is the ceiling source, so it is not listed here.
+ */
+export const ADMIN_CEILING_GROUPS: PermissionGroup[] = [
+  "WHITE_LABEL_ADMIN",
+  "FRANCHISE_ADMIN",
+  "BRANCH_MANAGER",
+  "DEPARTMENT_HEAD",
+  "TEAM_LEADER",
+  "EXECUTIVE",
+];
+
+function clampCell(cell: PermCell | undefined, ceil: PermCell | undefined): PermCell {
+  const c = cell ?? { ...NONE };
+  if (!ceil) return { ...c };
+  // A cell can never grant more than the ceiling allows (boolean AND per action).
+  return {
+    view: !!c.view && !!ceil.view,
+    add: !!c.add && !!ceil.add,
+    edit: !!c.edit && !!ceil.edit,
+    delete: !!c.delete && !!ceil.delete,
+  };
+}
+
+function clampGroup(
+  group: Record<string, PermCell> | undefined,
+  ceiling: Record<string, PermCell> | undefined
+): Record<string, PermCell> {
+  const src = group ?? {};
+  const out: Record<string, PermCell> = {};
+  const keys = new Set([...Object.keys(src), ...Object.keys(ceiling ?? {})]);
+  for (const k of Array.from(keys)) out[k] = clampCell(src[k], ceiling?.[k]);
+  return out;
+}
+
+/** Clamp every group of `config` so no cell exceeds the same cell in `ceiling`. */
+export function clampConfigToCeiling(
+  config: RolePermissionsConfig,
+  ceiling: RolePermissionsConfig
+): RolePermissionsConfig {
+  const out = {} as Record<string, Record<string, PermCell>>;
+  for (const group of Object.keys(config) as PermissionGroup[]) {
+    if (OWNER_GROUPS.includes(group)) {
+      out[group] = { ...config[group] }; // owners are never clamped
+    } else {
+      out[group] = clampGroup(config[group], ceiling[group]);
+    }
+  }
+  return out as RolePermissionsConfig;
+}
+
+/**
+ * Cap the delegated admin tiers at the global ADMIN template. This is what makes
+ * "no admin surpasses the superadmin" true for white-label / franchise / branch /
+ * team admins — not just the literal ADMIN role.
+ */
+function applyAdminCeiling(
+  config: RolePermissionsConfig,
+  adminCeiling: Record<string, PermCell>
+): RolePermissionsConfig {
+  const out = { ...config } as Record<string, Record<string, PermCell>>;
+  for (const group of ADMIN_CEILING_GROUPS) {
+    out[group] = clampGroup(out[group], adminCeiling);
+  }
+  return out as RolePermissionsConfig;
+}
+
+function mergeOverDefaults(parsed: any): RolePermissionsConfig {
+  const merged = { ...DEFAULT_PERMISSIONS } as Record<string, Record<string, PermCell>>;
+  for (const group of Object.keys(DEFAULT_PERMISSIONS) as PermissionGroup[]) {
+    merged[group] = { ...DEFAULT_PERMISSIONS[group], ...((parsed && parsed[group]) || {}) };
+  }
+  return merged as RolePermissionsConfig;
+}
 
 /** Who may OPEN or EDIT the role-permission matrix (defense-in-depth beyond the
  * matrix itself): the platform owner, or a tenant's white-label admin. */
@@ -299,39 +391,62 @@ function enforceGovernance(config: RolePermissionsConfig): RolePermissionsConfig
 const ROLE_PERMS_KEY = "user_role_permissions";
 
 /**
- * Role → permission matrix. When a tenantId is given and that tenant has saved
- * its own matrix, it wins; otherwise the platform-global matrix is used, then the
- * built-in DEFAULT_PERMISSIONS. Either way every value is merged over the schema
- * defaults so no item is ever missing.
+ * The platform owner's GLOBAL matrix, merged over the schema defaults. This is the
+ * single source of truth for the ceiling: the maximum any tenant or delegated
+ * admin can ever be granted. It is NOT governance-enforced or admin-capped here —
+ * it is the raw owner-set ceiling that the other functions clamp against.
+ */
+export async function getGlobalRolePermissions(): Promise<RolePermissionsConfig> {
+  try {
+    const g = await prisma.systemSetting.findUnique({ where: { key: ROLE_PERMS_KEY } });
+    if (g?.value) return mergeOverDefaults(JSON.parse(g.value));
+  } catch (error) {
+    console.error("Failed to read global user_role_permissions setting:", error);
+  }
+  return mergeOverDefaults({});
+}
+
+/**
+ * The effective ceiling a NON-owner admin may grant from the editor: the global
+ * matrix with the delegated-admin tiers already capped at the global ADMIN
+ * template. The UI uses this to lock toggles a tenant admin isn't allowed to turn
+ * on, so the "can't surpass the superadmin" rule is visible, not just enforced.
+ */
+export function buildEffectiveCeiling(global: RolePermissionsConfig): RolePermissionsConfig {
+  return applyAdminCeiling(global, global.ADMIN);
+}
+
+/**
+ * Role → permission matrix for a tenant. The platform owner's GLOBAL matrix is the
+ * ceiling. A tenant's own saved matrix can only RESTRICT within that ceiling —
+ * never exceed it (clamped on read, so even a stale/over-broad or hand-crafted
+ * tenant matrix can't escalate). On top of that, the delegated admin tiers are
+ * capped at the global ADMIN template, and tenant-governance keys are forced off
+ * for non-managers. Every value is merged over the schema defaults so no item is
+ * ever missing.
  */
 export async function getRolePermissions(tenantId?: string | null): Promise<RolePermissionsConfig> {
   try {
-    let raw: string | null = null;
+    const global = await getGlobalRolePermissions();
+
+    let resolved: RolePermissionsConfig = global;
     if (tenantId) {
       const t = await prisma.tenantSetting.findUnique({
         where: { tenantId_key: { tenantId, key: ROLE_PERMS_KEY } },
       });
-      raw = t?.value ?? null;
-    }
-    if (raw == null) {
-      const g = await prisma.systemSetting.findUnique({ where: { key: ROLE_PERMS_KEY } });
-      raw = g?.value ?? null;
-    }
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const merged = { ...DEFAULT_PERMISSIONS };
-      for (const group of Object.keys(DEFAULT_PERMISSIONS) as PermissionGroup[]) {
-        merged[group] = {
-          ...DEFAULT_PERMISSIONS[group],
-          ...(parsed[group] || {}),
-        };
+      if (t?.value) {
+        // Tenant matrix may only restrict within the owner's ceiling.
+        resolved = clampConfigToCeiling(mergeOverDefaults(JSON.parse(t.value)), global);
       }
-      return enforceGovernance(merged);
     }
+
+    // Delegated admins never exceed what the owner grants the global ADMIN tier.
+    resolved = applyAdminCeiling(resolved, global.ADMIN);
+    return enforceGovernance(resolved);
   } catch (error) {
     console.error("Failed to read user_role_permissions setting:", error);
+    return enforceGovernance(DEFAULT_PERMISSIONS);
   }
-  return enforceGovernance(DEFAULT_PERMISSIONS);
 }
 
 type PermUser = { email: string; role: string; tenantId?: string | null };

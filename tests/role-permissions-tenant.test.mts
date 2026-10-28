@@ -35,8 +35,16 @@ async function runAll() {
 
 const tag = `rpt_${Date.now()}`;
 let aId = "", bId = "";
+// Capture and restore the real global matrix so these tests never leave the dev DB
+// with a restricted ceiling.
+let priorGlobal: string | null = null;
 
 async function setup() {
+  const existing = await prisma.systemSetting.findUnique({ where: { key: "user_role_permissions" } });
+  priorGlobal = existing?.value ?? null;
+  // Start from a clean, fully-permissive global ceiling ("{}" merges to the full
+  // defaults) so these tests don't depend on whatever the dev app has saved.
+  await setTenantSetting("user_role_permissions", "{}", null);
   const a = await prisma.organization.create({ data: { name: `${tag}_A`, code: `${tag}a` } });
   const b = await prisma.organization.create({ data: { name: `${tag}_B`, code: `${tag}b` } });
   aId = a.id; bId = b.id;
@@ -44,6 +52,12 @@ async function setup() {
 async function cleanup() {
   await prisma.tenantSetting.deleteMany({ where: { tenantId: { in: [aId, bId].filter(Boolean) } } }).catch(() => {});
   await prisma.organization.deleteMany({ where: { id: { in: [aId, bId].filter(Boolean) } } }).catch(() => {});
+  // Restore (or clear) the global matrix exactly as it was before the run.
+  if (priorGlobal == null) {
+    await prisma.systemSetting.deleteMany({ where: { key: "user_role_permissions" } }).catch(() => {});
+  } else {
+    await prisma.systemSetting.update({ where: { key: "user_role_permissions" }, data: { value: priorGlobal } }).catch(() => {});
+  }
 }
 
 test("a tenant's saved matrix applies only to that tenant", async () => {
@@ -69,6 +83,53 @@ test("a tenant's saved matrix applies only to that tenant", async () => {
 test("the global default is untouched by a tenant override", async () => {
   const global = await getRolePermissions();
   assert.equal(global.WHITE_LABEL_ADMIN.whatsapp_hub.view, true, "global/default unchanged");
+});
+
+test("a tenant cannot escalate above the owner's global ceiling", async () => {
+  // Owner (global) turns Billing OFF for the ADMIN template — the ceiling.
+  await setTenantSetting(
+    "user_role_permissions",
+    JSON.stringify({ ADMIN: { billing: { view: false, add: false, edit: false, delete: false } } }),
+    null,
+  );
+  // Tenant B tries to grant ADMIN full Billing anyway.
+  await setTenantSetting(
+    "user_role_permissions",
+    JSON.stringify({ ADMIN: { billing: { view: true, add: true, edit: true, delete: true } } }),
+    bId,
+  );
+  const forB = await getRolePermissions(bId);
+  assert.equal(forB.ADMIN.billing.view, false, "tenant can't re-enable what the owner turned off");
+  assert.equal(forB.ADMIN.billing.edit, false, "…for any action, not just view");
+});
+
+test("delegated admin tiers are capped at the global ADMIN ceiling", async () => {
+  // With Billing off for ADMIN globally, every delegated admin loses it too —
+  // even though their own template defaults to Billing on.
+  const forB = await getRolePermissions(bId);
+  assert.equal(forB.WHITE_LABEL_ADMIN.billing.view, false, "white-label admin capped by ADMIN ceiling");
+  assert.equal(forB.FRANCHISE_ADMIN.billing.view, false, "franchise admin capped by ADMIN ceiling");
+  assert.equal(forB.TEAM_LEADER.billing.view, false, "team leader capped by ADMIN ceiling");
+});
+
+test("the platform owner (SUPERADMIN) is never capped", async () => {
+  // SUPERADMIN stays full regardless of any ceiling — owner rights are absolute.
+  const forB = await getRolePermissions(bId);
+  assert.equal(forB.SUPERADMIN.billing.view, true, "SUPERADMIN keeps full access");
+});
+
+test("a tenant may still restrict within the ceiling", async () => {
+  // The owner allows Reports for ADMIN (default on). Tenant A turns it off → off
+  // for A only; tenant B keeps it. Restricting down is always allowed.
+  await setTenantSetting(
+    "user_role_permissions",
+    JSON.stringify({ ADMIN: { reports: { view: false, add: false, edit: false, delete: false } } }),
+    aId,
+  );
+  const forA = await getRolePermissions(aId);
+  const forB = await getRolePermissions(bId);
+  assert.equal(forA.ADMIN.reports.view, false, "tenant A restricted Reports for itself");
+  assert.equal(forB.ADMIN.reports.view, true, "tenant B keeps Reports (within ceiling)");
 });
 
 try {

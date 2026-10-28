@@ -1,4 +1,10 @@
-import { getRolePermissions, canManageRolePermissions } from "@/lib/permissions";
+import {
+  getRolePermissions,
+  canManageRolePermissions,
+  getGlobalRolePermissions,
+  buildEffectiveCeiling,
+} from "@/lib/permissions";
+import { isSuperAdmin } from "@/lib/roles";
 import { RolesSettingsClient } from "./roles-settings-client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
@@ -17,8 +23,24 @@ export default async function RolesSettingsPage() {
   if (!canManageRolePermissions(session?.user?.role)) {
     redirect("/dashboard?error=Access+Denied");
   }
-  // A tenant admin edits their own tenant's matrix; the platform owner edits the global one.
-  const initialPermissions = await getRolePermissions(session?.user?.tenantId);
+  const role = session?.user?.role;
+  const owner = role ? isSuperAdmin(role) : false;
 
-  return <RolesSettingsClient initialPermissions={initialPermissions} />;
+  // The platform owner edits the raw GLOBAL ceiling directly; a tenant admin edits
+  // their own tenant's matrix (already clamped to the owner's ceiling on read).
+  const initialPermissions = owner
+    ? await getGlobalRolePermissions()
+    : await getRolePermissions(session?.user?.tenantId);
+
+  // Non-owners get the effective ceiling so the UI can lock anything the platform
+  // owner hasn't granted. The owner has no ceiling — they define it.
+  const ceiling = owner ? null : buildEffectiveCeiling(await getGlobalRolePermissions());
+
+  return (
+    <RolesSettingsClient
+      initialPermissions={initialPermissions}
+      isOwner={owner}
+      ceiling={ceiling}
+    />
+  );
 }
