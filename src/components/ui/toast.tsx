@@ -34,18 +34,18 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastCtx.Provider value={{ push }}>
       {children}
-      <div className="pointer-events-none fixed right-4 top-4 z-[200] flex w-full max-w-sm flex-col gap-2">
+      <div className="pointer-events-none fixed left-1/2 top-5 z-[200] flex w-full max-w-md -translate-x-1/2 flex-col items-center gap-2 px-4">
         {toasts.map((t) => {
           const I = Icon[t.kind];
           return (
             <div
               key={t.id}
               role="status"
-              className={`pointer-events-auto flex items-start gap-3 rounded-xl border px-4 py-3 shadow-lg animate-in ${styles[t.kind]}`}
+              className={`pointer-events-auto flex w-full items-center gap-3 rounded-2xl border px-5 py-4 shadow-xl ring-1 ring-black/5 ${styles[t.kind]}`}
             >
-              <I className={`mt-0.5 h-5 w-5 shrink-0 ${iconColor[t.kind]}`} />
-              <p className="flex-1 text-sm font-medium leading-snug">{t.text}</p>
-              <button onClick={() => dismiss(t.id)} className="shrink-0 rounded p-0.5 text-current/60 hover:bg-black/5" aria-label="Dismiss">
+              <I className={`h-6 w-6 shrink-0 ${iconColor[t.kind]}`} />
+              <p className="flex-1 text-sm font-semibold leading-snug">{t.text}</p>
+              <button onClick={() => dismiss(t.id)} className="shrink-0 rounded-lg p-1 text-current/60 hover:bg-black/5" aria-label="Dismiss">
                 <X className="h-4 w-4" />
               </button>
             </div>
