@@ -27,6 +27,7 @@ import {
   MessageSquare,
   Monitor,
   MoveUp,
+  GripVertical,
   MoveDown,
   Plus,
   RotateCcw,
@@ -86,6 +87,13 @@ export function WebpageEditorClient({
   const [activePageId, setActivePageId] = useState<string>(initialPages[0]?.id || "");
   const [builderDevice, setBuilderDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+
+  // Drag-and-drop section reordering state
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  // Widget palette (choose which section/widget type to add)
+  const [showWidgetPicker, setShowWidgetPicker] = useState(false);
 
   // Right-Click Context Menu State
   const [contextMenu, setContextMenu] = useState<{
@@ -261,6 +269,17 @@ export function WebpageEditorClient({
     sections[index] = sections[targetIdx];
     sections[targetIdx] = temp;
 
+    const updatedPage = { ...activePage, sections };
+    setPages((prev) => prev.map((p) => (p.id === activePage.id ? updatedPage : p)));
+  }
+
+  // Reorder a section from one position to another (drag-and-drop).
+  function reorderSections(from: number, to: number) {
+    if (!activePage || from === to || from < 0 || to < 0) return;
+    const sections = [...activePage.sections];
+    if (from >= sections.length || to >= sections.length) return;
+    const [moved] = sections.splice(from, 1);
+    sections.splice(to, 0, moved);
     const updatedPage = { ...activePage, sections };
     setPages((prev) => prev.map((p) => (p.id === activePage.id ? updatedPage : p)));
   }
@@ -483,14 +502,43 @@ export function WebpageEditorClient({
                         setSelectedSectionId(section.id);
                         setIsInspectorOpen(true);
                       }}
+                      onDragOver={(e) => {
+                        if (dragIndex === null) return;
+                        e.preventDefault();
+                        if (dragOverIndex !== index) setDragOverIndex(index);
+                      }}
+                      onDrop={(e) => {
+                        if (dragIndex === null) return;
+                        e.preventDefault();
+                        reorderSections(dragIndex, index);
+                        setDragIndex(null);
+                        setDragOverIndex(null);
+                      }}
                       className={`group relative rounded-3xl transition-all duration-200 cursor-pointer ${
                         isSelected
                           ? "ring-2 ring-brand shadow-2xl scale-[1.005]"
                           : "hover:ring-2 hover:ring-brand/50"
-                      }`}
+                      } ${dragOverIndex === index && dragIndex !== null && dragIndex !== index ? "ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-950" : ""} ${dragIndex === index ? "opacity-40" : ""}`}
                     >
                       {/* Elementor Floating Action Bar Overlay */}
                       <div className="absolute -top-3.5 left-6 z-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 bg-slate-900 border border-brand/40 text-white rounded-full px-3 py-1 text-[10px] font-extrabold shadow-xl">
+                        <button
+                          type="button"
+                          draggable
+                          onDragStart={(e) => {
+                            e.stopPropagation();
+                            setDragIndex(index);
+                          }}
+                          onDragEnd={() => {
+                            setDragIndex(null);
+                            setDragOverIndex(null);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          title="Drag to reorder this section"
+                          className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-brand"
+                        >
+                          <GripVertical className="h-3.5 w-3.5" />
+                        </button>
                         <span className="text-brand uppercase tracking-wider">{section.type}</span>
                         <span className="text-slate-600">|</span>
                         <button
@@ -544,16 +592,50 @@ export function WebpageEditorClient({
                   );
                 })}
 
-                {/* ADD NEW SECTION FLOATING BUTTON AT BOTTOM */}
-                <div className="pt-4 text-center">
-                  <button
-                    type="button"
-                    onClick={() => addSection("cta")}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-dashed border-slate-700 hover:border-brand text-slate-400 hover:text-brand font-bold text-xs transition cursor-pointer"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Add New Frontend Section</span>
-                  </button>
+                {/* ADD NEW SECTION — widget palette */}
+                <div className="pt-4">
+                  {!showWidgetPicker ? (
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowWidgetPicker(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-dashed border-slate-700 hover:border-brand text-slate-400 hover:text-brand font-bold text-xs transition cursor-pointer"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>Add New Section</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-slate-700 bg-slate-900 p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="text-xs font-extrabold uppercase tracking-wider text-slate-300">Choose a widget</span>
+                        <button type="button" onClick={() => setShowWidgetPicker(false)} className="text-slate-500 hover:text-white">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {WIDGET_TYPES.map((w) => {
+                          const WIcon = w.icon;
+                          return (
+                            <button
+                              key={w.type}
+                              type="button"
+                              onClick={() => {
+                                addSection(w.type);
+                                setShowWidgetPicker(false);
+                              }}
+                              className="flex flex-col items-start gap-1 rounded-xl border border-slate-700 bg-slate-800/60 p-3 text-left hover:border-brand hover:bg-slate-800 transition"
+                            >
+                              <span className="flex items-center gap-1.5 text-xs font-bold text-white">
+                                <WIcon className="h-3.5 w-3.5 text-brand" /> {w.label}
+                              </span>
+                              <span className="text-[10px] leading-tight text-slate-400">{w.desc}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -650,6 +732,25 @@ export function WebpageEditorClient({
                         />
                       </div>
                     </>
+                  ) : null}
+
+                  {selectedSection.type === "rawHtml" ? (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Custom code (HTML + CSS + JavaScript)
+                      </label>
+                      <textarea
+                        rows={10}
+                        spellCheck={false}
+                        value={selectedSection.rawCode || ""}
+                        onChange={(e) => updateSection(selectedSection.id, { rawCode: e.target.value })}
+                        placeholder={"<div id=\"app\">Hello</div>\n<script>document.getElementById('app').textContent = 'JS works: ' + (2 + 2);</script>"}
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 font-mono text-[11px] leading-relaxed outline-none focus:border-brand"
+                      />
+                      <p className="mt-1 text-[10px] leading-snug text-slate-500">
+                        Runs in a <b>sandboxed iframe</b> — isolated from the rest of the site (can&apos;t read cookies or other pages), so it&apos;s safe to embed maps, forms or small scripts.
+                      </p>
+                    </div>
                   ) : null}
                 </div>
               )}

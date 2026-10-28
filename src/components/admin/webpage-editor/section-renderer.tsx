@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   ArrowRight,
   Building2,
@@ -534,10 +534,10 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
       return (
         <section className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 my-4 overflow-hidden">
           {section.rawCode ? (
-            <div dangerouslySetInnerHTML={{ __html: section.rawCode }} />
+            <SandboxedEmbed code={section.rawCode} />
           ) : (
             <div className="p-8 text-center text-xs font-mono text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl">
-              [Raw HTML / Embed Widget Box]
+              [Custom Code / Embed block — paste HTML, CSS and JavaScript in the inspector]
             </div>
           )}
         </section>
@@ -547,4 +547,48 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
     default:
       return null;
   }
+}
+
+/**
+ * Renders a custom-code block (HTML + CSS + JS) inside a SANDBOXED iframe.
+ * The sandbox allows scripts to run (so embedded widgets/functions work) but
+ * withholds `allow-same-origin`, giving the frame an opaque origin — so the code
+ * can't read the parent page, its cookies, storage, or other tenants' data. The
+ * frame auto-sizes to its content via postMessage.
+ */
+function SandboxedEmbed({ code }: { code: string }) {
+  const ref = useRef<HTMLIFrameElement>(null);
+  const [height, setHeight] = useState(360);
+
+  const srcDoc =
+    '<!doctype html><html><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank">' +
+    "<style>html,body{margin:0;padding:0;background:transparent;color:#0f172a;" +
+    "font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}</style></head><body>" +
+    code +
+    "<script>(function(){function r(){try{var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight);" +
+    "parent.postMessage({__embedHeight:h},'*');}catch(e){}}window.addEventListener('load',r);setTimeout(r,250);" +
+    "setTimeout(r,1200);try{new ResizeObserver(r).observe(document.body);}catch(e){setInterval(r,1500);}})();</script>" +
+    "</body></html>";
+
+  useEffect(() => {
+    function onMsg(e: MessageEvent) {
+      if (ref.current && e.source === ref.current.contentWindow && e.data && typeof e.data.__embedHeight === "number") {
+        setHeight(Math.min(Math.max(e.data.__embedHeight, 60), 6000));
+      }
+    }
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, []);
+
+  return (
+    <iframe
+      ref={ref}
+      title="Custom code block"
+      sandbox="allow-scripts allow-popups allow-forms allow-modals allow-popups-to-escape-sandbox"
+      srcDoc={srcDoc}
+      className="block w-full border-0"
+      style={{ height }}
+    />
+  );
 }
