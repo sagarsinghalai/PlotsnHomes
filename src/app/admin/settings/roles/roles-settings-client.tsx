@@ -418,6 +418,61 @@ export function RolesSettingsClient({
     );
   }, [allModules, settingSearch]);
 
+  // Group the visible modules by their sidebar section so each section can be
+  // shown/hidden as a whole.
+  const sections = useMemo(() => {
+    const order: string[] = [];
+    const map = new Map<string, typeof filteredModules>();
+    for (const m of filteredModules) {
+      if (!map.has(m.groupLabel)) {
+        map.set(m.groupLabel, []);
+        order.push(m.groupLabel);
+      }
+      map.get(m.groupLabel)!.push(m);
+    }
+    return order.map((label) => ({ label, modules: map.get(label)! }));
+  }, [filteredModules]);
+
+  // A section is on/off/mixed by whether its modules' "view" is all on / all off.
+  function sectionViewState(keys: string[]): "on" | "off" | "mixed" {
+    if (isLockedGroup) return "on";
+    const vals = keys.map((k) => !!(permissions[selectedGroup]?.[k] as Record<string, boolean>)?.view);
+    if (vals.every(Boolean)) return "on";
+    if (vals.every((v) => !v)) return "off";
+    return "mixed";
+  }
+
+  // A section is locked when the ceiling allows none of its modules.
+  function sectionLocked(keys: string[]): boolean {
+    if (isLockedGroup) return true;
+    return keys.every((k) => !ceilingAllows(selectedGroup, k, "view"));
+  }
+
+  // Show/hide an entire section: set every module in it on (clamped by the
+  // ceiling) or off at once.
+  function setSectionView(keys: string[], on: boolean) {
+    if (isLockedGroup) return;
+    const targets: PermissionGroup[] =
+      selectedGroup === "ADMIN" || selectedGroup === "EMPLOYEE" ? ["ADMIN", "EMPLOYEE"] : [selectedGroup];
+    setPermissions((prev) => {
+      const next = { ...prev };
+      targets.forEach((grp) => {
+        const grpObj = { ...next[grp] };
+        keys.forEach((key) => {
+          const moduleDef = allModules.find((m) => m.key === key);
+          const subKeys = moduleDef ? moduleDef.subPermissions.map((s) => s.key) : ["view", "add", "edit", "delete"];
+          const obj: Record<string, boolean> = {};
+          subKeys.forEach((k) => {
+            obj[k] = on && ceilingAllows(grp, key, k);
+          });
+          grpObj[key] = obj as any;
+        });
+        next[grp] = grpObj;
+      });
+      return next;
+    });
+  }
+
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto p-4 sm:p-6 bg-slate-50 min-h-screen">
       {/* Top Header Bar & User Selector Controls */}
@@ -636,9 +691,55 @@ export function RolesSettingsClient({
             </div>
           </div>
 
-          {/* Module Settings Grid with Toggle Switches */}
-          <div className="space-y-6">
-            {filteredModules.map((module) => {
+          {/* Module Settings Grid, grouped by section with a section master toggle */}
+          <div className="space-y-8">
+            {sections.map((section) => {
+              const keys = section.modules.map((m) => m.key);
+              const secState = sectionViewState(keys);
+              const secLocked = sectionLocked(keys);
+              return (
+                <div key={section.label} className="space-y-4">
+                  {/* Section master toggle — shows/hides the whole section */}
+                  <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        disabled={secLocked}
+                        onClick={() => setSectionView(keys, secState !== "on")}
+                        title={
+                          isLockedGroup
+                            ? "The platform owner always has full access."
+                            : secLocked
+                            ? "Reserved by the platform owner — can't be enabled here."
+                            : secState === "off"
+                            ? "Show this whole section"
+                            : "Hide this whole section"
+                        }
+                        className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          secLocked ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+                        } ${secState !== "off" ? "bg-emerald-600" : "bg-slate-300"}`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                            secState !== "off" ? "translate-x-5" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-slate-600">{section.label}</span>
+                      {!isLockedGroup && secState === "mixed" && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-200">Partial</span>
+                      )}
+                      {isLockedGroup && <Crown className="h-3.5 w-3.5 text-amber-500" />}
+                      {!isLockedGroup && secLocked && <Lock className="h-3.5 w-3.5 text-slate-400" />}
+                    </div>
+                    <span className={`text-[11px] font-bold ${secState === "off" ? "text-slate-400" : "text-emerald-600"}`}>
+                      {isLockedGroup ? "ABSOLUTE" : secState === "off" ? "SECTION HIDDEN" : secState === "mixed" ? "PARTIAL" : "SECTION SHOWN"}
+                    </span>
+                  </div>
+
+                  {/* Modules in this section */}
+                  <div className="space-y-6">
+                    {section.modules.map((module) => {
               const subPerms = (permissions[selectedGroup]?.[module.key] as Record<string, boolean>) || {};
               const moduleLocked = isLockedGroup || !ceilingAllows(selectedGroup, module.key, "view");
               const enabled = isLockedGroup ? true : isModuleEnabled(module.key);
@@ -719,6 +820,10 @@ export function RolesSettingsClient({
                       })}
                     </div>
                   )}
+                </div>
+              );
+                    })}
+                  </div>
                 </div>
               );
             })}

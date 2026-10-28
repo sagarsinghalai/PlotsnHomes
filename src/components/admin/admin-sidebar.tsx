@@ -425,7 +425,7 @@ export function AdminSidebar({
       .filter((item) => hasItemPermission(item.href))
       .filter((item) => item.label.toLowerCase().includes(searchQuery.toLowerCase()));
     return { ...group, items };
-  }).filter((group) => group.items.length > 0 || searchQuery.length === 0);
+  }).filter((group) => group.items.length > 0);
 
   return (
     <>
