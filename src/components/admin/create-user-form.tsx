@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
-import { ROLE_LABELS } from "@/lib/roles";
+import { ROLE_LABELS, assignableRoles } from "@/lib/roles";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
 
@@ -176,12 +176,10 @@ export function CreateUserForm() {
           <div>
             <Label>Account type</Label>
             <SearchableSelect
-              options={(Object.keys(ROLE_LABELS) as Role[])
-                .filter((r) => r !== "SUPERADMIN" || userRole === "SUPERADMIN")
-                .map((r) => ({
-                  value: r,
-                  label: ROLE_LABELS[r],
-                }))}
+              options={assignableRoles(userRole).map((r) => ({
+                value: r,
+                label: ROLE_LABELS[r],
+              }))}
               value={form.role}
               onChange={(val) => setForm((f) => ({ ...f, role: val as Role }))}
               placeholder="Select account role..."

@@ -6,6 +6,7 @@ import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
 import { generateNextUserId } from "@/lib/user-id";
 import { checkUserExists4Params, validateUserDobAge } from "@/lib/user-validation";
+import { assignableRoles, ROLE_LABELS } from "@/lib/roles";
 
 const createSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").regex(/^[a-zA-Z\s]+$/, "Name can only contain alphabets and spaces"),
@@ -58,8 +59,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: check.message }, { status: 400 });
     }
 
-    if (data.role === Role.SUPERADMIN && auth.session?.user?.role !== Role.SUPERADMIN) {
-      return NextResponse.json({ error: "Only a Super Admin can assign the Super Admin role." }, { status: 403 });
+    // A creator may only assign roles strictly below their own (no peers/superiors).
+    // This is the authoritative guard; the UI dropdown mirrors it.
+    const creatorRole = auth.session?.user?.role as Role | undefined;
+    if (!creatorRole || !assignableRoles(creatorRole).includes(data.role)) {
+      return NextResponse.json(
+        { error: `You are not allowed to create a ${ROLE_LABELS[data.role] ?? data.role} account.` },
+        { status: 403 }
+      );
     }
 
     const passwordHash = await bcrypt.hash(data.password, 12);

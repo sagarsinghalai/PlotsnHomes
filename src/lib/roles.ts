@@ -36,6 +36,35 @@ export const SUPERADMIN_ROLES: Role[] = [Role.SUPERADMIN, Role.PLATFORM_ADMIN];
 /** Customer-facing marketplace roles */
 export const CUSTOMER_ROLES: Role[] = [Role.BUYER, Role.SELLER, Role.DEMO];
 
+/**
+ * Account-creation authority, highest → lowest. A user may only create accounts
+ * whose role is STRICTLY BELOW their own rank — so no one mints a peer or a
+ * superior (privilege-escalation guard). SUPERADMIN is assignable only by a
+ * SUPERADMIN; DEMO is reserved for SUPERADMIN too. An AGENT therefore gets only
+ * SELLER and BUYER.
+ */
+const ROLE_RANK: Role[] = [
+  Role.SUPERADMIN,
+  Role.PLATFORM_ADMIN,
+  Role.WHITE_LABEL_ADMIN,
+  Role.FRANCHISE_ADMIN,
+  Role.BRANCH_MANAGER,
+  Role.DEPARTMENT_HEAD,
+  Role.TEAM_LEADER,
+  Role.EXECUTIVE,
+  Role.EMPLOYEE,
+  Role.AGENT,
+  Role.SELLER,
+  Role.BUYER,
+];
+
+export function assignableRoles(creatorRole: Role | string | null | undefined): Role[] {
+  if (creatorRole === Role.SUPERADMIN) return [...ROLE_RANK, Role.DEMO]; // every role
+  const myRank = ROLE_RANK.indexOf(creatorRole as Role);
+  if (myRank < 0) return [Role.SELLER, Role.BUYER]; // unknown/own-scope → customers only
+  return ROLE_RANK.filter((_, i) => i > myRank); // strictly below the creator
+}
+
 export const ROLE_LABELS: Record<Role, string> = {
   SUPERADMIN: "Super Admin",
   PLATFORM_ADMIN: "Platform Admin",

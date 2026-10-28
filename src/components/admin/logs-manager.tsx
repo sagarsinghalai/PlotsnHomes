@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   FileText,
   Search,
@@ -32,10 +32,32 @@ import { useAdminPermissions } from "@/components/admin/admin-permissions-contex
 import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
 import { TableScrollButtons } from "@/components/ui/table-scroll-buttons";
 
-export function LogsManager() {
+export function LogsManager({
+  allowedActorEmails = null,
+  viewerEmail = null,
+}: {
+  // null = this viewer may see every actor's activity (owner/admin). Otherwise,
+  // only activity by these actor emails (their subtree, or just themselves).
+  allowedActorEmails?: string[] | null;
+  viewerEmail?: string | null;
+} = {}) {
   const { hasAddPermission } = useAdminPermissions();
   const canAdd = hasAddPermission("/admin/emails");
-  const [logs, setLogs] = useState<ActivityLogItem[]>(() => getAllActivityLogs());
+
+  // Restrict the mock activity feed to the actors this viewer is allowed to see,
+  // so an agent/staffer sees only their own (or downline) activity — never the
+  // superadmin's or other teams'.
+  const scopeLogs = useCallback(
+    (all: ActivityLogItem[]): ActivityLogItem[] => {
+      if (!allowedActorEmails) return all;
+      const allow = new Set(allowedActorEmails.map((e) => e.toLowerCase()));
+      if (viewerEmail) allow.add(viewerEmail.toLowerCase());
+      return all.filter((l) => l.actorEmail && allow.has(l.actorEmail.toLowerCase()));
+    },
+    [allowedActorEmails, viewerEmail]
+  );
+
+  const [logs, setLogs] = useState<ActivityLogItem[]>(() => scopeLogs(getAllActivityLogs()));
   const [activeTab, setActiveTab] = useState<LogCategory | "all">("all");
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
@@ -51,13 +73,19 @@ export function LogsManager() {
 
   useEffect(() => {
     const handleUpdate = () => {
-      setLogs(getAllActivityLogs());
+      setLogs(scopeLogs(getAllActivityLogs()));
     };
     window.addEventListener("plotsnhomes_logs_updated", handleUpdate);
     return () => {
       window.removeEventListener("plotsnhomes_logs_updated", handleUpdate);
     };
-  }, []);
+  }, [scopeLogs]);
+
+  // Re-apply the scope if it changes (and on mount, so SSR's unscoped seed is
+  // replaced immediately on the client).
+  useEffect(() => {
+    setLogs(scopeLogs(getAllActivityLogs()));
+  }, [scopeLogs]);
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
