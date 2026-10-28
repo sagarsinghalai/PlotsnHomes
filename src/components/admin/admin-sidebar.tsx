@@ -46,9 +46,11 @@ import {
   Globe,
   Layout,
   Bot,
+  LogOut,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { PERMISSIONS_SCHEMA, RolePermissionsConfig, PermissionGroup } from "@/lib/permissions";
@@ -185,10 +187,18 @@ export function AdminSidebar({
   permissions,
   userGroup,
   userRole,
+  userName = "",
+  userEmail = "",
+  userImage = null,
+  planLabel = "",
 }: {
   permissions: RolePermissionsConfig;
   userGroup: PermissionGroup;
   userRole: string;
+  userName?: string;
+  userEmail?: string;
+  userImage?: string | null;
+  planLabel?: string;
 }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -561,13 +571,41 @@ export function AdminSidebar({
         </nav>
 
         <div className="border-t border-slate-800 p-4 space-y-3 shrink-0">
+          {/* Logged-in user account card → profile & settings */}
           <Link
             href="/dashboard/profile"
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2 rounded-lg bg-slate-800/70 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800 hover:text-white"
+            title="My profile & settings"
+            className="flex items-center gap-3 rounded-xl bg-slate-800/70 px-3 py-2.5 hover:bg-slate-800 group"
           >
-            <Settings className="h-4 w-4 shrink-0" /> My Profile &amp; Settings
+            {userImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={userImage} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-700" />
+            ) : (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
+                {(userName || userEmail || "?").trim().charAt(0).toUpperCase()}
+              </span>
+            )}
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-white">{userName || "My account"}</span>
+              <span className="block truncate text-xs text-slate-400">{userEmail}</span>
+              {planLabel && (
+                <span className="mt-1 inline-block rounded-full bg-indigo-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-300 ring-1 ring-indigo-500/30">
+                  {planLabel}
+                </span>
+              )}
+            </span>
           </Link>
+
+          {/* Logout directly on the page */}
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm font-semibold text-rose-300 hover:bg-rose-500/20 hover:text-rose-200"
+          >
+            <LogOut className="h-4 w-4 shrink-0" /> Logout
+          </button>
+
           <Link
             href="/dashboard"
             onClick={() => setIsOpen(false)}
