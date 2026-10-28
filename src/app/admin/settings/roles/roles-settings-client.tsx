@@ -64,16 +64,39 @@ type WebUser = {
   role: string;
 };
 
-// Super Admin (platform owner) is shown locked/read-only at the top; the editable
-// templates below it are Admin, Employee, Agent, Seller, Buyer.
-const SIMPLE_USER_ROLES = [
-  { value: "SUPERADMIN", label: "Super Admin" },
-  { value: "ADMIN", label: "Admin" },
-  { value: "EMPLOYEE", label: "Employee" },
-  { value: "AGENT", label: "Agent" },
-  { value: "SELLER", label: "Seller" },
-  { value: "BUYER", label: "Buyer" },
+// Roles you can lock/unlock, grouped. Super Admin (platform owner) is shown
+// locked/read-only; the Admin tiers are each capped by the global Admin ceiling.
+const EDITOR_ROLE_GROUPS: { label: string; roles: { value: string; label: string }[] }[] = [
+  { label: "Platform owner", roles: [{ value: "SUPERADMIN", label: "Super Admin (absolute · locked)" }] },
+  {
+    label: "Admin tiers (capped by the Admin ceiling)",
+    roles: [
+      { value: "ADMIN", label: "Admin" },
+      { value: "WHITE_LABEL_ADMIN", label: "White-Label Admin" },
+      { value: "FRANCHISE_ADMIN", label: "Franchise Admin" },
+      { value: "BRANCH_MANAGER", label: "Branch Manager" },
+      { value: "DEPARTMENT_HEAD", label: "Department Head" },
+      { value: "TEAM_LEADER", label: "Team Leader" },
+      { value: "EXECUTIVE", label: "Executive" },
+    ],
+  },
+  {
+    label: "Staff",
+    roles: [
+      { value: "EMPLOYEE", label: "Employee" },
+      { value: "AGENT", label: "Agent" },
+    ],
+  },
+  {
+    label: "Customers",
+    roles: [
+      { value: "SELLER", label: "Seller" },
+      { value: "BUYER", label: "Buyer" },
+    ],
+  },
 ];
+// Flat list for the role filter and user→role matching.
+const SIMPLE_USER_ROLES = EDITOR_ROLE_GROUPS.flatMap((g) => g.roles);
 
 function WrenchIcon(props: any) {
   return (
@@ -428,7 +451,7 @@ export function RolesSettingsClient({
               onChange={(e) => setUserRoleFilter(e.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 focus:bg-white"
             >
-              <option value="ALL">All Roles (Admin, Employee, Agent, Seller, Buyer)</option>
+              <option value="ALL">All Roles</option>
               {SIMPLE_USER_ROLES.map((r) => (
                 <option key={r.value} value={r.value}>
                   {r.label}
@@ -576,10 +599,14 @@ export function RolesSettingsClient({
                   onChange={(e) => setSelectedGroup(e.target.value as PermissionGroup)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:border-blue-500 outline-none shadow-xs"
                 >
-                  {SIMPLE_USER_ROLES.map((r) => (
-                    <option key={r.value} value={r.value}>
-                      {r.label} ({r.value})
-                    </option>
+                  {EDITOR_ROLE_GROUPS.map((g) => (
+                    <optgroup key={g.label} label={g.label}>
+                      {g.roles.map((r) => (
+                        <option key={r.value} value={r.value}>
+                          {r.label}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>
