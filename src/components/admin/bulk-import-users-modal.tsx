@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { Role } from "@prisma/client";
 import { X, Upload, FileSpreadsheet, Download, Loader2, CheckCircle2, AlertTriangle, FileText } from "lucide-react";
-import { roleLabel } from "@/lib/roles";
+import { roleLabel, assignableRoles } from "@/lib/roles";
+import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
 
 // Catalog of every importable field (column header + example value).
 const FIELD: Record<string, { header: string; example: string }> = {
@@ -72,7 +73,12 @@ export function BulkImportUsersModal({
   onClose: () => void;
   onImported: () => void;
 }) {
-  const [role, setRole] = useState<Role>("AGENT");
+  const { userRole } = useAdminPermissions();
+  // Only roles the current user may actually create (strictly below their rank).
+  const allowedRoles = ROLE_ORDER.filter((r) => assignableRoles(userRole).includes(r));
+  const [role, setRole] = useState<Role>(
+    () => (allowedRoles.includes("AGENT" as Role) ? ("AGENT" as Role) : allowedRoles[allowedRoles.length - 1] ?? ("BUYER" as Role))
+  );
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [downloading, setDownloading] = useState<"csv" | "xlsx" | null>(null);
@@ -193,7 +199,7 @@ export function BulkImportUsersModal({
               onChange={(e) => { setRole(e.target.value as Role); setResult(null); setError(""); }}
               className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-brand"
             >
-              {ROLE_ORDER.map((r) => (
+              {allowedRoles.map((r) => (
                 <option key={r} value={r}>{roleLabel(r)}</option>
               ))}
             </select>

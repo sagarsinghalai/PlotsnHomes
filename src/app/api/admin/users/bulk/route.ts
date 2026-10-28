@@ -6,6 +6,7 @@ import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
 import { generateNextUserId } from "@/lib/user-id";
 import { validateUserDobAge, parseDobDate } from "@/lib/user-validation";
+import { assignableRoles } from "@/lib/roles";
 
 // Accepts many human-friendly spellings for each role/account type.
 const ROLE_MAP: Record<string, Role> = {
@@ -73,7 +74,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Too many rows — import at most 1000 users at a time." }, { status: 400 });
   }
 
-  const isSuperAdmin = auth.session?.user?.role === Role.SUPERADMIN;
+  // Roles this importer is allowed to create (strictly below their own rank).
+  const allowedRoles = assignableRoles(auth.session?.user?.role);
   const created: { name: string; email: string; userId: string; tempPassword: string | null }[] = [];
   const skipped: { row: number; name: string; email: string; errors: RowError[] }[] = [];
 
@@ -188,8 +190,8 @@ export async function POST(req: Request) {
       if (!mapped) errors.push({ field: "Role", message: `Unknown account type "${roleRaw}"` });
       else role = mapped;
     }
-    if (role === Role.SUPERADMIN && !isSuperAdmin) {
-      errors.push({ field: "Role", message: "Only a Super Admin can create Super Admin accounts" });
+    if (!allowedRoles.includes(role)) {
+      errors.push({ field: "Role", message: `You are not allowed to create ${role} accounts` });
     }
 
     // ── Manager email must resolve ──
