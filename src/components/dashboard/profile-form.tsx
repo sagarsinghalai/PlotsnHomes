@@ -41,8 +41,31 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
     image: user.image ?? "",
   });
 
+  const [uploading, setUploading] = useState(false);
+
   function set(key: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  async function uploadPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("kind", "image");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
+      set("image", data.url);
+    } catch (err: any) {
+      setError(err.message || "Photo upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   }
 
   async function save(e: React.FormEvent) {
@@ -119,12 +142,28 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
             />
           </div>
           <div className="sm:col-span-2">
-            <Label>Profile photo URL</Label>
-            <Input
-              value={form.image}
-              onChange={(e) => set("image", e.target.value)}
-              placeholder="https://..."
-            />
+            <Label>Profile photo</Label>
+            <div className="mt-1 flex items-center gap-4">
+              {form.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={form.image} alt="Profile" className="h-16 w-16 rounded-full object-cover ring-2 ring-slate-100" />
+              ) : (
+                <span className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-xl font-semibold text-slate-400">
+                  {(form.name || user.email).slice(0, 1).toUpperCase()}
+                </span>
+              )}
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                  {uploading ? "Uploading…" : "Upload photo"}
+                  <input type="file" accept="image/*" className="hidden" onChange={uploadPhoto} disabled={uploading} />
+                </label>
+                {form.image && (
+                  <button type="button" onClick={() => set("image", "")} className="rounded-lg px-3 py-1.5 text-sm font-medium text-rose-600 hover:bg-rose-50">
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>

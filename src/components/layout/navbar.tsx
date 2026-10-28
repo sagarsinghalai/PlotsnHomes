@@ -107,9 +107,13 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
         <div className="hidden items-center gap-3 md:flex shrink-0">
           {session ? (
             <div className="flex items-center gap-3">
-              <span className="text-xs xl:text-sm font-medium whitespace-nowrap text-slate-400 max-w-[160px] truncate">
+              <Link
+                href="/dashboard/profile"
+                title="Profile & account settings"
+                className="text-xs xl:text-sm font-medium whitespace-nowrap text-slate-300 hover:text-white max-w-[160px] truncate"
+              >
                 {session.user.name}
-              </span>
+              </Link>
               <Button
                 variant="ghost"
                 className="text-xs xl:text-sm whitespace-nowrap text-slate-300 hover:text-white hover:bg-slate-800"
@@ -166,9 +170,14 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
             </Link>
           )}
           {session ? (
-            <Button variant="ghost" className="mt-2 w-full text-slate-300 hover:text-white" onClick={() => signOut({ callbackUrl: "/login" })}>
-              Sign out
-            </Button>
+            <>
+              <Link href="/dashboard/profile" className="block py-2 font-medium text-slate-300 hover:text-white" onClick={() => setOpen(false)}>
+                Profile &amp; settings
+              </Link>
+              <Button variant="ghost" className="mt-2 w-full text-slate-300 hover:text-white" onClick={() => signOut({ callbackUrl: "/login" })}>
+                Sign out
+              </Button>
+            </>
           ) : (
             <div className="mt-4 flex flex-col gap-2">
               <Link href="/login" onClick={() => setOpen(false)}>

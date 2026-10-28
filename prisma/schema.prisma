@@ -149,6 +149,12 @@ model User {
   role          Role          @default(BUYER)
   image         String?
   active        Boolean       @default(true)
+  // Soft-delete / deactivation metadata. A user "deleting" their account sets
+  // active=false + selfDeleted=true (data is retained; the platform owner can
+  // reactivate later). Admin deactivation sets selfDeleted=false.
+  deactivatedAt      DateTime?
+  deactivationReason String?
+  selfDeleted        Boolean   @default(false)
   lastActiveAt  DateTime?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt

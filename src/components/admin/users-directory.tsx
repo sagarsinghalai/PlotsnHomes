@@ -33,6 +33,9 @@ export type UserRow = {
   managerName?: string | null;
   department?: string | null;
   active: boolean;
+  selfDeleted?: boolean;
+  deactivationReason?: string | null;
+  deactivatedAt?: string | null;
   lastActiveAt: string | null;
   createdAt: string;
   kycStatus: string | null;
@@ -497,9 +500,17 @@ export function UsersDirectory({
                     {u.city && <p>{u.city}{u.country ? `, ${u.country}` : ""}</p>}
                   </div>
                   <div className="flex items-center justify-between text-xs border-t border-slate-100 dark:border-slate-800 pt-2">
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex flex-wrap items-center gap-1.5">
                       <span className={`h-2 w-2 rounded-full ${!u.active ? "bg-rose-400" : online ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`} />
                       <span className="font-medium text-slate-600 dark:text-slate-300">{!u.active ? "Disabled" : act.label}</span>
+                      {!u.active && u.selfDeleted && (
+                        <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700" title={u.deactivatedAt ? `on ${new Date(u.deactivatedAt).toLocaleString()}` : undefined}>
+                          Deleted by user
+                        </span>
+                      )}
+                      {!u.active && !u.selfDeleted && u.deactivationReason && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">{u.deactivationReason}</span>
+                      )}
                     </span>
                     {u.kycStatus ? (
                       <span className={`font-bold ${u.kycStatus === "APPROVED" ? "text-emerald-600" : u.kycStatus === "REJECTED" ? "text-rose-600" : "text-amber-600"}`}>{u.kycStatus}</span>

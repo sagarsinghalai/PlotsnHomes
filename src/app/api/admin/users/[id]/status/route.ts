@@ -40,7 +40,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     return NextResponse.json({ error: "You do not have permission to manage this account." }, { status: 403 });
   }
 
-  await prisma.user.update({ where: { id: target.id }, data: { active } });
+  await prisma.user.update({
+    where: { id: target.id },
+    data: active
+      ? { active: true, deactivatedAt: null, deactivationReason: null, selfDeleted: false }
+      : { active: false, deactivatedAt: new Date(), deactivationReason: "Deactivated by admin", selfDeleted: false },
+  });
 
   await writeAudit({
     actorId: actor.id,
