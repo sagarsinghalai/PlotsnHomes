@@ -6,6 +6,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { hasCrmAccess } from "@/lib/roles";
+
+// Staff (incl. agents) land on their work panel; customers on their dashboard.
+function homeForRole(role: string | null | undefined): string {
+  return role && hasCrmAccess(role as any) ? "/admin" : "/dashboard";
+}
 
 export function LoginForm() {
   const router = useRouter();
@@ -18,9 +24,9 @@ export function LoginForm() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/dashboard");
+      router.push(params.get("callbackUrl") ?? homeForRole(session?.user?.role));
     }
-  }, [status, router]);
+  }, [status, session, params, router]);
 
   useEffect(() => {
     if (params.get("reason") === "session-expired") {
@@ -49,7 +55,17 @@ export function LoginForm() {
       return;
     }
 
-    router.push(params.get("callbackUrl") ?? "/dashboard");
+    // Route by role (staff → /admin, customers → /dashboard). Use a plain fetch
+    // of the session endpoint — next-auth's getSession() can throw on URL
+    // construction under some NEXTAUTH_URL/host setups.
+    let role: string | null = null;
+    try {
+      const s = await fetch("/api/auth/session").then((r) => r.json());
+      role = s?.user?.role ?? null;
+    } catch {
+      /* fall back to the default destination */
+    }
+    router.push(params.get("callbackUrl") ?? homeForRole(role));
     router.refresh();
   }
 
