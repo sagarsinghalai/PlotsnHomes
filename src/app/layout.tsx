@@ -6,6 +6,8 @@ import { ConditionalMarketTicker } from "@/components/market/conditional-market-
 import { MarketTicker } from "@/components/market/market-ticker";
 import { Providers } from "@/components/providers";
 import { BodyThemeSync } from "@/components/layout/body-theme-sync";
+import { getPublicTenantId } from "@/lib/public-tenant";
+import { getTenantBrandOverride } from "@/lib/white-label-store";
 import "./globals.css";
 
 // Inter is the primary UI typeface for the redesigned design system.
@@ -28,11 +30,26 @@ export const metadata: Metadata = {
     "Browse verified properties, run investment calculators, and transact securely with PlotsnHomes.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // White-label: brand the public chrome for the visited tenant when they've
+  // configured their own profile; otherwise the default platform brand shows.
+  let brand: { companyName?: string; logoUrl?: string } | null = null;
+  try {
+    const override = await getTenantBrandOverride(await getPublicTenantId());
+    if (override) {
+      brand = {
+        companyName: override.companyName || undefined,
+        logoUrl: override.logoUrl && override.logoUrl !== "/logo.png" ? override.logoUrl : undefined,
+      };
+    }
+  } catch {
+    /* fall back to default brand */
+  }
+
   return (
     <html lang="en">
       <body className={`${sans.variable} ${display.variable} font-sans antialiased`}>
@@ -41,7 +58,7 @@ export default function RootLayout({
           <ConditionalMarketTicker>
             <MarketTicker />
           </ConditionalMarketTicker>
-          <ConditionalNavbar />
+          <ConditionalNavbar brandName={brand?.companyName} logoUrl={brand?.logoUrl} />
           <main className="min-h-screen">{children}</main>
           <ConditionalFooter />
         </Providers>

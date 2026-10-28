@@ -39,7 +39,7 @@ function getRoleLabel(role?: string) {
   }
 }
 
-export function Navbar() {
+export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: string } = {}) {
   const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -75,7 +75,7 @@ export function Navbar() {
     >
       <div className="mx-auto flex h-full w-full max-w-[1536px] items-center justify-between px-4 sm:px-6 lg:px-8 flex-nowrap">
         {/* Utmost Left: Logo & Title */}
-        <BrandLogo href="/" />
+        <BrandLogo href="/" brandName={brandName} logoUrl={logoUrl} />
 
         {/* Center: Navigation Links */}
         <nav className="hidden items-center gap-2 sm:gap-3 lg:gap-4 xl:gap-6 md:flex shrink-0 flex-nowrap">

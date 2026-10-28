@@ -145,6 +145,22 @@ function safeParse(raw: string): Partial<WhiteLabelProfile> {
   try { return JSON.parse(raw) as Partial<WhiteLabelProfile>; } catch { return {}; }
 }
 
+/**
+ * The tenant's OWN saved brand, or null when they have none (no global/default
+ * fallback). Used to brand the public site only for partners who configured it,
+ * leaving the default platform site untouched.
+ */
+export async function getTenantBrandOverride(tenantId: string | null | undefined): Promise<WhiteLabelProfile | null> {
+  if (!tenantId) return null;
+  try {
+    const row = await prisma.tenantSetting.findUnique({ where: { tenantId_key: { tenantId, key: WL_PROFILE_KEY } } });
+    if (!row) return null;
+    return { ...DEFAULT_WL_PROFILE, ...safeParse(row.value) };
+  } catch {
+    return null;
+  }
+}
+
 export async function getPartnerSubscriptions(): Promise<PartnerSubscriptionRecord[]> {
   const raw = await getSetting(WL_SUBSCRIPTIONS_KEY);
   if (!raw) return DEFAULT_PARTNER_SUBSCRIPTIONS;
