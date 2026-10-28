@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, Check, Save, CreditCard, Image as ImageIcon } from "lucide-react";
 import { DomainStatusCard } from "@/components/admin/domain-status-card";
+import { useToast } from "@/components/ui/toast";
 
 type Profile = {
   companyName: string;
@@ -21,6 +22,7 @@ type Profile = {
 };
 
 export function BusinessProfileClient() {
+  const toast = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [domain, setDomain] = useState("");
   const [orgName, setOrgName] = useState<string | null>(null);
@@ -64,9 +66,11 @@ export function BusinessProfileClient() {
       const j = await res.json();
       if (!res.ok || !j.ok) throw new Error(j.error || "Save failed");
       setSaved(true);
+      toast.success("Business profile saved.");
       setTimeout(() => setSaved(false), 2500);
     } catch (e: any) {
       setErr(e.message || "Save failed");
+      toast.error(e.message || "Could not save business profile.");
     } finally {
       setSaving(false);
     }

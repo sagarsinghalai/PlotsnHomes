@@ -5,6 +5,7 @@ import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { AlertTriangle, ShieldCheck, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 export function AccountSecurity() {
   return (
@@ -16,6 +17,7 @@ export function AccountSecurity() {
 }
 
 function ChangePassword() {
+  const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
@@ -39,9 +41,11 @@ function ChangePassword() {
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "Could not update password");
       setMsg("Password updated.");
+      toast.success("Password updated.");
       setForm({ currentPassword: "", newPassword: "", confirm: "" });
     } catch (err: any) {
       setError(err.message || "Could not update password");
+      toast.error(err.message || "Could not update password.");
     } finally {
       setBusy(false);
     }
@@ -74,6 +78,7 @@ function ChangePassword() {
 }
 
 function DeleteAccount() {
+  const toast = useToast();
   const [confirming, setConfirming] = useState(false);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -90,6 +95,7 @@ function DeleteAccount() {
       await signOut({ callbackUrl: "/login?deleted=1" });
     } catch (err: any) {
       setError(err.message || "Could not delete account");
+      toast.error(err.message || "Could not delete account.");
       setBusy(false);
     }
   }

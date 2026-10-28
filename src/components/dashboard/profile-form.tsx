@@ -9,6 +9,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { Input, Label } from "@/components/ui/input";
 import { DEFAULT_COUNTRY_CODE } from "@/lib/locale-defaults";
 import { roleLabel } from "@/lib/roles";
+import { useToast } from "@/components/ui/toast";
 
 type ProfileUser = {
   id: string;
@@ -27,6 +28,7 @@ type ProfileUser = {
 
 export function ProfileForm({ user }: { user: ProfileUser }) {
   const router = useRouter();
+  const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
@@ -60,8 +62,10 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
       const data = await res.json();
       if (!res.ok || !data.url) throw new Error(data.error || "Upload failed");
       set("image", data.url);
+      toast.success("Photo uploaded. Click Save profile to keep it.");
     } catch (err: any) {
       setError(err.message || "Photo upload failed");
+      toast.error(err.message || "Photo upload failed.");
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -94,10 +98,12 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
 
     if (!res.ok) {
       setError(data.error ?? "Could not save profile");
+      toast.error(data.error ?? "Could not save profile.");
       return;
     }
 
     setMsg("Profile updated successfully.");
+    toast.success("Profile updated successfully.");
     router.refresh();
   }
 

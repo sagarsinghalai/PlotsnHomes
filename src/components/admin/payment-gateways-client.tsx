@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, ShieldCheck, Check, AlertTriangle, CreditCard, Building2, KeyRound } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 type MaskedSection = {
   razorpay: { enabled: boolean; keyId: string; hasKeySecret: boolean; hasWebhookSecret: boolean };
@@ -136,6 +137,7 @@ function GatewaySection({
   encReady: boolean;
   platformBadge?: boolean;
 }) {
+  const toast = useToast();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [err, setErr] = useState("");
@@ -173,10 +175,12 @@ function GatewaySection({
       const j = await res.json();
       if (!res.ok || !j.success) throw new Error(j.error || "Save failed");
       setSaved(true);
+      toast.success(`${title} saved.`);
       onSaved();
       setTimeout(() => setSaved(false), 2500);
     } catch (e: any) {
       setErr(e.message || "Save failed");
+      toast.error(e.message || "Could not save payment settings.");
     } finally {
       setSaving(false);
     }
