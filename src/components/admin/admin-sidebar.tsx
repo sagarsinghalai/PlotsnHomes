@@ -606,13 +606,6 @@ export function AdminSidebar({
             <LogOut className="h-4 w-4 shrink-0" /> Logout
           </button>
 
-          <Link
-            href="/dashboard"
-            onClick={() => setIsOpen(false)}
-            className="text-xs text-slate-500 hover:text-indigo-300 block"
-          >
-            ← Exit admin
-          </Link>
           <AdminCurrencySelector />
         </div>
       </aside>
