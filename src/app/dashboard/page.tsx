@@ -101,6 +101,7 @@ export default async function DashboardPage() {
   ]);
 
   const allLinks = [
+    { href: "/dashboard/profile", label: "My Profile & Settings", icon: User },
     ...(hasItemPermission("send_message") || userRole === "BUYER" || userRole === "SELLER"
       ? [{ href: "/dashboard/messages", label: "Messages & Support", icon: MessageSquare }]
       : []),

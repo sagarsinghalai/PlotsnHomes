@@ -562,6 +562,13 @@ export function AdminSidebar({
 
         <div className="border-t border-slate-800 p-4 space-y-3 shrink-0">
           <Link
+            href="/dashboard/profile"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 rounded-lg bg-slate-800/70 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800 hover:text-white"
+          >
+            <Settings className="h-4 w-4 shrink-0" /> My Profile &amp; Settings
+          </Link>
+          <Link
             href="/dashboard"
             onClick={() => setIsOpen(false)}
             className="text-xs text-slate-500 hover:text-indigo-300 block"
