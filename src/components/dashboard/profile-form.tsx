@@ -10,6 +10,7 @@ import { Input, Label } from "@/components/ui/input";
 import { DEFAULT_COUNTRY_CODE } from "@/lib/locale-defaults";
 import { roleLabel } from "@/lib/roles";
 import { useToast } from "@/components/ui/toast";
+import { validateAddressFields } from "@/lib/profile-validation";
 
 type ProfileUser = {
   id: string;
@@ -32,6 +33,7 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     name: user.name,
     phone: user.phone ?? "",
@@ -47,6 +49,12 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
 
   function set(key: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   }
 
   async function uploadPhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -74,9 +82,23 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
     setError("");
     setMsg("");
+
+    const errs = validateAddressFields({
+      city: form.city,
+      state: form.state,
+      zip: form.zip,
+      country: form.country,
+    });
+    if (Object.keys(errs).length) {
+      setFieldErrors(errs);
+      toast.error("Please fix the highlighted fields.");
+      return;
+    }
+    setFieldErrors({});
+
+    setBusy(true);
 
     const res = await fetch("/api/user/profile", {
       method: "PATCH",
@@ -97,8 +119,10 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
     setBusy(false);
 
     if (!res.ok) {
-      setError(data.error ?? "Could not save profile");
-      toast.error(data.error ?? "Could not save profile.");
+      const message = typeof data.error === "string" ? data.error : "Could not save profile";
+      if (data.field) setFieldErrors((prev) => ({ ...prev, [data.field]: message }));
+      setError(message);
+      toast.error(message + (message.endsWith(".") ? "" : "."));
       return;
     }
 
@@ -183,15 +207,33 @@ export function ProfileForm({ user }: { user: ProfileUser }) {
           </div>
           <div>
             <Label>City</Label>
-            <Input value={form.city} onChange={(e) => set("city", e.target.value)} />
+            <Input
+              value={form.city}
+              onChange={(e) => set("city", e.target.value)}
+              aria-invalid={!!fieldErrors.city}
+              className={fieldErrors.city ? "border-rose-400 focus:ring-rose-300" : ""}
+            />
+            {fieldErrors.city && <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.city}</p>}
           </div>
           <div>
             <Label>State / region</Label>
-            <Input value={form.state} onChange={(e) => set("state", e.target.value)} />
+            <Input
+              value={form.state}
+              onChange={(e) => set("state", e.target.value)}
+              aria-invalid={!!fieldErrors.state}
+              className={fieldErrors.state ? "border-rose-400 focus:ring-rose-300" : ""}
+            />
+            {fieldErrors.state && <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.state}</p>}
           </div>
           <div>
             <Label>ZIP / postal</Label>
-            <Input value={form.zip} onChange={(e) => set("zip", e.target.value)} />
+            <Input
+              value={form.zip}
+              onChange={(e) => set("zip", e.target.value)}
+              aria-invalid={!!fieldErrors.zip}
+              className={fieldErrors.zip ? "border-rose-400 focus:ring-rose-300" : ""}
+            />
+            {fieldErrors.zip && <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.zip}</p>}
           </div>
           <div>
             <Label>Country</Label>

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
+import { validateAddressFields } from "@/lib/profile-validation";
 
 const patchSchema = z.object({
   name: z.string().min(2).optional(),
@@ -55,6 +56,31 @@ export async function PATCH(req: Request) {
   try {
     const body = await req.json();
     const data = patchSchema.parse(body);
+
+    // Validate address fields authoritatively (the client can be bypassed).
+    // Fall back to the stored country so ZIP rules apply even when the PATCH
+    // omits country.
+    let country = data.country ?? undefined;
+    if (country === undefined && data.zip !== undefined) {
+      const existing = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { country: true },
+      });
+      country = existing?.country ?? undefined;
+    }
+    const addressErrors = validateAddressFields({
+      city: data.city,
+      state: data.state,
+      zip: data.zip,
+      country,
+    });
+    const firstField = Object.keys(addressErrors)[0];
+    if (firstField) {
+      return NextResponse.json(
+        { error: addressErrors[firstField], field: firstField },
+        { status: 400 }
+      );
+    }
 
     const user = await prisma.user.update({
       where: { id: session.user.id },
