@@ -1,11 +1,15 @@
 /**
- * Seed a clean white-label test hierarchy with known logins (all password
- * "demo1234"), plus reset two stuck WL-admin passwords. Idempotent — safe to
- * re-run. Run: `npx tsx scripts/seed-wl-hierarchy.mts`
+ * Seed a MINIMAL white-label test hierarchy with known logins (all password
+ * "demo1234"). Idempotent — safe to re-run. Run: `npx tsx scripts/seed-wl-hierarchy.mts`
  *
- * Tenant: "Skyline Realty (WL Test)" (code SKYLINE)
- *   WL Admin ─ Franchise Admin ─ Branch Manager ─ Dept Head ─ Team Leader ─ Agents
- * Leads are owned by different users so owner-level visibility can be tested.
+ * Tenant: "Skyline Realty (WL Test)" (code SKYLINE). A single linear chain with
+ * exactly ONE account at every level, so allocation/scoping is unambiguous:
+ *
+ *   WL Admin → Franchise Admin → Branch Manager → Dept Head → Team Leader → Agent → 1 Lead
+ *
+ * Each account has exactly one subordinate directly below it, and the single lead
+ * (owned by the Agent) rolls up the whole chain — so every level should see it.
+ * Scope is limited to the Skyline tenant; no other tenant/user is touched.
  */
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
@@ -13,12 +17,14 @@ import bcrypt from "bcryptjs";
 
 const pw = await bcrypt.hash("demo1234", 12);
 
-// 1) Tenant org (unique by code).
-const org = await prisma.organization.upsert({
-  where: { code: "SKYLINE" },
-  create: { name: "Skyline Realty (WL Test)", code: "SKYLINE", status: "ACTIVE" },
-  update: { status: "ACTIVE" },
+// 1) Tenant org. Match an existing Skyline org by code (either case) or name so
+// re-runs reuse it; only create when truly absent.
+const existingOrg = await prisma.organization.findFirst({
+  where: { OR: [{ code: "SKYLINE" }, { code: "skyline" }, { name: "Skyline Realty (WL Test)" }] },
 });
+const org = existingOrg
+  ? await prisma.organization.update({ where: { id: existingOrg.id }, data: { status: "ACTIVE" } })
+  : await prisma.organization.create({ data: { name: "Skyline Realty (WL Test)", code: "SKYLINE", status: "ACTIVE" } });
 const tenantId = org.id;
 
 async function upUser(email: string, name: string, role: Role) {
@@ -29,19 +35,18 @@ async function upUser(email: string, name: string, role: Role) {
   });
 }
 
-// 2) One user per level.
+// 2) Exactly one user per level (single linear chain).
 const wlAdmin = await upUser("wl.admin@skyline.test", "Skyline WL Admin", Role.WHITE_LABEL_ADMIN);
 const frAdmin = await upUser("franchise.admin@skyline.test", "Skyline Franchise Admin", Role.FRANCHISE_ADMIN);
 const brMgr = await upUser("branch.manager@skyline.test", "Skyline Branch Manager", Role.BRANCH_MANAGER);
 const deptHead = await upUser("dept.head@skyline.test", "Skyline Dept Head", Role.DEPARTMENT_HEAD);
 const teamLead = await upUser("team.leader@skyline.test", "Skyline Team Leader", Role.TEAM_LEADER);
-const agentA = await upUser("agent.a@skyline.test", "Skyline Agent A", Role.AGENT);
-const agentB = await upUser("agent.b@skyline.test", "Skyline Agent B", Role.AGENT);
+const agent = await upUser("agent.a@skyline.test", "Skyline Agent", Role.AGENT);
 
 // 3) Org → WL admin link.
 await prisma.organization.update({ where: { id: tenantId }, data: { whiteLabelAdminId: wlAdmin.id } });
 
-// 4) Org units (no unique on name → find-or-create by tenant+name).
+// 4) Org units (no unique on name → find-or-create by tenant+name). One each.
 async function foc<T extends { findFirst: Function; create: Function; update: Function }>(
   model: T, where: any, data: any
 ): Promise<any> {
@@ -59,42 +64,48 @@ const department = await foc(prisma.department, { tenantId, name: "Residential S
 const team = await foc(prisma.team, { tenantId, name: "Team Alpha" },
   { code: "SKY-TEAM-ALPHA", departmentId: department.id, teamLeaderId: teamLead.id });
 
-// 5) Membership + manager chain (each reports up one level).
+// 5) Membership + manager chain. Each user carries its FULL ancestor unit chain
+// (franchiseId → branchId → departmentId → teamId) so subtree scoping rolls up
+// correctly: a leader sees everyone whose unit-id matches, at every level below.
 await prisma.user.update({ where: { id: frAdmin.id }, data: { franchiseId: franchise.id, managerId: wlAdmin.id } });
 await prisma.user.update({ where: { id: brMgr.id }, data: { franchiseId: franchise.id, branchId: branch.id, managerId: frAdmin.id } });
-await prisma.user.update({ where: { id: deptHead.id }, data: { branchId: branch.id, departmentId: department.id, managerId: brMgr.id } });
-await prisma.user.update({ where: { id: teamLead.id }, data: { departmentId: department.id, teamId: team.id, managerId: deptHead.id } });
-for (const a of [agentA, agentB]) {
-  await prisma.user.update({
-    where: { id: a.id },
-    data: { franchiseId: franchise.id, branchId: branch.id, departmentId: department.id, teamId: team.id, managerId: teamLead.id },
-  });
-}
+await prisma.user.update({ where: { id: deptHead.id }, data: { franchiseId: franchise.id, branchId: branch.id, departmentId: department.id, managerId: brMgr.id } });
+await prisma.user.update({ where: { id: teamLead.id }, data: { franchiseId: franchise.id, branchId: branch.id, departmentId: department.id, teamId: team.id, managerId: deptHead.id } });
+await prisma.user.update({
+  where: { id: agent.id },
+  data: { franchiseId: franchise.id, branchId: branch.id, departmentId: department.id, teamId: team.id, managerId: teamLead.id },
+});
 
-// 6) Leads owned by different users (tagged so re-runs stay idempotent).
-await prisma.lead.deleteMany({ where: { tenantId, source: "WL-SEED" } });
-const leadSpecs: Array<[string, typeof agentA]> = [
-  ["Rhea (Agent A lead 1)", agentA], ["Sam (Agent A lead 2)", agentA], ["Nina (Agent A lead 3)", agentA],
-  ["Omar (Agent B lead 1)", agentB], ["Priya (Agent B lead 2)", agentB],
-  ["Carl (Team Leader lead)", teamLead],
-  ["Deepa (WL Admin lead)", wlAdmin],
+// 6) Remove any extra users previously seeded in this tenant, so every level has
+// exactly one subordinate. (Earlier runs created a second agent.)
+const keepEmails = [
+  "wl.admin@skyline.test", "franchise.admin@skyline.test", "branch.manager@skyline.test",
+  "dept.head@skyline.test", "team.leader@skyline.test", "agent.a@skyline.test",
 ];
-for (const [name, owner] of leadSpecs) {
-  await prisma.lead.create({
-    data: { tenantId, name, email: "", phone: "+91 90000 00001", source: "WL-SEED", ownerId: owner.id },
-  });
+const extras = await prisma.user.findMany({ where: { tenantId, email: { notIn: keepEmails } }, select: { id: true } });
+if (extras.length) {
+  const ids = extras.map((u) => u.id);
+  await prisma.lead.deleteMany({ where: { ownerId: { in: ids } } });
+  await prisma.user.updateMany({ where: { managerId: { in: ids } }, data: { managerId: null } });
+  await prisma.user.deleteMany({ where: { id: { in: ids } } });
 }
 
-// 7) Reset the two stuck WL-admin passwords to demo1234.
-const reset = await prisma.user.updateMany({
-  where: { email: { in: ["bhavya@gmail.com", "sagar@apexpremier.com"] } },
-  data: { passwordHash: pw },
+// 7) Exactly ONE lead, owned by the single Agent — it rolls up the whole chain,
+// so every level (Team Leader … WL Admin) should see this one record.
+await prisma.lead.deleteMany({ where: { tenantId } });
+const lead = await prisma.lead.create({
+  data: { tenantId, name: "Test Lead (Agent)", email: "", phone: "+91 90000 00001", source: "WL-SEED", ownerId: agent.id },
 });
 
 console.log("Tenant:", org.name, tenantId);
-console.log("Users:", [wlAdmin, frAdmin, brMgr, deptHead, teamLead, agentA, agentB].map((u) => `${u.email} [${u.role}]`).join("\n       "));
-console.log("Units:", { franchise: franchise.name, branch: branch.name, department: department.name, team: team.name });
-console.log("Leads seeded:", leadSpecs.length, "(3 Agent A, 2 Agent B, 1 Team Leader, 1 WL Admin)");
-console.log("Passwords reset (bhavya/sagar):", reset.count);
+console.log("Chain:");
+console.log("  WL Admin        ", wlAdmin.email);
+console.log("  └ Franchise Admin", frAdmin.email, "(", franchise.name, ")");
+console.log("    └ Branch Manager", brMgr.email, "(", branch.name, ")");
+console.log("      └ Dept Head    ", deptHead.email, "(", department.name, ")");
+console.log("        └ Team Leader", teamLead.email, "(", team.name, ")");
+console.log("          └ Agent    ", agent.email);
+console.log("            └ Lead   ", lead.name, "→ owner:", agent.email);
+console.log("Extra users removed:", extras.length);
 
 await prisma.$disconnect();
