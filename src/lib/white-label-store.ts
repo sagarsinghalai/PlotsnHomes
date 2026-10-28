@@ -1,4 +1,5 @@
-import { getSetting, setSetting } from "@/lib/system-settings";
+import { getSetting, setSetting, getTenantSetting, setTenantSetting } from "@/lib/system-settings";
+import { prisma } from "@/lib/prisma";
 
 export type WhiteLabelProfile = {
   customDomain: string;        // e.g. "https://invest.apexrealestate.com"
@@ -107,8 +108,14 @@ export const DEFAULT_PARTNER_SUBSCRIPTIONS: PartnerSubscriptionRecord[] = [
   },
 ];
 
-export async function getWhiteLabelProfile(): Promise<WhiteLabelProfile> {
-  const raw = await getSetting(WL_PROFILE_KEY);
+/**
+ * White-label branding. With a tenantId it returns that tenant's own brand
+ * (falling back to the platform's global profile, then the default) — used for
+ * the PARTNER'S PUBLIC SITE. With no tenantId it returns the platform's global
+ * profile (used as the merchant-of-record identity on invoices/emails).
+ */
+export async function getWhiteLabelProfile(tenantId?: string | null): Promise<WhiteLabelProfile> {
+  const raw = await getTenantSetting(WL_PROFILE_KEY, tenantId);
   if (!raw) return DEFAULT_WL_PROFILE;
   try {
     const parsed = JSON.parse(raw);
@@ -118,11 +125,24 @@ export async function getWhiteLabelProfile(): Promise<WhiteLabelProfile> {
   }
 }
 
-export async function saveWhiteLabelProfile(data: Partial<WhiteLabelProfile>): Promise<WhiteLabelProfile> {
-  const current = await getWhiteLabelProfile();
+export async function saveWhiteLabelProfile(data: Partial<WhiteLabelProfile>, tenantId?: string | null): Promise<WhiteLabelProfile> {
+  let current: WhiteLabelProfile;
+  if (tenantId) {
+    // Read the tenant's OWN row directly (getTenantSetting would fall back to the
+    // global profile), so a partner's first save starts clean — never inheriting
+    // the platform's "PlotsnHomes" brand.
+    const row = await prisma.tenantSetting.findUnique({ where: { tenantId_key: { tenantId, key: WL_PROFILE_KEY } } });
+    current = row ? { ...DEFAULT_WL_PROFILE, ...safeParse(row.value) } : { ...DEFAULT_WL_PROFILE };
+  } else {
+    current = await getWhiteLabelProfile(null);
+  }
   const updated = { ...current, ...data };
-  await setSetting(WL_PROFILE_KEY, JSON.stringify(updated));
+  await setTenantSetting(WL_PROFILE_KEY, JSON.stringify(updated), tenantId);
   return updated;
+}
+
+function safeParse(raw: string): Partial<WhiteLabelProfile> {
+  try { return JSON.parse(raw) as Partial<WhiteLabelProfile>; } catch { return {}; }
 }
 
 export async function getPartnerSubscriptions(): Promise<PartnerSubscriptionRecord[]> {

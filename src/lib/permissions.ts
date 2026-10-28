@@ -86,6 +86,7 @@ export const PERMISSIONS_SCHEMA: PermissionHead[] = [
   {
     label: "Other settings",
     subheads: [
+      { key: "business_profile", label: "Business Profile", route: "/admin/settings/business-profile" },
       { key: "roles_permissions", label: "Roles & permissions", route: "/admin/settings/roles" },
       { key: "dropdown_options", label: "Dropdown options", route: "/admin/settings/dropdowns" },
       { key: "webpage_editor", label: "Webpage Editor", route: "/admin/settings/webpage-editor" },
@@ -243,7 +244,7 @@ const PLATFORM_ONLY_KEYS = ["platform", "white_label_hub"];
 // owner — may open/edit the role-permission matrix. A franchise/branch/team leader
 // must never grant permissions (they could escalate their own access), so the
 // permission editor is owner-only, not part of the general staff menu set.
-const TENANT_GOVERNANCE_KEYS = ["roles_permissions"];
+const TENANT_GOVERNANCE_KEYS = ["roles_permissions", "business_profile"];
 const NONE: PermCell = { view: false, add: false, edit: false, delete: false };
 
 // White-label (tenant) admin: full tenant admin incl. the role matrix for their tenant.

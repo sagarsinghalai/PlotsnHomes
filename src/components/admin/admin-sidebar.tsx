@@ -145,6 +145,7 @@ const DEFAULT_NAV: NavGroup[] = [
   {
     title: "Other settings",
     items: [
+      { href: "/admin/settings/business-profile", label: "Business Profile", icon: Building2 },
       { href: "/admin/settings/roles", label: "Roles & permissions", icon: ShieldCheck },
       { href: "/admin/settings/dropdowns", label: "Dropdown options", icon: ListFilter },
       { href: "/admin/settings/project-defaults", label: "Project Defaults", icon: SlidersHorizontal },
