@@ -1,7 +1,7 @@
 import { LeadStage } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { leadScopeForUser, requireCrmApi } from "@/lib/crm-access";
+import { leadScopeForUser, requireCrmApi, isOwnScopeRole } from "@/lib/crm-access";
 import { prisma } from "@/lib/prisma";
 import { noTenantResponse } from "@/lib/data-access";
 import { calculateLeadScore, refreshLeadScore } from "@/lib/lead-scoring";
@@ -167,3 +167,24 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 }
 
+
+export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+  const auth = await requireCrmApi();
+  if (auth.error) return auth.error;
+  if (!auth.tenantId) return noTenantResponse();
+  // Deleting a lead is destructive — allow leaders/admins (anyone not confined to
+  // their own records), scoped to leads they can already see. Agents can't delete.
+  if (isOwnScopeRole(auth.session.user.role)) {
+    return NextResponse.json({ error: "You don't have permission to delete leads." }, { status: 403 });
+  }
+  try {
+    const existing = await getLeadIfAllowed(params.id, auth);
+    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    // Remove child activity rows first, then the lead.
+    await prisma.leadActivity.deleteMany({ where: { leadId: params.id } });
+    await prisma.lead.delete({ where: { id: params.id } });
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || "Delete failed" }, { status: 500 });
+  }
+}

@@ -12,6 +12,9 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  Eye,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -117,6 +120,22 @@ export function LeadsTableView({
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function deleteLead(id: string, name: string) {
+    if (!confirm(`Delete lead "${name}"? This also removes its activity history and can't be undone.`)) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/admin/leads/${id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || "Could not delete the lead.");
+      router.refresh();
+    } catch (e: any) {
+      alert(e.message || "Could not delete the lead.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const initialPipelineId = pipelines[0]?.id || "";
   const initialStage = pipelines[0]?.stages?.[0]?.key || "NEW";
@@ -635,13 +654,31 @@ export function LeadsTableView({
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <Link
-                            href={`/admin/crm/leads/${l.id}`}
-                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium hover:bg-slate-50"
-                          >
-                            View
-                            <ExternalLink className="h-3 w-3" />
-                          </Link>
+                          <div className="inline-flex items-center gap-1">
+                            <Link
+                              href={`/admin/crm/leads/${l.id}`}
+                              title="View lead"
+                              className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-1.5 text-slate-600 hover:bg-slate-50 hover:text-brand-hover"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Link>
+                            <Link
+                              href={`/admin/crm/leads/${l.id}?edit=1`}
+                              title="Edit lead"
+                              className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-1.5 text-slate-600 hover:bg-slate-50 hover:text-brand-hover"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => deleteLead(l.id, l.name)}
+                              disabled={deletingId === l.id}
+                              title="Delete lead"
+                              className="inline-flex items-center justify-center rounded-lg border border-rose-200 p-1.5 text-rose-500 hover:bg-rose-50 disabled:opacity-50"
+                            >
+                              {deletingId === l.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
