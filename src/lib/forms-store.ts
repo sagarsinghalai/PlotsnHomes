@@ -12,6 +12,8 @@ export type FormFieldType =
   | "number"
   | "textarea"
   | "select"
+  | "radio"
+  | "checkboxGroup"
   | "checkbox";
 
 export type FormField = {
@@ -20,8 +22,31 @@ export type FormField = {
   type: FormFieldType;
   required?: boolean;
   placeholder?: string;
-  options?: string[]; // for "select"
+  options?: string[]; // for "select" | "radio" | "checkboxGroup"
+  validate?: "letters"; // extra client+server validation (e.g. names = letters only)
 };
+
+/** Shared field validation used by the renderer (client) and the submit API. */
+export function validateFormValue(field: FormField, raw: string): string | null {
+  const v = (raw ?? "").trim();
+  if (field.required && !v) return `"${field.label}" is required.`;
+  if (!v) return null; // optional + empty is fine
+  if (field.validate === "letters" && !/^[A-Za-z][A-Za-z\s.'-]*$/.test(v)) {
+    return `"${field.label}" can only contain letters.`;
+  }
+  if (field.type === "email" && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) {
+    return `Enter a valid email for "${field.label}".`;
+  }
+  if (field.type === "phone") {
+    // Stored as "<dialcode> <digits>"; the digits part must be exactly 10.
+    const digits = v.replace(/^\+?\d{1,4}\s*/, "").replace(/\D/g, "");
+    if (!/^\d{10}$/.test(digits)) return `Enter a valid 10-digit number for "${field.label}".`;
+  }
+  if (field.type === "number" && !/^-?\d+(\.\d+)?$/.test(v)) {
+    return `"${field.label}" must be a number.`;
+  }
+  return null;
+}
 
 export type FormSettings = {
   submitText?: string;

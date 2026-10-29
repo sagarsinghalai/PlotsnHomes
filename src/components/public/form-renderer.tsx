@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { FormDef } from "@/lib/forms-store";
+import { validateFormValue, type FormDef } from "@/lib/forms-store";
+import { COUNTRY_DIAL_CODES, dialCodeLabel } from "@/lib/country-codes";
 
 export function FormRenderer({ form, embed = false }: { form: FormDef; embed?: boolean }) {
   const [values, setValues] = useState<Record<string, string>>({});
@@ -44,6 +45,11 @@ export function FormRenderer({ form, embed = false }: { form: FormDef; embed?: b
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    // Client-side validation (the server re-checks).
+    for (const f of form.fields) {
+      const err = validateFormValue(f, values[f.id] || "");
+      if (err) { setError(err); return; }
+    }
     setBusy(true);
     setError("");
     try {
@@ -95,55 +101,79 @@ export function FormRenderer({ form, embed = false }: { form: FormDef; embed?: b
         </div>
       )}
 
-      {form.fields.map((f) => (
+      {form.fields.map((f) => {
+        const val = values[f.id] || "";
+        return (
         <div key={f.id}>
           <label className="mb-1 block text-sm font-medium text-slate-700">
             {f.label}
             {f.required && <span className="ml-0.5 text-rose-500">*</span>}
           </label>
           {f.type === "textarea" ? (
-            <textarea
-              rows={4}
-              required={f.required}
-              placeholder={f.placeholder}
-              value={values[f.id] || ""}
-              onChange={(e) => set(f.id, e.target.value)}
-              className={inputCls}
-            />
+            <textarea rows={4} required={f.required} placeholder={f.placeholder} value={val} onChange={(e) => set(f.id, e.target.value)} className={inputCls} />
           ) : f.type === "select" ? (
-            <select
-              required={f.required}
-              value={values[f.id] || ""}
-              onChange={(e) => set(f.id, e.target.value)}
-              className={inputCls}
-            >
+            <select required={f.required} value={val} onChange={(e) => set(f.id, e.target.value)} className={inputCls}>
               <option value="">Select…</option>
-              {(f.options || []).map((o) => (
-                <option key={o} value={o}>{o}</option>
-              ))}
+              {(f.options || []).map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
+          ) : f.type === "radio" ? (
+            <div className="space-y-1.5">
+              {(f.options || []).map((o) => (
+                <label key={o} className="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="radio" name={f.id} checked={val === o} onChange={() => set(f.id, o)} className="h-4 w-4 border-slate-300 text-brand focus:ring-brand" />
+                  {o}
+                </label>
+              ))}
+            </div>
+          ) : f.type === "checkboxGroup" ? (
+            <div className="space-y-1.5">
+              {(f.options || []).map((o) => {
+                const chosen = val ? val.split("|").filter(Boolean) : [];
+                const on = chosen.includes(o);
+                return (
+                  <label key={o} className="flex items-center gap-2 text-sm text-slate-700">
+                    <input type="checkbox" checked={on} onChange={(e) => {
+                      const next = e.target.checked ? [...chosen, o] : chosen.filter((x) => x !== o);
+                      set(f.id, next.join("|"));
+                    }} className="h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand" />
+                    {o}
+                  </label>
+                );
+              })}
+            </div>
           ) : f.type === "checkbox" ? (
-            <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input
-                type="checkbox"
-                checked={values[f.id] === "yes"}
-                onChange={(e) => set(f.id, e.target.checked ? "yes" : "")}
-                className="h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
-              />
-              {f.placeholder || "Yes"}
+            <label className="flex items-start gap-2 text-sm text-slate-700">
+              <input type="checkbox" checked={val === "yes"} onChange={(e) => set(f.id, e.target.checked ? "yes" : "")} className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand" />
+              <span>{f.placeholder || "I agree"}</span>
             </label>
+          ) : f.type === "phone" ? (
+            (() => {
+              const parts = val.split(" ");
+              const cc = parts[0] && parts[0].startsWith("+") ? parts[0] : "+91";
+              const digits = (parts.slice(1).join("") || (parts[0]?.startsWith("+") ? "" : parts[0] || "")).replace(/\D/g, "");
+              return (
+                <div className="flex gap-2">
+                  <select value={cc} onChange={(e) => set(f.id, `${e.target.value} ${digits}`)} className={inputCls + " max-w-[160px] shrink-0"}>
+                    {COUNTRY_DIAL_CODES.map((c) => <option key={`${c.code}-${c.name}`} value={c.code}>{dialCodeLabel(c)}</option>)}
+                  </select>
+                  <input type="tel" inputMode="numeric" maxLength={10} required={f.required} placeholder={f.placeholder || "10-digit number"} value={digits}
+                    onChange={(e) => set(f.id, `${cc} ${e.target.value.replace(/\D/g, "").slice(0, 10)}`)} className={inputCls} />
+                </div>
+              );
+            })()
           ) : (
             <input
-              type={f.type === "number" ? "number" : f.type === "email" ? "email" : f.type === "phone" ? "tel" : "text"}
+              type={f.type === "number" ? "number" : f.type === "email" ? "email" : "text"}
               required={f.required}
               placeholder={f.placeholder}
-              value={values[f.id] || ""}
-              onChange={(e) => set(f.id, e.target.value)}
+              value={val}
+              onChange={(e) => set(f.id, f.validate === "letters" ? e.target.value.replace(/[^A-Za-z\s.'-]/g, "") : e.target.value)}
               className={inputCls}
             />
           )}
         </div>
-      ))}
+        );
+      })}
 
       {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
 

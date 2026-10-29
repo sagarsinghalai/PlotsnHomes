@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getFormBySlug, addSubmission } from "@/lib/forms-store";
+import { getFormBySlug, addSubmission, validateFormValue } from "@/lib/forms-store";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -20,9 +20,8 @@ export async function POST(req: Request, { params }: { params: { slug: string } 
   for (const f of form.fields) {
     const raw = body[f.id];
     const val = raw == null ? "" : String(raw).trim();
-    if (f.required && !val) {
-      return NextResponse.json({ error: `"${f.label}" is required.` }, { status: 400 });
-    }
+    const err = validateFormValue(f, val);
+    if (err) return NextResponse.json({ error: err }, { status: 400 });
     data[f.id] = val;
   }
 

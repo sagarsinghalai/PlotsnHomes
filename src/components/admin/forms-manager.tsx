@@ -14,8 +14,12 @@ const FIELD_TYPES: { type: FormFieldType; label: string }[] = [
   { type: "number", label: "Number" },
   { type: "textarea", label: "Paragraph" },
   { type: "select", label: "Dropdown" },
-  { type: "checkbox", label: "Checkbox" },
+  { type: "radio", label: "Radio buttons" },
+  { type: "checkboxGroup", label: "Checkboxes (multi)" },
+  { type: "checkbox", label: "Single checkbox" },
 ];
+
+const HAS_OPTIONS = (t: FormFieldType) => t === "select" || t === "radio" || t === "checkboxGroup";
 
 function newField(): FormField {
   return { id: `f-${Date.now()}-${Math.floor(Math.random() * 1000)}`, label: "New field", type: "text", required: false };
@@ -337,10 +341,25 @@ function FormEditor({ form, setForm, onSave, onCancel }: { form: FormDef; setFor
                 </label>
                 <input className={fieldCls + " w-full px-3 py-1.5 text-xs"} value={f.placeholder || ""} onChange={(e) => setField(f.id, { placeholder: e.target.value })} placeholder={f.type === "checkbox" ? "e.g. I agree to be contacted" : "e.g. you@example.com"} />
               </div>
-              {f.type === "select" && (
+              {HAS_OPTIONS(f.type) && (
                 <div>
-                  <label className="mb-0.5 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Dropdown options</label>
-                  <input className={fieldCls + " w-full px-3 py-1.5 text-xs"} value={(f.options || []).join(", ")} onChange={(e) => setField(f.id, { options: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })} placeholder="Option A, Option B, Option C" />
+                  <label className="mb-0.5 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Options (one per line, or comma-separated)</label>
+                  <textarea
+                    rows={3}
+                    className={fieldCls + " w-full px-3 py-1.5 text-xs"}
+                    value={(f.options || []).join("\n")}
+                    onChange={(e) => setField(f.id, { options: e.target.value.split(/[\n,]/).map((s) => s.trim()).filter(Boolean) })}
+                    placeholder={"Option A\nOption B\nOption C"}
+                  />
+                </div>
+              )}
+              {f.type === "text" && (
+                <div>
+                  <label className="mb-0.5 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Validation</label>
+                  <select className={fieldCls + " w-full px-3 py-1.5 text-xs"} value={f.validate || ""} onChange={(e) => setField(f.id, { validate: (e.target.value || undefined) as any })}>
+                    <option value="">None</option>
+                    <option value="letters">Letters only (for names)</option>
+                  </select>
                 </div>
               )}
             </div>
