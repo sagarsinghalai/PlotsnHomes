@@ -121,6 +121,60 @@ export function LeadsTableView({
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+  }
+  function toggleAllVisible(ids: string[]) {
+    setSelected((prev) => {
+      const allOn = ids.length > 0 && ids.every((id) => prev.has(id));
+      const n = new Set(prev);
+      ids.forEach((id) => (allOn ? n.delete(id) : n.add(id)));
+      return n;
+    });
+  }
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  async function bulkDelete() {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    if (!confirm(`Delete ${ids.length} selected lead(s)? This also removes their activity history and can't be undone.`)) return;
+    setBulkBusy(true);
+    try {
+      const oks = await Promise.all(ids.map((id) => fetch(`/api/admin/leads/${id}`, { method: "DELETE" }).then((r) => r.ok).catch(() => false)));
+      const failed = oks.filter((ok) => !ok).length;
+      clearSelection();
+      router.refresh();
+      if (failed) alert(`${failed} of ${ids.length} could not be deleted (permission or already removed).`);
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  async function bulkSetStage(stage: string) {
+    const ids = Array.from(selected);
+    if (!ids.length || !stage) return;
+    setBulkBusy(true);
+    try {
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/admin/leads/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ stage }) }).catch(() => {})
+        )
+      );
+      clearSelection();
+      router.refresh();
+    } finally {
+      setBulkBusy(false);
+    }
+  }
 
   async function deleteLead(id: string, name: string) {
     if (!confirm(`Delete lead "${name}"? This also removes its activity history and can't be undone.`)) return;
@@ -566,10 +620,42 @@ export function LeadsTableView({
             )
           ) : (
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            {selected.size > 0 && (
+              <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 bg-brand/5 px-4 py-3">
+                <span className="text-sm font-bold text-slate-800">{selected.size} selected</span>
+                <select
+                  disabled={bulkBusy}
+                  value=""
+                  onChange={(e) => { const s = e.target.value; if (s) bulkSetStage(s); }}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 outline-none focus:border-brand"
+                >
+                  <option value="">Set stage…</option>
+                  {CRM_STAGES.map((s) => <option key={s} value={s}>{stageLabel(s)}</option>)}
+                </select>
+                <button
+                  type="button"
+                  disabled={bulkBusy}
+                  onClick={bulkDelete}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                >
+                  {bulkBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />} Delete selected
+                </button>
+                <button type="button" onClick={clearSelection} className="text-xs font-medium text-slate-500 hover:text-slate-700">Clear</button>
+              </div>
+            )}
             <div ref={tableScrollRef} className="overflow-x-auto">
               <table className="w-full text-sm min-w-[1000px]">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                    <th className="px-3 py-3.5 w-8">
+                      <input
+                        type="checkbox"
+                        aria-label="Select all"
+                        checked={filtered.length > 0 && filtered.every((l) => selected.has(l.id))}
+                        onChange={() => toggleAllVisible(filtered.map((l) => l.id))}
+                        className="h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
+                      />
+                    </th>
                     <th className="px-4 py-3.5 font-semibold">Lead</th>
                     <th className="px-4 py-3.5 font-semibold">Contact</th>
                     <th className="px-4 py-3.5 font-semibold">Source</th>
@@ -602,8 +688,17 @@ export function LeadsTableView({
                         key={l.id}
                         className={`border-t border-slate-100 hover:bg-slate-50/80 transition ${
                           overdue ? "bg-red-50/30" : ""
-                        }`}
+                        } ${selected.has(l.id) ? "bg-brand/5" : ""}`}
                       >
+                        <td className="px-3 py-3">
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${l.name}`}
+                            checked={selected.has(l.id)}
+                            onChange={() => toggleOne(l.id)}
+                            className="h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
+                          />
+                        </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-bold text-white">
