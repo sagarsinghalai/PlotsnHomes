@@ -47,7 +47,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CustomPage, NavItemLink, NavSettings, SectionBlock, SectionType } from "@/lib/webpage-editor-store";
+import { CustomPage, NavItemLink, NavSettings, SectionBlock, SectionType, OVERRIDABLE_ROUTES } from "@/lib/webpage-editor-store";
 import { SectionRenderer } from "@/components/admin/webpage-editor/section-renderer";
 
 const FONT_FAMILIES = [
@@ -208,6 +208,35 @@ export function WebpageEditorClient({
       }
     } catch {
       setSaving(false);
+    }
+  }
+
+  // Update one page's metadata (e.g. route override, publish status) and persist.
+  // When a route override is assigned, it's cleared from any other page first so a
+  // route is only ever taken over by one page.
+  async function savePageMeta(pageId: string, updates: Partial<CustomPage>) {
+    const route = updates.targetRoute;
+    const next = pages.map((p) => {
+      if (p.id === pageId) return { ...p, ...updates };
+      if (route && p.targetRoute === route) return { ...p, targetRoute: undefined };
+      return p;
+    });
+    const changed = next.filter((p) => JSON.stringify(p) !== JSON.stringify(pages.find((o) => o.id === p.id)));
+    setPages(next);
+    try {
+      for (const p of changed) {
+        const res = await fetch("/api/admin/webpage-editor/pages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(p),
+        });
+        const data = await res.json();
+        if (res.ok && data.page) setPages((prev) => prev.map((x) => (x.id === data.page.id ? data.page : x)));
+      }
+      showToast("Page settings saved.");
+      router.refresh();
+    } catch {
+      showToast("Could not save page settings.");
     }
   }
 
@@ -966,6 +995,43 @@ export function WebpageEditorClient({
                     </button>
                   </div>
                 </div>
+
+                {/* Route takeover + publish controls */}
+                <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                      Takes over page
+                    </label>
+                    <select
+                      value={p.targetRoute || ""}
+                      onChange={(e) => savePageMeta(p.id, { targetRoute: e.target.value || undefined })}
+                      className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-brand"
+                    >
+                      <option value="">— None (shows at /p/{p.slug}) —</option>
+                      {OVERRIDABLE_ROUTES.map((r) => (
+                        <option key={r.route} value={r.route}>{r.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={p.status}
+                      onChange={(e) => savePageMeta(p.id, { status: e.target.value as CustomPage["status"] })}
+                      className="w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-brand"
+                    >
+                      <option value="published">Published (live)</option>
+                      <option value="draft">Draft (hidden)</option>
+                    </select>
+                  </div>
+                </div>
+                {p.targetRoute && (
+                  <p className="text-[10px] leading-snug text-amber-600 dark:text-amber-400">
+                    When <b>published</b>, this replaces the real {OVERRIDABLE_ROUTES.find((r) => r.route === p.targetRoute)?.label || p.targetRoute} page. Set to Draft to restore the original.
+                  </p>
+                )}
 
                 <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <span>{p.sections.length} Sections</span>

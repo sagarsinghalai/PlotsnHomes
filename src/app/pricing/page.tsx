@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { PricingPlans, type PricingPlan } from "@/components/public/pricing-plans";
 import { parseFeatures, INTERVAL_LABELS, intervalShort, formatDurationMinutes } from "@/lib/subscription";
 import { activeSignupGateway } from "@/lib/signup-payment";
+import { getPublishedPageForRoute, getNavSettings, getFooterSettings } from "@/lib/webpage-editor-store";
+import { BuilderPageView } from "@/components/public/builder-page-view";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +13,15 @@ export const metadata = {
 };
 
 export default async function PricingPage() {
+  // Admin-built override takes over /pricing when published (reversible).
+  {
+    const override = await getPublishedPageForRoute("/pricing");
+    if (override) {
+      const [nav, footer] = await Promise.all([getNavSettings(), getFooterSettings()]);
+      return <BuilderPageView page={override} nav={nav} footer={footer} />;
+    }
+  }
+
   const rows = await prisma.subscriptionPlan.findMany({
     where: { active: true },
     orderBy: [{ sortOrder: "asc" }, { price: "asc" }],

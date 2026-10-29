@@ -76,10 +76,19 @@ export type CustomPage = {
   seoDescription?: string;
   showInNavbar?: boolean;
   showInFooter?: boolean;
+  // When set, this page OVERRIDES (takes over) an existing real route — e.g. "/"
+  // or "/pricing" — whenever it is published. Empty = a normal /p/<slug> page.
+  targetRoute?: string;
   sections: SectionBlock[];
   createdAt: string;
   updatedAt: string;
 };
+
+/** Real routes an admin may take over with a builder page. */
+export const OVERRIDABLE_ROUTES: { route: string; label: string }[] = [
+  { route: "/", label: "Homepage ( / )" },
+  { route: "/pricing", label: "Pricing ( /pricing )" },
+];
 
 export type NavItemLink = {
   id: string;
@@ -292,6 +301,18 @@ export async function getCustomPageBySlug(slug: string): Promise<CustomPage | nu
   return pages.find((p) => p.slug.toLowerCase() === cleanSlug) || null;
 }
 
+/**
+ * The published builder page that currently overrides `route`, or null. Used by
+ * real pages (home, pricing, …) to render admin-built content in place of their
+ * coded version when an override exists and is published.
+ */
+export async function getPublishedPageForRoute(route: string): Promise<CustomPage | null> {
+  const pages = await getCustomPages();
+  return (
+    pages.find((p) => p.targetRoute === route && p.status === "published") || null
+  );
+}
+
 export async function saveCustomPage(pageData: Partial<CustomPage> & { title: string; slug: string }): Promise<CustomPage> {
   const currentList = await getCustomPages();
   const now = new Date().toISOString();
@@ -318,6 +339,7 @@ export async function saveCustomPage(pageData: Partial<CustomPage> & { title: st
         seoDescription: pageData.seoDescription,
         showInNavbar: pageData.showInNavbar ?? true,
         showInFooter: pageData.showInFooter ?? true,
+        targetRoute: pageData.targetRoute,
         sections: pageData.sections || [],
         createdAt: now,
         updatedAt: now,
@@ -334,6 +356,7 @@ export async function saveCustomPage(pageData: Partial<CustomPage> & { title: st
       seoDescription: pageData.seoDescription,
       showInNavbar: pageData.showInNavbar ?? true,
       showInFooter: pageData.showInFooter ?? true,
+      targetRoute: pageData.targetRoute,
       sections: pageData.sections || [],
       createdAt: now,
       updatedAt: now,

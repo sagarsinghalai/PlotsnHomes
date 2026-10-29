@@ -6,6 +6,8 @@ import { CityLandmarkSlider } from "@/components/property/city-landmark-slider";
 import { TestimonialsSection } from "@/components/property/testimonials-section";
 import { prisma } from "@/lib/prisma";
 import { getBhkConfigurations } from "@/lib/system-settings";
+import { getPublishedPageForRoute, getNavSettings, getFooterSettings } from "@/lib/webpage-editor-store";
+import { BuilderPageView } from "@/components/public/builder-page-view";
 import { getPublicTenantId } from "@/lib/public-tenant";
 import { getSiteSetting, SITE_SETTING_KEYS, HeroStat, HeroCard, FeaturedArea, HeroContent, HowItWorksStep, TestimonialsConfig, TeamMemberItem } from "@/lib/site-settings";
 import { formatCurrency, parseImages } from "@/lib/utils";
@@ -15,6 +17,16 @@ import { LeadCaptureForm } from "@/components/public/lead-capture-form";
 import { ProjectsShowcase, type ShowcaseProject } from "@/components/public/projects-showcase";
 
 export default async function HomePage() {
+  // If an admin has published a builder page that takes over the homepage, render
+  // that instead of the coded home. Unpublish it to fall back to this page.
+  {
+    const override = await getPublishedPageForRoute("/");
+    if (override) {
+      const [nav, footer] = await Promise.all([getNavSettings(), getFooterSettings()]);
+      return <BuilderPageView page={override} nav={nav} footer={footer} />;
+    }
+  }
+
   const tenantId = await getPublicTenantId();
   const [
     featured,
