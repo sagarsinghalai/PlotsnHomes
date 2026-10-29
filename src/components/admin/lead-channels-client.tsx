@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, Check, Save, Copy, RefreshCw, Zap, Plug, Shield, ChevronDown, ChevronUp } from "lucide-react";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { LEAD_CHANNEL_ORDER, type LeadChannels, type LeadChannelKey } from "@/lib/lead-channels";
+import { LEAD_CHANNEL_ORDER, type LeadChannels, type LeadChannelKey } from "@/lib/lead-channels-config";
 
 type Opt = { id: string; name: string; email?: string };
 
