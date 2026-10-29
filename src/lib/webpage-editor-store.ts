@@ -11,6 +11,7 @@ export type SectionType =
   | "stats"
   | "gallery"
   | "columns"
+  | "form"
   | "rawHtml";
 
 /** One column inside a "columns" (row) section. Holds its own HTML/content. */
@@ -59,6 +60,7 @@ export type SectionBlock = {
   }>;
   rawCode?: string;
   grid?: GridColumn[];
+  formSlug?: string; // for type "form" — which built form to embed
   propertyQuery?: {
     type?: string;
     category?: string;

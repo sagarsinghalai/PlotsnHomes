@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Eye,
   FileCode,
+  ClipboardList,
   FileText,
   Globe,
   HelpCircle,
@@ -70,15 +71,18 @@ const WIDGET_TYPES: { type: SectionType; label: string; icon: any; desc: string 
   { type: "stats", label: "Metrics Counter Bar", icon: Layers, desc: "4-column key metrics counter bar" },
   { type: "gallery", label: "Media Gallery", icon: ImageIcon, desc: "Photo container & video player embed" },
   { type: "columns", label: "Columns (Row)", icon: LayoutGrid, desc: "A row split into 2–4 responsive columns" },
+  { type: "form", label: "Form", icon: ClipboardList, desc: "Embed one of your built forms to collect leads" },
   { type: "rawHtml", label: "Custom Code", icon: FileCode, desc: "HTML + CSS + JS, run in a safe sandbox" },
 ];
 
 export function WebpageEditorClient({
   initialPages,
   initialNav,
+  forms = [],
 }: {
   initialPages: CustomPage[];
   initialNav: NavSettings;
+  forms?: { slug: string; name: string }[];
 }) {
   const router = useRouter();
   const [pages, setPages] = useState<CustomPage[]>(initialPages);
@@ -91,6 +95,7 @@ export function WebpageEditorClient({
 
   // Drag-and-drop section reordering state
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragWidgetType, setDragWidgetType] = useState<SectionType | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // Widget palette (choose which section/widget type to add)
@@ -273,6 +278,7 @@ export function WebpageEditorClient({
               { id: `col-${Date.now()}-2`, html: "<h3>Column 2</h3><p>Add your content here.</p>" },
             ]
           : undefined,
+      formSlug: type === "form" ? forms[0]?.slug : undefined,
     };
 
     let updatedSections = [...activePage.sections];
@@ -558,14 +564,19 @@ export function WebpageEditorClient({
                         setIsInspectorOpen(true);
                       }}
                       onDragOver={(e) => {
-                        if (dragIndex === null) return;
+                        if (dragIndex === null && dragWidgetType === null) return;
                         e.preventDefault();
                         if (dragOverIndex !== index) setDragOverIndex(index);
                       }}
                       onDrop={(e) => {
-                        if (dragIndex === null) return;
                         e.preventDefault();
-                        reorderSections(dragIndex, index);
+                        if (dragWidgetType !== null) {
+                          // Dropped a widget from the palette → insert it here.
+                          addSection(dragWidgetType, index);
+                          setDragWidgetType(null);
+                        } else if (dragIndex !== null) {
+                          reorderSections(dragIndex, index);
+                        }
                         setDragIndex(null);
                         setDragOverIndex(null);
                       }}
@@ -647,8 +658,18 @@ export function WebpageEditorClient({
                   );
                 })}
 
-                {/* ADD NEW SECTION — widget palette */}
-                <div className="pt-4">
+                {/* ADD NEW SECTION — widget palette (also a drop zone to append) */}
+                <div
+                  className={`pt-4 ${dragWidgetType ? "rounded-2xl ring-2 ring-dashed ring-emerald-400/70" : ""}`}
+                  onDragOver={(e) => { if (dragWidgetType) e.preventDefault(); }}
+                  onDrop={(e) => {
+                    if (!dragWidgetType) return;
+                    e.preventDefault();
+                    addSection(dragWidgetType);
+                    setDragWidgetType(null);
+                    setDragOverIndex(null);
+                  }}
+                >
                   {!showWidgetPicker ? (
                     <div className="text-center">
                       <button
@@ -675,11 +696,15 @@ export function WebpageEditorClient({
                             <button
                               key={w.type}
                               type="button"
+                              draggable
+                              onDragStart={() => setDragWidgetType(w.type)}
+                              onDragEnd={() => { setDragWidgetType(null); setDragOverIndex(null); }}
                               onClick={() => {
                                 addSection(w.type);
                                 setShowWidgetPicker(false);
                               }}
-                              className="flex flex-col items-start gap-1 rounded-xl border border-slate-700 bg-slate-800/60 p-3 text-left hover:border-brand hover:bg-slate-800 transition"
+                              title="Click to add, or drag onto the page"
+                              className="flex cursor-grab flex-col items-start gap-1 rounded-xl border border-slate-700 bg-slate-800/60 p-3 text-left transition hover:border-brand hover:bg-slate-800 active:cursor-grabbing"
                             >
                               <span className="flex items-center gap-1.5 text-xs font-bold text-white">
                                 <WIcon className="h-3.5 w-3.5 text-brand" /> {w.label}
@@ -804,6 +829,29 @@ export function WebpageEditorClient({
                       />
                       <p className="mt-1 text-[10px] leading-snug text-slate-500">
                         Runs in a <b>sandboxed iframe</b> — isolated from the rest of the site (can&apos;t read cookies or other pages), so it&apos;s safe to embed maps, forms or small scripts.
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {selectedSection.type === "form" ? (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Which form to show</label>
+                      {forms.length === 0 ? (
+                        <p className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-3 text-xs text-slate-400">
+                          No forms yet — build one under Communications → Forms, then it appears here.
+                        </p>
+                      ) : (
+                        <select
+                          value={selectedSection.formSlug || ""}
+                          onChange={(e) => updateSection(selectedSection.id, { formSlug: e.target.value })}
+                          className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm outline-none focus:border-brand"
+                        >
+                          <option value="">Select a form…</option>
+                          {forms.map((f) => <option key={f.slug} value={f.slug}>{f.name}</option>)}
+                        </select>
+                      )}
+                      <p className="mt-1 text-[10px] leading-snug text-slate-500">
+                        The live form is embedded — edits you make in Forms show here automatically, and submissions flow into your CRM.
                       </p>
                     </div>
                   ) : null}

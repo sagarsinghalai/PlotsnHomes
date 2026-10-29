@@ -3,11 +3,18 @@ export const dynamic = "force-dynamic";
 import { WebpageEditorClient } from "@/components/admin/webpage-editor-client";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { getCustomPages, getNavSettings } from "@/lib/webpage-editor-store";
+import { getForms } from "@/lib/forms-store";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
+import { isSuperAdmin } from "@/lib/roles";
 
 export default async function AdminWebpageEditorPage() {
-  const [pages, nav] = await Promise.all([
+  const session = await getServerSession(authOptions);
+  const owner = session?.user ? isSuperAdmin(session.user.role) : false;
+  const [pages, nav, forms] = await Promise.all([
     getCustomPages(),
     getNavSettings(),
+    getForms(owner ? undefined : session?.user?.tenantId),
   ]);
 
   return (
@@ -22,7 +29,11 @@ export default async function AdminWebpageEditorPage() {
         ]}
       />
 
-      <WebpageEditorClient initialPages={pages} initialNav={nav} />
+      <WebpageEditorClient
+        initialPages={pages}
+        initialNav={nav}
+        forms={forms.map((f) => ({ slug: f.slug, name: f.name }))}
+      />
     </div>
   );
 }

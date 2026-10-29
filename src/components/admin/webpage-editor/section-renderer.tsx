@@ -572,6 +572,23 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
       );
     }
 
+    case "form": {
+      return (
+        <section className="p-6 my-4" style={{ background: section.bgColor || undefined }}>
+          {section.title ? (
+            <h2 className="mb-4 text-2xl font-bold" style={{ color: section.textColor || undefined }}>{section.title}</h2>
+          ) : null}
+          {section.formSlug ? (
+            <FormEmbed slug={section.formSlug} />
+          ) : (
+            <div className="rounded-xl border border-dashed border-slate-300 p-8 text-center text-xs text-slate-400 dark:border-slate-700">
+              Choose which form to show in the inspector →
+            </div>
+          )}
+        </section>
+      );
+    }
+
     case "rawHtml": {
       return (
         <section className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 my-4 overflow-hidden">
@@ -598,6 +615,31 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
  * can't read the parent page, its cookies, storage, or other tenants' data. The
  * frame auto-sizes to its content via postMessage.
  */
+/** Embeds a built form (from the Forms feature) live at /f/<slug>?embed=1, so the
+ * page always shows the current version of the form. Same-origin, so it auto-sizes. */
+function FormEmbed({ slug }: { slug: string }) {
+  const ref = useRef<HTMLIFrameElement>(null);
+  const [height, setHeight] = useState(520);
+  function resize() {
+    try {
+      const doc = ref.current?.contentWindow?.document;
+      if (doc) setHeight(Math.max(160, doc.body.scrollHeight + 24));
+    } catch {
+      /* cross-origin (shouldn't happen for same-site) — keep default */
+    }
+  }
+  return (
+    <iframe
+      ref={ref}
+      src={`/f/${slug}?embed=1`}
+      title="Form"
+      onLoad={() => { resize(); setTimeout(resize, 400); }}
+      className="block w-full border-0"
+      style={{ height }}
+    />
+  );
+}
+
 function SandboxedEmbed({ code }: { code: string }) {
   const ref = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState(360);
