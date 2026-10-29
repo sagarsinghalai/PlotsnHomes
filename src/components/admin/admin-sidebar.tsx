@@ -128,6 +128,7 @@ const DEFAULT_NAV: NavGroup[] = [
     title: "Communications",
     items: [
       { href: "/admin/communications", label: "Hub", icon: MessageSquare },
+      { href: "/admin/communications/forms", label: "Forms", icon: ClipboardList },
       { href: "/admin/variables-templates", label: "Variables & Templates", icon: SlidersHorizontal },
       { href: "/admin/messages", label: "Send message", icon: Send },
       { href: "/admin/meetings", label: "Meetings", icon: Calendar },

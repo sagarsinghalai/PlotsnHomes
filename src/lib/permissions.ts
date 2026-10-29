@@ -68,6 +68,7 @@ export const PERMISSIONS_SCHEMA: PermissionHead[] = [
     label: "Communications",
     subheads: [
       { key: "comms_hub", label: "Hub", route: "/admin/communications" },
+      { key: "forms", label: "Forms", route: "/admin/communications/forms" },
       { key: "whatsapp_hub", label: "WhatsApp Hub", route: "/admin/whatsapp" },
       { key: "send_message", label: "Send message", route: "/admin/messages" },
       { key: "meetings", label: "Meetings", route: "/admin/meetings" },
