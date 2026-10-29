@@ -151,6 +151,17 @@ function CopyRow({ icon, label, value, onCopy, mono }: { icon: React.ReactNode; 
   );
 }
 
+function hostOf(ref?: string): string {
+  if (!ref) return "Direct / none";
+  try {
+    const h = new URL(ref).hostname.replace(/^www\./, "");
+    if (h === window.location.hostname) return "This site";
+    return h;
+  } catch {
+    return "Direct / none";
+  }
+}
+
 function Submissions({ formId, fields }: { formId: string; fields: FormField[] }) {
   const [rows, setRows] = useState<any[] | null>(null);
   useEffect(() => {
@@ -160,27 +171,100 @@ function Submissions({ formId, fields }: { formId: string; fields: FormField[] }
       .catch(() => setRows([]));
   }, [formId]);
 
+  const analytics = useMemo(() => {
+    if (!rows || rows.length === 0) return null;
+    // Submissions over the last 14 days.
+    const days: { label: string; count: number }[] = [];
+    const now = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const count = rows.filter((r) => (r.createdAt || "").slice(0, 10) === key).length;
+      days.push({ label: `${d.getDate()}/${d.getMonth() + 1}`, count });
+    }
+    const maxDay = Math.max(1, ...days.map((d) => d.count));
+    // Traffic sources.
+    const srcMap = new Map<string, number>();
+    rows.forEach((r) => { const h = hostOf(r.referrer); srcMap.set(h, (srcMap.get(h) || 0) + 1); });
+    const sources = Array.from(srcMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    // Field fill rates.
+    const fillRates = fields.map((f) => {
+      const filled = rows.filter((r) => (r.data?.[f.id] || "").toString().trim()).length;
+      return { label: f.label, pct: Math.round((filled / rows.length) * 100) };
+    });
+    return { days, maxDay, sources, fillRates, total: rows.length };
+  }, [rows, fields]);
+
   if (rows === null) return <p className="pt-2 text-xs text-slate-400">Loading…</p>;
   if (rows.length === 0) return <p className="pt-2 text-xs text-slate-400">No submissions yet.</p>;
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-800">
-      <table className="w-full text-left text-[11px]">
-        <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500">
-          <tr>
-            <th className="px-2 py-1.5 font-semibold">When</th>
-            {fields.map((f) => <th key={f.id} className="px-2 py-1.5 font-semibold">{f.label}</th>)}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-          {rows.slice(0, 50).map((r) => (
-            <tr key={r.id}>
-              <td className="whitespace-nowrap px-2 py-1.5 text-slate-400">{new Date(r.createdAt).toLocaleString()}</td>
-              {fields.map((f) => <td key={f.id} className="px-2 py-1.5 text-slate-700 dark:text-slate-300">{r.data?.[f.id] || "—"}</td>)}
+    <div className="space-y-4 pt-1">
+      {analytics && (
+        <>
+          {/* Submissions over time */}
+          <div>
+            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Submissions · last 14 days</p>
+            <div className="flex items-end gap-1 h-20 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-2">
+              {analytics.days.map((d, i) => (
+                <div key={i} className="group flex flex-1 flex-col items-center justify-end" title={`${d.label}: ${d.count}`}>
+                  <div className="w-full rounded-t bg-brand/70 group-hover:bg-brand" style={{ height: `${(d.count / analytics.maxDay) * 100}%`, minHeight: d.count ? 3 : 0 }} />
+                  <span className="mt-0.5 text-[7px] text-slate-400">{d.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {/* Top sources */}
+            <div>
+              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Top sources</p>
+              <div className="space-y-1">
+                {analytics.sources.map(([name, count]) => (
+                  <div key={name} className="flex items-center justify-between text-[11px]">
+                    <span className="truncate text-slate-600 dark:text-slate-300">{name}</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{count} ({Math.round((count / analytics.total) * 100)}%)</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Field fill rates */}
+            <div>
+              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Field completion</p>
+              <div className="space-y-1.5">
+                {analytics.fillRates.map((f) => (
+                  <div key={f.label}>
+                    <div className="flex items-center justify-between text-[10px] text-slate-500"><span className="truncate">{f.label}</span><span>{f.pct}%</span></div>
+                    <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800"><div className="h-1.5 rounded-full bg-emerald-500" style={{ width: `${f.pct}%` }} /></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className="overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-800">
+        <table className="w-full text-left text-[11px]">
+          <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500">
+            <tr>
+              <th className="px-2 py-1.5 font-semibold">When</th>
+              <th className="px-2 py-1.5 font-semibold">Source</th>
+              {fields.map((f) => <th key={f.id} className="px-2 py-1.5 font-semibold">{f.label}</th>)}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            {rows.slice(0, 50).map((r) => (
+              <tr key={r.id}>
+                <td className="whitespace-nowrap px-2 py-1.5 text-slate-400">{new Date(r.createdAt).toLocaleString()}</td>
+                <td className="whitespace-nowrap px-2 py-1.5 text-slate-400">{hostOf(r.referrer)}</td>
+                {fields.map((f) => <td key={f.id} className="px-2 py-1.5 text-slate-700 dark:text-slate-300">{r.data?.[f.id] || "—"}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
