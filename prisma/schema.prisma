@@ -137,6 +137,7 @@ model User {
   passwordHash  String
   name          String
   phone         String?
+  customFields  String        @default("{}") // superadmin-defined custom field values (JSON)
   countryCode   String?       @default("+91")
   pan           String?
   aadhar        String?

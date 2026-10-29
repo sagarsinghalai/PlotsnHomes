@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Briefcase, FileText, Phone, User } from "lucide-react";
 
 const CATEGORIES = [
+  { slug: "user", title: "User / Account Fields", icon: User },
   { slug: "call", title: "Call Related Fields", icon: Phone },
   { slug: "site_visit", title: "Site Visit Related Fields", icon: Briefcase },
   { slug: "followup", title: "Followup Related Fields", icon: FileText },

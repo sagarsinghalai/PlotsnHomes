@@ -13,13 +13,16 @@ import { useAdminPermissions } from "@/components/admin/admin-permissions-contex
 import { validateUserDobAge } from "@/lib/user-validation";
 import { COUNTRY_DIAL_CODES, dialCodeLabel } from "@/lib/country-codes";
 
-export function CreateUserForm() {
+type CustomDef = { id: string; label: string; fieldType: string; options: string | null; required: boolean };
+
+export function CreateUserForm({ customDefs = [] }: { customDefs?: CustomDef[] }) {
   const router = useRouter();
   const { hasAddPermission, userRole } = useAdminPermissions();
   const canAdd = hasAddPermission("/admin/users");
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -75,6 +78,7 @@ export function CreateUserForm() {
         pan: form.pan.trim() || undefined,
         aadhar: form.aadhar.trim() || undefined,
         dob: form.dob || undefined,
+        customFields: JSON.stringify(customValues),
       }),
     });
     const data = await res.json();
@@ -186,6 +190,33 @@ export function CreateUserForm() {
               searchPlaceholder="Search role..."
             />
           </div>
+          {customDefs.length > 0 && (
+            <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Custom fields</p>
+              {customDefs.map((d) => {
+                const v = customValues[d.id] || "";
+                const set = (val: string) => setCustomValues((p) => ({ ...p, [d.id]: val }));
+                return (
+                  <div key={d.id}>
+                    <Label>{d.label}{d.required && <span className="ml-0.5 text-rose-500">*</span>}</Label>
+                    {d.fieldType === "textarea" ? (
+                      <textarea className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" rows={2} required={d.required} value={v} onChange={(e) => set(e.target.value)} />
+                    ) : d.fieldType === "select" ? (
+                      <select className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" required={d.required} value={v} onChange={(e) => set(e.target.value)}>
+                        <option value="">Select…</option>
+                        {(d.options || "").split(",").map((o) => o.trim()).filter(Boolean).map((o) => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    ) : d.fieldType === "checkbox" ? (
+                      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={v === "yes"} onChange={(e) => set(e.target.checked ? "yes" : "")} /> Yes</label>
+                    ) : (
+                      <Input type={d.fieldType === "number" ? "number" : d.fieldType === "email" ? "email" : d.fieldType === "phone" ? "tel" : d.fieldType === "date" ? "date" : "text"} required={d.required} value={v} onChange={(e) => set(e.target.value)} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <div className="flex gap-2 pt-2">
             <Button type="submit" disabled={busy} variant="gold">
               Create &amp; edit profile

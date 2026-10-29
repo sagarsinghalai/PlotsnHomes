@@ -35,6 +35,13 @@ export default async function AdminUsersPage({
       ? await userDirectoryScopeForUser(session.user.role, session.user.id, session.user.tenantId)
       : { tenantId: "__no_tenant__" };
 
+  // Superadmin-defined custom fields for users (shown in the Add User form).
+  const userFieldDefs = await prisma.customFieldDef.findMany({
+    where: { category: "user" },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, label: true, fieldType: true, options: true, required: true },
+  });
+
   const users = await prisma.user.findMany({
     where: userWhere,
     orderBy: { createdAt: "desc" },
@@ -54,7 +61,7 @@ export default async function AdminUsersPage({
         breadcrumb={[{ label: "Admin", href: "/admin" }, { label: "Users" }]}
         actions={
           <>
-            <CreateUserForm />
+            <CreateUserForm customDefs={userFieldDefs} />
             <Link
               href="/admin/kyc"
               className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"

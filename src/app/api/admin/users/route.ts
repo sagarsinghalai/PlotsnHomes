@@ -25,6 +25,7 @@ const createSchema = z.object({
   aadhar: z.string().optional().nullable().or(z.literal("")),
   dob: z.string().optional().nullable().or(z.literal("")),
   role: z.nativeEnum(Role).default(Role.BUYER),
+  customFields: z.string().optional(),
   // Super admins may place the new user in a specific tenant; everyone else
   // creates within their own tenant.
   organizationId: z.string().optional().nullable().or(z.literal("")),
@@ -90,6 +91,7 @@ export async function POST(req: Request) {
         dob: data.dob ? new Date(data.dob) : null,
         role: data.role,
         tenantId,
+        ...(data.customFields ? { customFields: data.customFields } : {}),
       },
     });
 
