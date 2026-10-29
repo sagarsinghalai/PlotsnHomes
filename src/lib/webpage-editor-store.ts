@@ -10,7 +10,14 @@ export type SectionType =
   | "testimonials"
   | "stats"
   | "gallery"
+  | "columns"
   | "rawHtml";
+
+/** One column inside a "columns" (row) section. Holds its own HTML/content. */
+export type GridColumn = {
+  id: string;
+  html?: string;
+};
 
 export type SectionBlock = {
   id: string;
@@ -51,6 +58,7 @@ export type SectionBlock = {
     statLabel?: string;
   }>;
   rawCode?: string;
+  grid?: GridColumn[];
   propertyQuery?: {
     type?: string;
     category?: string;

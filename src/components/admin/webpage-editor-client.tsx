@@ -69,7 +69,8 @@ const WIDGET_TYPES: { type: SectionType; label: string; icon: any; desc: string 
   { type: "testimonials", label: "Client Reviews", icon: Star, desc: "Customer review cards & star ratings" },
   { type: "stats", label: "Metrics Counter Bar", icon: Layers, desc: "4-column key metrics counter bar" },
   { type: "gallery", label: "Media Gallery", icon: ImageIcon, desc: "Photo container & video player embed" },
-  { type: "rawHtml", label: "Custom HTML / Map", icon: FileCode, desc: "Raw HTML code or Google Maps iframe" },
+  { type: "columns", label: "Columns (Row)", icon: LayoutGrid, desc: "A row split into 2–4 responsive columns" },
+  { type: "rawHtml", label: "Custom Code", icon: FileCode, desc: "HTML + CSS + JS, run in a safe sandbox" },
 ];
 
 export function WebpageEditorClient({
@@ -236,6 +237,13 @@ export function WebpageEditorClient({
               { id: `it-3`, title: "Feature Three", description: "Detail description goes here." },
             ]
           : undefined,
+      grid:
+        type === "columns"
+          ? [
+              { id: `col-${Date.now()}-1`, html: "<h3>Column 1</h3><p>Add your content here.</p>" },
+              { id: `col-${Date.now()}-2`, html: "<h3>Column 2</h3><p>Add your content here.</p>" },
+            ]
+          : undefined,
     };
 
     let updatedSections = [...activePage.sections];
@@ -257,6 +265,24 @@ export function WebpageEditorClient({
     const updatedSections = activePage.sections.map((s) => (s.id === sectionId ? { ...s, ...updates } : s));
     const updatedPage = { ...activePage, sections: updatedSections };
     setPages((prev) => prev.map((p) => (p.id === activePage.id ? updatedPage : p)));
+  }
+
+  // Set the number of columns in the selected "columns" section (2–4).
+  function setColumnCount(sectionId: string, n: number) {
+    const sec = activePage?.sections.find((s) => s.id === sectionId);
+    if (!sec) return;
+    let grid = [...(sec.grid || [])];
+    while (grid.length < n) grid.push({ id: `col-${Date.now()}-${grid.length}`, html: "" });
+    if (grid.length > n) grid = grid.slice(0, n);
+    updateSection(sectionId, { grid });
+  }
+
+  // Edit one column's HTML/content.
+  function updateColumnHtml(sectionId: string, colId: string, html: string) {
+    const sec = activePage?.sections.find((s) => s.id === sectionId);
+    if (!sec) return;
+    const grid = (sec.grid || []).map((c) => (c.id === colId ? { ...c, html } : c));
+    updateSection(sectionId, { grid });
   }
 
   function moveSection(index: number, direction: "up" | "down") {
@@ -749,6 +775,52 @@ export function WebpageEditorClient({
                       />
                       <p className="mt-1 text-[10px] leading-snug text-slate-500">
                         Runs in a <b>sandboxed iframe</b> — isolated from the rest of the site (can&apos;t read cookies or other pages), so it&apos;s safe to embed maps, forms or small scripts.
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {selectedSection.type === "columns" ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Number of columns
+                        </label>
+                        <div className="flex gap-2">
+                          {[2, 3, 4].map((n) => {
+                            const active = (selectedSection.grid?.length || 2) === n;
+                            return (
+                              <button
+                                key={n}
+                                type="button"
+                                onClick={() => setColumnCount(selectedSection.id, n)}
+                                className={`flex-1 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                                  active
+                                    ? "border-brand bg-brand/10 text-brand-hover"
+                                    : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-brand/50"
+                                }`}
+                              >
+                                {n} columns
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      {(selectedSection.grid || []).map((col, i) => (
+                        <div key={col.id}>
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Column {i + 1} content (HTML / CSS / JS)
+                          </label>
+                          <textarea
+                            rows={5}
+                            spellCheck={false}
+                            value={col.html || ""}
+                            onChange={(e) => updateColumnHtml(selectedSection.id, col.id, e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 font-mono text-[11px] leading-relaxed outline-none focus:border-brand"
+                          />
+                        </div>
+                      ))}
+                      <p className="text-[10px] leading-snug text-slate-500">
+                        Each column renders in its own sandboxed frame and the row <b>stacks vertically on mobile</b>.
                       </p>
                     </div>
                   ) : null}

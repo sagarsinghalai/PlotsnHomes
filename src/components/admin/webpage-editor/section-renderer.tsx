@@ -530,6 +530,48 @@ export function SectionRenderer({ section }: { section: SectionBlock }) {
       );
     }
 
+    case "columns": {
+      const cols = section.grid && section.grid.length ? section.grid : [{ id: "c1" }, { id: "c2" }];
+      const n = cols.length;
+      // Responsive: one column on phones, then fan out on larger screens.
+      const gridClass =
+        n >= 4
+          ? "sm:grid-cols-2 lg:grid-cols-4"
+          : n === 3
+          ? "sm:grid-cols-2 lg:grid-cols-3"
+          : n === 2
+          ? "sm:grid-cols-2"
+          : "";
+      return (
+        <section
+          className="p-6 my-4"
+          style={{ background: section.bgColor || undefined, paddingTop: section.paddingY, paddingBottom: section.paddingY }}
+        >
+          {section.title ? (
+            <h2 className="mb-4 text-2xl font-bold" style={{ color: section.textColor || undefined }}>
+              {section.title}
+            </h2>
+          ) : null}
+          <div className={`grid grid-cols-1 ${gridClass} gap-4`}>
+            {cols.map((col) => (
+              <div
+                key={col.id}
+                className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+              >
+                {col.html ? (
+                  <SandboxedEmbed code={col.html} />
+                ) : (
+                  <div className="m-2 rounded-xl border border-dashed border-slate-300 p-6 text-center text-xs text-slate-400 dark:border-slate-700">
+                    Empty column — add content in the inspector
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    }
+
     case "rawHtml": {
       return (
         <section className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 my-4 overflow-hidden">
