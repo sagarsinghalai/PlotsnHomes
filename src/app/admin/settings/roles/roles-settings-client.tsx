@@ -207,6 +207,7 @@ export function RolesSettingsClient({
   const [topSearch, setTopSearch] = useState("");
   const [settingSearch, setSettingSearch] = useState("");
   const [activeLeftTab, setActiveLeftTab] = useState("roles_permissions");
+  const [leftSearch, setLeftSearch] = useState("");
   const [restrictDataVisibility, setRestrictDataVisibility] = useState(false);
 
   // Status feedback
@@ -600,8 +601,19 @@ export function RolesSettingsClient({
             Sidebar Menu Modules
           </p>
 
+          <div className="relative pt-2 pb-1">
+            <Search className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={leftSearch}
+              onChange={(e) => setLeftSearch(e.target.value)}
+              placeholder="Search menu modules..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-10 pr-3 text-xs font-medium text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:bg-white"
+            />
+          </div>
+
           <div className="space-y-1 pt-1">
-            {LEFT_SIDEBAR_ITEMS.map((item) => {
+            {LEFT_SIDEBAR_ITEMS.filter((item) => item.label.toLowerCase().includes(leftSearch.toLowerCase())).map((item) => {
               const Icon = item.icon;
               const isActive = activeLeftTab === item.id;
               return (
