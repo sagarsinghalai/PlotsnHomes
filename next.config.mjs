@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+import path from "node:path";
+
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -9,6 +11,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   webpack: (config, { dev }) => {
+    config.resolve.alias["@"] = path.resolve("./src");
     if (dev) {
       config.cache = false;
     }
