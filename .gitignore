@@ -137,3 +137,6 @@ db-export/
 
 # local sqlite backups
 prisma/dev.db.bak-*
+
+# Local account/login export (not for version control)
+account-logins.csv
