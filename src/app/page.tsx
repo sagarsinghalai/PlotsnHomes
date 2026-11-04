@@ -381,7 +381,7 @@ export default async function HomePage() {
 
           <div className="mt-12 grid gap-12 lg:grid-cols-12 items-start">
             {/* Left Side: Gateways Grid & Security Badges */}
-            <div className="lg:col-span-7 space-y-8">
+            <div className="lg:col-span-7 space-y-8 min-w-0">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                 Supported Payment Gateways
               </p>
@@ -477,7 +477,7 @@ export default async function HomePage() {
                     )
                   }
                 ].map((gw) => (
-                  <div key={gw.name} className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all duration-200 min-h-[110px] cursor-pointer">
+                  <div key={gw.name} className="min-w-0 rounded-xl border border-slate-200 bg-slate-50/50 p-4 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all duration-200 min-h-[110px] cursor-pointer">
                     <div className="flex items-center h-8 mb-2">
                       {gw.logo}
                     </div>
@@ -506,7 +506,7 @@ export default async function HomePage() {
             </div>
 
             {/* Right Side: Deposits & Withdrawals Flow (Navbar styled dark box) */}
-            <div className="lg:col-span-5">
+            <div className="lg:col-span-5 min-w-0">
               <div className="rounded-2xl border border-slate-800 bg-slate-950 p-6 sm:p-8 shadow-2xl text-white">
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">
                   How Deposits & Withdrawals Work
@@ -643,7 +643,7 @@ export default async function HomePage() {
               A Typical Trade in Under 60 Seconds
             </p>
 
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-2">
+            <div className="mx-auto flex max-w-xs flex-col lg:max-w-none lg:flex-row lg:items-center lg:justify-between gap-0 lg:gap-2">
               {[
                 { icon: <Search className="h-4 w-4" />, label: "Browse", sub: "Find property" },
                 { icon: <Activity className="h-4 w-4" />, label: "Select", sub: "Choose shares" },
@@ -654,14 +654,23 @@ export default async function HomePage() {
                 { icon: <ArrowUpRight className="h-4 w-4" />, label: "Sell", sub: "Anytime" },
                 { icon: <Wallet className="h-4 w-4" />, label: "Profit", sub: "In wallet" }
               ].map((step, idx, arr) => (
-                <div key={idx} className="flex flex-col lg:flex-row items-center w-full lg:w-auto">
-                  <div className="flex flex-col items-center text-center">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 border border-brand/40 text-brand shadow-md">
-                      {step.icon}
+                <div key={idx} className="flex w-full items-start gap-4 lg:w-auto lg:flex-row lg:items-center lg:gap-0">
+                  {/* Node: circle + label. On mobile the circle carries a vertical connector to the next step. */}
+                  <div className="flex items-start gap-4 lg:block">
+                    <div className="flex flex-col items-center">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 border border-brand/40 text-brand shadow-md">
+                        {step.icon}
+                      </div>
+                      {idx < arr.length - 1 && (
+                        <div className="my-1 h-10 w-[1.5px] bg-gradient-to-b from-brand/50 to-slate-800 lg:hidden" />
+                      )}
                     </div>
-                    <p className="text-xs font-semibold text-white mt-2.5">{step.label}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">{step.sub}</p>
+                    <div className="pt-1 text-left lg:mt-2.5 lg:pt-0 lg:text-center">
+                      <p className="text-xs font-semibold text-white">{step.label}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{step.sub}</p>
+                    </div>
                   </div>
+                  {/* Desktop horizontal connector */}
                   {idx < arr.length - 1 && (
                     <div className="hidden lg:block h-[1px] w-12 sm:w-16 bg-gradient-to-r from-brand/50 to-slate-800 mx-4 shrink-0" />
                   )}
