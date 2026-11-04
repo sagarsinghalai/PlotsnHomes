@@ -140,3 +140,7 @@ prisma/dev.db.bak-*
 
 # Local account/login export (not for version control)
 account-logins.csv
+
+# Database backups (contain user data — never commit)
+backups/*.sql
+backups/*.sql.gz
