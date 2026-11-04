@@ -203,6 +203,7 @@ model User {
   commissionRate    Float?        @default(3.0)
   agentCommissions  AgentCommission[] @relation("AgentCommissions")
   crmActivities     UserActivity[]    @relation("ContactActivities")
+  listingDraft      ListingDraft?
 }
 
 // HubSpot-style CRM activity timeline attached to a User (contact):
@@ -1176,6 +1177,38 @@ model PasswordResetToken {
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// One-time passcodes for phone/email OTP login (seller onboarding & beyond).
+// Codes are stored hashed, single-use, short-lived and attempt-limited.
+model OtpCode {
+  id         String    @id @default(cuid())
+  identifier String    // normalized email (lowercased) OR phone digits
+  channel    String    // "email" | "whatsapp" | "sms"
+  codeHash   String
+  purpose    String    @default("login")
+  expiresAt  DateTime
+  usedAt     DateTime?
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  @@index([identifier, purpose])
+  @@index([expiresAt])
+}
+
+// Server-side draft of an in-progress listing so a seller can abandon the
+// multi-step wizard and resume (on any device) from the last step. One active
+// draft per user.
+model ListingDraft {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  step      Int      @default(0)
+  data      String   @default("{}") // JSON blob of the wizard form state
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
 }

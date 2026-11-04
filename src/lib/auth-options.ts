@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/roles";
 import { writeAudit } from "@/lib/audit";
 import { isOrgAccessAllowed } from "@/lib/subscription-access";
+import { resolveUserByIdentifier, verifyLoginOtp } from "@/lib/otp";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
@@ -38,6 +39,48 @@ export const authOptions: NextAuthOptions = {
           user.passwordHash
         );
         if (!valid) return null;
+
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { lastActiveAt: new Date(), active: true },
+          });
+        } catch (e) {
+          console.warn("[BrickVest] activity update skipped:", e);
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          image: user.image,
+          tenantId: user.tenantId ?? null,
+        };
+      },
+    }),
+    CredentialsProvider({
+      id: "otp",
+      name: "otp",
+      credentials: {
+        identifier: { label: "Email or phone", type: "text" },
+        code: { label: "Code", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.identifier || !credentials?.code) return null;
+
+        const resolved = await resolveUserByIdentifier(credentials.identifier);
+        if (!resolved) return null;
+
+        const verify = await verifyLoginOtp({ email: resolved.email, code: credentials.code });
+        if (!verify.ok) return null;
+
+        const user = await prisma.user.findUnique({
+          where: { id: resolved.id },
+          include: { organizationRel: { select: { status: true, subscriptionEndsAt: true } } },
+        });
+        if (!user || user.active === false) return null;
+        if (user.tenantId && !isOrgAccessAllowed(user.organizationRel)) return null;
 
         try {
           await prisma.user.update({
