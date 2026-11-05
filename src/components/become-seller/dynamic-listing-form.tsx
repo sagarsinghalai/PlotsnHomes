@@ -44,7 +44,7 @@ const furnishIcon = (v: string) => (/^fully/.test(v) ? Sofa : /^semi/.test(v) ? 
 
 type Values = Record<string, any>;
 
-export function DynamicListingForm() {
+export function DynamicListingForm({ doneHref = "/dashboard" }: { doneHref?: string } = {}) {
   const router = useRouter();
   const assetClasses = getAssetClasses();
   const [assetClass, setAssetClass] = useState(assetClasses[0]?.id || "RES");
@@ -239,7 +239,7 @@ export function DynamicListingForm() {
         <h2 className="mt-4 text-2xl font-extrabold text-white">Listing submitted!</h2>
         <p className="mt-2 text-sm text-slate-400 max-w-md mx-auto">Our team will verify and publish it shortly.</p>
         <div className="mt-6 flex justify-center gap-3">
-          <button onClick={() => router.push("/dashboard")} className="rounded-xl bg-brand hover:bg-brand-hover px-6 py-3 text-sm font-bold text-white">Go to dashboard</button>
+          <button onClick={() => router.push(doneHref)} className="rounded-xl bg-brand hover:bg-brand-hover px-6 py-3 text-sm font-bold text-white">Done</button>
           <button onClick={() => { setDone(false); setCategoryId(null); setValues({ listing_intent: "sale", country_code: "IN" }); }} className="rounded-xl border border-slate-700 px-6 py-3 text-sm font-bold text-slate-300 hover:bg-slate-800">List another</button>
         </div>
       </div>

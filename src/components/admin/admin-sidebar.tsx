@@ -47,6 +47,8 @@ import {
   Layout,
   Bot,
   LogOut,
+  FileSpreadsheet,
+  FileUp,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -85,6 +87,8 @@ const DEFAULT_NAV: NavGroup[] = [
     items: [
       { href: "/admin/projects", label: "Projects", icon: FolderKanban },
       { href: "/admin/properties", label: "Properties", icon: Building2 },
+      { href: "/admin/properties/new-detailed", label: "Detailed Listing", icon: FileSpreadsheet },
+      { href: "/admin/properties/import", label: "Import Listing", icon: FileUp },
       { href: "/admin/price-history", label: "Price History", icon: TrendingUp },
       { href: "/admin/categories", label: "Categories", icon: FolderTree },
     ],
