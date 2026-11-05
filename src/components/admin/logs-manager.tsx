@@ -58,7 +58,7 @@ export function LogsManager({
   );
 
   const [logs, setLogs] = useState<ActivityLogItem[]>(() => scopeLogs(getAllActivityLogs()));
-  const [activeTab, setActiveTab] = useState<LogCategory | "all">("all");
+  const [activeTab, setActiveTab] = useState<LogCategory | "all" | "approvals">("all");
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -89,7 +89,11 @@ export function LogsManager({
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
-      if (activeTab !== "all" && log.category !== activeTab) return false;
+      if (activeTab === "approvals") {
+        if (!/^Listing (Approved|Rejected)/.test(log.action)) return false;
+      } else if (activeTab !== "all" && log.category !== activeTab) {
+        return false;
+      }
       if (roleFilter !== "ALL" && log.actorRole !== roleFilter) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -113,6 +117,7 @@ export function LogsManager({
   const sellerCount = useMemo(() => logs.filter((l) => l.category === "seller").length, [logs]);
   const customerCount = useMemo(() => logs.filter((l) => l.category === "customer").length, [logs]);
   const editCount = useMemo(() => logs.filter((l) => l.category === "edit").length, [logs]);
+  const approvalsCount = useMemo(() => logs.filter((l) => /^Listing (Approved|Rejected)/.test(l.action)).length, [logs]);
 
   const handleAddLog = (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,7 +156,24 @@ export function LogsManager({
   return (
     <div className="space-y-6 font-sans text-slate-900 dark:text-white">
       {/* Overview Cards Grid for ALL User Roles */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
+        {/* Approvals & Rejections Card */}
+        <div
+          onClick={() => setActiveTab("approvals")}
+          className={`group cursor-pointer p-5 rounded-2xl border transition-all duration-200 relative overflow-hidden shadow-2xs hover:shadow-md ${
+            activeTab === "approvals"
+              ? "bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-400 dark:border-emerald-700 ring-2 ring-emerald-400/20"
+              : "bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 hover:border-emerald-400 dark:hover:border-emerald-700 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <span className={`text-[11px] font-bold uppercase tracking-wider truncate ${activeTab === "approvals" ? "text-emerald-700 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400 group-hover:text-emerald-700"}`}>APPROVALS</span>
+            <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${activeTab === "approvals" ? "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"}`}>{approvalsCount} Logs</span>
+          </div>
+          <div className="text-2xl font-black font-mono text-slate-900 dark:text-white my-1">{approvalsCount}</div>
+          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-normal line-clamp-1 mt-0.5">Listing approvals &amp; rejections</p>
+        </div>
+
         {/* Admin Card */}
         <div
           onClick={() => setActiveTab("admin")}

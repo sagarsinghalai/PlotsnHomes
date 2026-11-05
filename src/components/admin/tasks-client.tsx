@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   Check, X, Loader2, Building2, ShieldCheck, Landmark, CalendarCheck, FileText, ArrowRight, RefreshCw,
 } from "lucide-react";
+import { logActivity } from "@/lib/activity-logs";
 
 type Item = { type: string; id: string; title: string; subtitle: string; href: string; createdAt: string };
 type Summary = { listings: number; kyc: number; loans: number; showings: number; registrations: number; total: number };
@@ -18,6 +20,7 @@ const TYPE_META: Record<string, { label: string; icon: any }> = {
 };
 
 export function TasksClient() {
+  const { data: session } = useSession();
   const [items, setItems] = useState<Item[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,10 +37,20 @@ export function TasksClient() {
 
   async function moderateListing(id: string, status: "ACTIVE" | "REJECTED") {
     setBusy(id);
+    const item = items.find((i) => i.type === "listing" && i.id === id);
     const res = await fetch(`/api/admin/properties/${id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }),
     });
     if (res.ok) {
+      logActivity({
+        category: "edit",
+        action: status === "ACTIVE" ? "Listing Approved" : "Listing Rejected",
+        actorName: session?.user?.name || "Admin",
+        actorRole: (session?.user as any)?.role || "SUPERADMIN",
+        actorEmail: session?.user?.email || "",
+        target: item?.title || "Listing",
+        details: `${status === "ACTIVE" ? "Approved and published" : "Rejected"} seller listing from Notifications & Tasks.`,
+      });
       setItems((x) => x.filter((i) => !(i.type === "listing" && i.id === id)));
       setSummary((s) => (s ? { ...s, listings: Math.max(0, s.listings - 1), total: Math.max(0, s.total - 1) } : s));
     }
