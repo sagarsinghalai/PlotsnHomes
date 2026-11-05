@@ -60,7 +60,7 @@ export async function resolveUserByIdentifier(identifier: string) {
 export async function createLoginOtp(params: {
   user: { email: string; name: string; phone: string | null };
   deliver: OtpDeliver;
-}): Promise<{ ok: boolean; channel: string; devCode?: string; error?: string }> {
+}): Promise<{ ok: boolean; channel: string; realSent?: boolean; devCode?: string; error?: string }> {
   const { user, deliver } = params;
   const identifier = user.email.toLowerCase();
   const code = generateCode();
@@ -70,15 +70,20 @@ export async function createLoginOtp(params: {
 
   let channel: "email" | "whatsapp" | "sms" = "email";
   let sendError: string | undefined;
+  // Was the code actually delivered through a real provider (not dev simulation)?
+  // When true we never echo the code on screen.
+  let realSent = false;
 
   if (deliver === "email") {
     channel = "email";
     try {
-      await sendEmail({
+      const res = await sendEmail({
         to: user.email,
         subject: "Your PlotsnHomes login code",
         html: otpEmailHtml(user.name, code),
       });
+      realSent = res.delivered && (res.provider === "smtp" || res.provider === "resend");
+      if (!res.delivered && res.error) sendError = res.error;
     } catch (e) {
       sendError = (e as Error)?.message;
       console.warn("[otp] email send failed:", sendError);
@@ -96,9 +101,11 @@ export async function createLoginOtp(params: {
       if (canWhatsApp) {
         channel = "whatsapp";
         await sendWhatsAppApi(normalizePhone(user.phone), body, config);
+        realSent = true;
       } else if (canSms) {
         channel = "sms";
         await sendSms(user.phone, body, config);
+        realSent = true;
       } else {
         // No provider configured — rely on the dev echo below.
         channel = "sms";
@@ -121,7 +128,8 @@ export async function createLoginOtp(params: {
     },
   });
 
-  return { ok: true, channel, devCode: devEcho(code) };
+  // Only echo the code on screen (dev convenience) when it was NOT really sent.
+  return { ok: true, channel, realSent, devCode: realSent ? undefined : devEcho(code) };
 }
 
 /** Verify a login OTP keyed to the user's canonical email. Single-use, expiring,

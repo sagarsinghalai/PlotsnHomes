@@ -27,6 +27,7 @@ export function SellerFlow() {
   const [kind, setKind] = useState<SellerKind>("INDIVIDUAL");
   const [loginOpen, setLoginOpen] = useState(false);
   const [prefillIdentifier, setPrefillIdentifier] = useState("");
+  const [loginReason, setLoginReason] = useState("");
 
   // Once authenticated (fresh signup, OTP/password login, or returning user) the
   // flow jumps straight into the listing wizard.
@@ -93,6 +94,7 @@ export function SellerFlow() {
             onContinue={() => setPhase("signup")}
             onLogin={() => {
               setPrefillIdentifier("");
+              setLoginReason("");
               setLoginOpen(true);
             }}
           />
@@ -102,12 +104,14 @@ export function SellerFlow() {
           <SignupForm
             kind={kind}
             onBack={() => setPhase("choose-type")}
-            onExists={(identifier) => {
+            onExists={(identifier, reason) => {
               setPrefillIdentifier(identifier);
+              setLoginReason(reason);
               setLoginOpen(true);
             }}
             onLogin={() => {
               setPrefillIdentifier("");
+              setLoginReason("");
               setLoginOpen(true);
             }}
           />
@@ -120,6 +124,7 @@ export function SellerFlow() {
         open={loginOpen}
         onClose={() => setLoginOpen(false)}
         prefillIdentifier={prefillIdentifier}
+        reason={loginReason}
       />
     </div>
   );

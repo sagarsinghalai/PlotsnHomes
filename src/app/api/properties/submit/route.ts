@@ -117,7 +117,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, property });
   } catch (e) {
     if (e instanceof z.ZodError) {
-      return NextResponse.json({ error: e.issues[0]?.message }, { status: 400 });
+      const issue = e.issues[0];
+      const field = issue?.path?.length ? issue.path.join(".") : "input";
+      return NextResponse.json({ error: `Check the "${field}" field: ${issue?.message}` }, { status: 400 });
     }
     console.error(e);
     return NextResponse.json({ error: "Submit failed" }, { status: 500 });

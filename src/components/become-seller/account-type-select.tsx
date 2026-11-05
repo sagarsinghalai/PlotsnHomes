@@ -37,8 +37,8 @@ export function AccountTypeSelect({
 }) {
   return (
     <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 sm:p-10 shadow-2xl">
-      <h2 className="text-xl sm:text-2xl font-extrabold text-white">Who are you?</h2>
-      <p className="text-sm text-slate-400 mt-1">Choose the account type that fits you — you can list right after.</p>
+      <h2 className="text-xl sm:text-2xl font-extrabold text-white">Create your seller account to start listing</h2>
+      <p className="text-sm text-slate-400 mt-1">First, tell us who you are. You&apos;ll create an account (or log in) next — then you can add your property.</p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         {TYPES.map((t) => {

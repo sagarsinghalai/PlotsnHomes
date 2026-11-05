@@ -10,10 +10,12 @@ export function UserExistsModal({
   open,
   onClose,
   prefillIdentifier,
+  reason,
 }: {
   open: boolean;
   onClose: () => void;
   prefillIdentifier: string;
+  reason?: string;
 }) {
   const [tab, setTab] = useState<Tab>("password");
 
@@ -37,9 +39,13 @@ export function UserExistsModal({
 
   useEffect(() => {
     if (open) {
-      setEmail(prefillIdentifier.includes("@") ? prefillIdentifier : "");
+      const isEmail = prefillIdentifier.includes("@");
+      setEmail(isEmail ? prefillIdentifier : "");
       setIdentifier(prefillIdentifier);
-      setTab("password");
+      // If the match was a phone number, password login (which needs the email)
+      // won't help — default to OTP delivered to that phone.
+      setTab(isEmail ? "password" : "otp");
+      setDeliver(isEmail ? "email" : "phone");
       setError("");
       setForgotMsg(null);
       setForgotLink(null);
@@ -117,11 +123,7 @@ export function UserExistsModal({
         return;
       }
       setCodeSent(true);
-      setSentNote(
-        deliver === "email"
-          ? "We've emailed you a 6-digit code (valid 10 min)."
-          : "We've sent a 6-digit code to your phone (valid 10 min)."
-      );
+      setSentNote(data.message || "A 6-digit code has been sent. It's valid for 10 minutes.");
       if (data.devCode) setDevCode(data.devCode);
     } catch {
       setError("Could not send code.");
@@ -162,7 +164,7 @@ export function UserExistsModal({
           <ShieldCheck className="h-5 w-5 text-brand" />
           <h3 className="text-lg font-extrabold">User already exists</h3>
         </div>
-        <p className="mt-1 text-sm text-slate-500">This email or phone is already registered. Log in to continue.</p>
+        <p className="mt-1 text-sm text-slate-500">{reason || "This email or phone is already registered. Log in to continue."}</p>
 
         {/* Tabs */}
         <div className="mt-5 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">

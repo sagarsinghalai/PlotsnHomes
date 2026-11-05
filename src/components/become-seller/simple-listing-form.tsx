@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Building2, Building, Home, Store, Square, Tent, Trees, Landmark,
+  Building2, Building, Home, Store, LandPlot, Tent, Trees,
+  Crown, BedDouble, Layers, Castle, Fence, Tractor, Map, Briefcase, ShoppingBag,
   CheckCircle2, Loader2, Upload, X, ArrowRight, Sofa, Armchair, Bed, Download,
 } from "lucide-react";
 import {
@@ -27,15 +28,32 @@ const FURNISHING = [
   { v: "fully_furnished", l: "Fully furnished", Icon: Sofa },
 ];
 
+// Distinct icon per property type so the boxes are easy to tell apart.
+const TYPE_ICONS: Record<string, any> = {
+  "apartment-flat": Building2,
+  "penthouse": Crown,
+  "studio-apartment": BedDouble,
+  "builder-floor": Layers,
+  "independent-house": Home,
+  "villa": Castle,
+  "row-house-townhouse": Fence,
+  "farmhouse": Tractor,
+  "residential-plot": LandPlot,
+  "commercial-plot": Map,
+  "agricultural-land": Trees,
+  "farm-land": Tent,
+  "office-space": Briefcase,
+  "retail-shop-showroom": Store,
+  "sco": ShoppingBag,
+  "commercial-building": Building,
+};
 function catIcon(id: string, slug: string) {
+  if (TYPE_ICONS[slug]) return TYPE_ICONS[slug];
   const s = (slug || "").toLowerCase();
-  if (/penthouse/.test(s)) return Building;
-  if (/apartment|flat|studio|builder/.test(s)) return Building2;
-  if (/villa|house|row|town/.test(s)) return Home;
+  if (/plot|land/.test(s)) return LandPlot;
   if (/farm/.test(s)) return Tent;
   if (/agri/.test(s)) return Trees;
-  if (/plot|land/.test(s)) return Square;
-  if (/office|sco|building/.test(s)) return Landmark;
+  if (/office|sco|building/.test(s)) return Briefcase;
   if (/retail|shop|showroom/.test(s)) return Store;
   return Building2;
 }
@@ -70,6 +88,8 @@ export function SimpleListingForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [resume, setResume] = useState<null | { assetClass: string; categoryId: string; form: Form }>(null);
   const [hydrated, setHydrated] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -119,16 +139,30 @@ export function SimpleListingForm() {
   async function uploadPhotos(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files) return;
+    setUploadError("");
+    setUploading(true);
     const current = [...form.photos];
     const added: string[] = [];
+    const failures: string[] = [];
     for (const file of Array.from(files)) {
-      const fd = new FormData();
-      fd.append("file", file); fd.append("kind", "image"); fd.append("currentCount", String(current.length + added.length));
-      const r = await fetch("/api/upload", { method: "POST", body: fd });
-      const d = await r.json();
-      if (r.ok && d.url) added.push(d.url);
+      try {
+        const fd = new FormData();
+        fd.append("file", file); fd.append("kind", "image"); fd.append("currentCount", String(current.length + added.length));
+        const r = await fetch("/api/upload", { method: "POST", body: fd });
+        const d = await r.json();
+        if (r.ok && d.url) added.push(d.url);
+        else failures.push(`${file.name}: ${d.error || "upload failed"}`);
+      } catch {
+        failures.push(`${file.name}: upload failed`);
+      }
     }
-    set("photos", [...current, ...added]);
+    if (added.length) set("photos", [...current, ...added]);
+    if (failures.length) {
+      setUploadError(
+        `Couldn't add ${failures.length} image(s). ${failures[0]}. Use JPG/PNG/WebP under 10 MB. (iPhone HEIC photos aren't supported — share as "Most Compatible" or JPG.)`
+      );
+    }
+    setUploading(false);
     e.target.value = "";
   }
 
@@ -150,8 +184,12 @@ export function SimpleListingForm() {
 
     const typeName = category?.name || "Property";
     const title = autoTitle() || typeName;
-    const description = form.description.trim() ||
-      `${typeName} for ${form.intent === "rent" ? "rent" : "sale"} in ${form.locality.trim()}, ${form.city.trim()}.`;
+    // Guarantee a valid description (>= 10 chars) — a short typed note falls back
+    // to an auto-generated one so the server never rejects it as "Invalid input".
+    const typedDesc = form.description.trim();
+    const description = typedDesc.length >= 10
+      ? typedDesc
+      : `${typeName} for ${form.intent === "rent" ? "rent" : "sale"} in ${form.locality.trim()}, ${form.city.trim()}.`;
     const priceNum = Number(form.price);
 
     const attributes: Record<string, any> = {
@@ -352,9 +390,11 @@ export function SimpleListingForm() {
           {/* Photos */}
           <Field label="Photos">
             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-slate-700 bg-slate-950 py-4 text-slate-400 hover:border-amber-400/60">
-              <Upload className="h-4 w-4" /> Upload photos
-              <input type="file" accept="image/*" multiple className="hidden" onChange={uploadPhotos} />
+              {uploading ? <><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</> : <><Upload className="h-4 w-4" /> Upload photos</>}
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="hidden" onChange={uploadPhotos} />
             </label>
+            <p className="mt-1 text-[10px] text-slate-500">JPG, PNG or WebP, up to 10 MB each.</p>
+            {uploadError && <p className="mt-1 text-[10px] font-semibold text-rose-400">{uploadError}</p>}
             {form.photos.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {form.photos.map((u, i) => (

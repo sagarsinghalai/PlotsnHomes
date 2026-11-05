@@ -23,7 +23,7 @@ export function SignupForm({
 }: {
   kind: SellerKind;
   onBack: () => void;
-  onExists: (identifier: string) => void;
+  onExists: (identifier: string, reason: string) => void;
   onLogin: () => void;
 }) {
   const [name, setName] = useState("");
@@ -75,8 +75,11 @@ export function SignupForm({
       const data = await res.json();
 
       if (res.status === 409 && data.exists) {
-        // Already registered → hand off to the login popup.
-        onExists(email.trim().toLowerCase());
+        // Already registered → hand off to the login popup. If the PHONE is what
+        // collided, prefill the phone so OTP login reaches the right account
+        // (the typed email may be new and wouldn't match any account).
+        const id = data.field === "phone" ? `${countryCode}${phoneDigits}` : email.trim().toLowerCase();
+        onExists(id, data.message || "An account already exists. Please log in.");
         setLoading(false);
         return;
       }

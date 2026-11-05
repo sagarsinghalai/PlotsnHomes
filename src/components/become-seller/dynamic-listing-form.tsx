@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2, Building, Home, Store, Warehouse, Car, Trees, Factory, Hotel,
-  Square, MapPin, Landmark, Mountain, Package, Tent, Castle, CheckCircle2,
+  LandPlot, MapPin, Landmark, Mountain, Package, Tent, Castle, CheckCircle2,
   Loader2, Upload, X, ArrowRight, Sofa, Armchair, Bed,
 } from "lucide-react";
 import { COUNTRIES } from "@/lib/locale-defaults";
@@ -27,7 +27,7 @@ function catIcon(slugOrName: string) {
   if (/villa|house|bungalow|mansion|cottage|row|town/.test(s)) return Home;
   if (/farm/.test(s)) return Tent;
   if (/agri|orchard|dairy|poultry|aqua/.test(s)) return Trees;
-  if (/plot|land|redevelop|leasehold|mixed/.test(s)) return Square;
+  if (/plot|land|redevelop|leasehold|mixed/.test(s)) return LandPlot;
   if (/office|sco|cowork|commercial-building/.test(s)) return Landmark;
   if (/retail|shop|showroom|mall|restaurant|cafe|food/.test(s)) return Store;
   if (/warehouse|godown|logistics|cold/.test(s)) return Warehouse;
