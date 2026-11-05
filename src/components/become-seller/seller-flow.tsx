@@ -6,7 +6,10 @@ import { Home, Loader2, ShieldCheck, TrendingUp, FileCheck, Building } from "luc
 import { AccountTypeSelect } from "./account-type-select";
 import { SignupForm } from "./signup-form";
 import { UserExistsModal } from "./user-exists-modal";
-import { ListingWizard } from "./listing-wizard";
+// Sellers get the simple form. The full spec-driven form (dynamic-listing-form)
+// is kept for the admin back-end (Phase 2); the original static wizard lives in
+// ./listing-wizard.
+import { SimpleListingForm } from "./simple-listing-form";
 
 export type SellerKind = "INDIVIDUAL" | "DEVELOPER" | "AGENT";
 type Phase = "loading" | "choose-type" | "signup" | "wizard";
@@ -110,7 +113,7 @@ export function SellerFlow() {
           />
         )}
 
-        {phase === "wizard" && <ListingWizard />}
+        {phase === "wizard" && <SimpleListingForm />}
       </section>
 
       <UserExistsModal

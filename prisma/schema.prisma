@@ -325,6 +325,8 @@ model Property {
   brokerageRate      Float          @default(3.0)
   bhk                String?
   customFields       String         @default("[]")
+  // Extensible spec-driven listing attributes (dynamic form field_key -> value), JSON.
+  attributesJson     String         @default("{}")
   developerId        String?
   developer          Developer?     @relation(fields: [developerId], references: [id])
   projectId          String?

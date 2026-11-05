@@ -8,6 +8,7 @@ import { getPrimaryTenantId } from "@/lib/tenant";
 import { MEDIA_LIMITS } from "@/lib/media-limits";
 import { staffRolesFilter } from "@/lib/roles";
 import { slugify } from "@/lib/utils";
+import { ensureListingCategory } from "@/lib/listing-taxonomy-seed";
 
 const schema = z.object({
   title: z.string().min(3),
@@ -35,6 +36,11 @@ const schema = z.object({
   liftType: z.string().nullable().optional(),
   flatsPerFloor: z.number().int().nullable().optional(),
   availabilityStatus: z.string().default("Available"),
+  // Dynamic/simple seller form extras
+  categorySlug: z.string().nullable().optional(),
+  garages: z.number().int().min(0).optional(),
+  furnishingStatus: z.string().nullable().optional(),
+  attributes: z.any().optional(),
 });
 
 export async function POST(req: Request) {
@@ -46,8 +52,17 @@ export async function POST(req: Request) {
   try {
     const data = schema.parse(await req.json());
     const rates = await getPlatformRates();
-    const symbol = `BV-${data.state.toUpperCase()}-${Date.now().toString().slice(-4)}`;
+    const symbol = `BV-${(data.state || "NA").toUpperCase()}-${Date.now().toString().slice(-4)}`;
     const slug = slugify(`${symbol}-${data.title}`);
+
+    // Match the chosen property type to a DB PropertyCategory (seeds it if missing),
+    // so every selection resolves to a real category record.
+    let categoryName = data.category;
+    const specCategoryId = (data.attributes as any)?.asset_category_id as string | undefined;
+    if (specCategoryId) {
+      const matched = await ensureListingCategory(specCategoryId);
+      if (matched) categoryName = matched;
+    }
 
     const agent = await prisma.user.findFirst({
       where: { role: staffRolesFilter(), active: true },
@@ -69,7 +84,7 @@ export async function POST(req: Request) {
         state: data.state,
         address: data.address,
         zip: data.zip,
-        category: data.category,
+        category: categoryName,
         listingType: data.listingType,
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
@@ -83,9 +98,12 @@ export async function POST(req: Request) {
         hasPujaRoom: data.hasPujaRoom,
         hasStudyRoom: data.hasStudyRoom,
         balconies: data.balconies,
+        garages: data.garages ?? 0,
+        furnishingStatus: data.furnishingStatus ?? null,
         liftType: data.liftType,
         flatsPerFloor: data.flatsPerFloor,
         availabilityStatus: data.availabilityStatus,
+        attributesJson: JSON.stringify(data.attributes ?? {}),
         status: "PENDING",
         agentId: agent.id,
         submittedById: session.user.id,
