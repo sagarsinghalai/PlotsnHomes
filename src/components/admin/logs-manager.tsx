@@ -27,6 +27,7 @@ import {
   logActivity,
   ActivityLogItem,
   LogCategory,
+  INITIAL_ACTIVITY_LOGS,
 } from "@/lib/activity-logs";
 import { useAdminPermissions } from "@/components/admin/admin-permissions-context";
 import { useHorizontalScroll } from "@/hooks/use-horizontal-scroll";
@@ -57,7 +58,10 @@ export function LogsManager({
     [allowedActorEmails, viewerEmail]
   );
 
-  const [logs, setLogs] = useState<ActivityLogItem[]>(() => scopeLogs(getAllActivityLogs()));
+  // Initialise from the server-consistent seed so the first render matches SSR;
+  // the real localStorage logs load in the effect below (avoids a hydration
+  // mismatch when localStorage has entries the server seed doesn't).
+  const [logs, setLogs] = useState<ActivityLogItem[]>(() => scopeLogs(INITIAL_ACTIVITY_LOGS));
   const [activeTab, setActiveTab] = useState<LogCategory | "all" | "approvals">("all");
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
