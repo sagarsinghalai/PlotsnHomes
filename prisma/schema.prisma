@@ -27,6 +27,7 @@ enum PropertyStatus {
   DRAFT
   ACTIVE
   PENDING
+  REJECTED
   SOLD
   RENTED
 }

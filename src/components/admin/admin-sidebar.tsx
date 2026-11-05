@@ -49,6 +49,7 @@ import {
   LogOut,
   FileSpreadsheet,
   FileUp,
+  Bell,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -66,6 +67,7 @@ const DEFAULT_NAV: NavGroup[] = [
     title: "Dashboard",
     items: [
       { href: "/admin", label: "Overview", icon: LayoutDashboard },
+      { href: "/admin/tasks", label: "Notifications & Tasks", icon: Bell },
       { href: "/admin/logs", label: "Logs", icon: History },
     ],
   },
@@ -87,6 +89,7 @@ const DEFAULT_NAV: NavGroup[] = [
     items: [
       { href: "/admin/projects", label: "Projects", icon: FolderKanban },
       { href: "/admin/properties", label: "Properties", icon: Building2 },
+      { href: "/admin/properties/pending", label: "Pending Listings", icon: ClipboardList },
       { href: "/admin/properties/new-detailed", label: "Detailed Listing", icon: FileSpreadsheet },
       { href: "/admin/properties/import", label: "Import Listing", icon: FileUp },
       { href: "/admin/price-history", label: "Price History", icon: TrendingUp },
@@ -285,6 +288,31 @@ export function AdminSidebar({
     localStorage.removeItem(STORAGE_KEY);
     setNavState(DEFAULT_NAV);
   };
+
+  // Live pending-task counts for the sidebar badges (staff only; 403s ignored).
+  const [pendingBadges, setPendingBadges] = useState<Record<string, number>>({});
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      fetch("/api/admin/pending-tasks?summary=1")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (!alive || !d?.summary) return;
+          const s = d.summary;
+          setPendingBadges({
+            "/admin/properties/pending": s.listings,
+            "/admin/kyc": s.kyc,
+            "/admin/loans": s.loans,
+            "/admin/showings": s.showings,
+            "/admin/form-registrations": s.registrations,
+            "/admin/tasks": s.total,
+          });
+        })
+        .catch(() => {});
+    load();
+    const t = setInterval(load, 60000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
 
   const hasItemPermission = (href: string) => {
     if (userRole === "SUPERADMIN") return true;
@@ -565,6 +593,11 @@ export function AdminSidebar({
                           <GripVertical className="h-3.5 w-3.5 text-slate-600 group-hover:text-slate-400 shrink-0 transition" />
                           <Icon className="h-4 w-4 shrink-0" />
                           <span className="truncate">{item.label}</span>
+                          {(pendingBadges[item.href] ?? 0) > 0 && (
+                            <span className="ml-auto shrink-0 rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                              {pendingBadges[item.href]}
+                            </span>
+                          )}
                         </Link>
                       </div>
                     );
