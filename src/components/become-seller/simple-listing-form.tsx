@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2, Building, Home, Store, Square, Tent, Trees, Landmark,
-  CheckCircle2, Loader2, Upload, X, ArrowRight, Sofa, Armchair, Bed,
+  CheckCircle2, Loader2, Upload, X, ArrowRight, Sofa, Armchair, Bed, Download,
 } from "lucide-react";
 import {
   SELLER_ASSET_CLASSES, getSellerSubtypes, getCategory, kindOf, BHK_OPTIONS,
@@ -226,6 +226,12 @@ export function SimpleListingForm() {
         <div className="mt-6 flex justify-center gap-3">
           <button onClick={() => router.push("/dashboard")} className="rounded-xl bg-brand hover:bg-brand-hover px-6 py-3 text-sm font-bold text-white">Go to dashboard</button>
           <button onClick={() => { setDone(false); setCategoryId(null); setForm(EMPTY); }} className="rounded-xl border border-slate-700 px-6 py-3 text-sm font-bold text-slate-300 hover:bg-slate-800">List another</button>
+        </div>
+        <div className="mt-6 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-xs text-slate-400">
+          Want to add complete details? Download the full listing template, fill it in, and send it to our team — they can import every detail after your listing is approved.
+          <a href="/api/listing-template" className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-2 font-bold text-amber-300 hover:bg-amber-500/20">
+            <Download className="h-4 w-4" /> Download detailed Excel template
+          </a>
         </div>
       </div>
     );
