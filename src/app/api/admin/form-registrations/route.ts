@@ -115,16 +115,16 @@ export async function POST(req: Request) {
         // MessageLog creation is non-critical
       }
 
-      // Update registration record. We persist the generated password so the
-      // admin can retrieve it later via "View Credentials" (admin-only screen);
-      // re-approving resets it to a fresh value.
+      // Update registration record. The one-time password is returned below and
+      // emailed to the user; it is NEVER persisted in plaintext. To retrieve
+      // access later, the admin uses "Reset & Reveal", which generates a fresh
+      // password (this same code path) rather than reading a stored one.
       allRegs[idx] = {
         ...reg,
         status: "APPROVED",
         approvedAt: now,
         updatedAt: now,
         generatedUserId: userId,
-        generatedPassword: password,
       };
 
       await saveFormRegistrations(allRegs);

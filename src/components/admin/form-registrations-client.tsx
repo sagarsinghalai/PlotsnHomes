@@ -8,11 +8,11 @@ import {
   Crown,
   Eye,
   Home,
+  KeyRound,
   Loader2,
   Search,
   ShieldCheck,
   Sparkles,
-  UserCheck,
   XCircle,
   X,
 } from "lucide-react";
@@ -93,16 +93,15 @@ export function FormRegistrationsClient({
     }
   };
 
-  // "View Credentials" for an already-approved registration. If we stored the
-  // generated password, show it directly. If not (older approvals created before
-  // we persisted it), re-issue a fresh password — the endpoint resets the user's
-  // password, emails it, and persists it — then display it, clearly labeled.
-  const handleViewCredentials = async (reg: FormRegistrationRecord) => {
-    const role = reg.type === "WHITE_LABEL_PARTNER" ? "WHITE_LABEL_ADMIN" : "SELLER";
-    if (reg.generatedPassword) {
-      setCredsModal({ email: reg.email, password: reg.generatedPassword, role, name: reg.name });
-      return;
-    }
+  // Reset & Reveal. We never store login passwords in plaintext, so there is no
+  // existing password to "look up". Instead this generates a fresh password,
+  // resets the user's account to it, emails it, and shows it once. It replaces
+  // any current password, so we confirm first.
+  const handleResetReveal = async (reg: FormRegistrationRecord) => {
+    const ok = window.confirm(
+      `Reset the password for ${reg.name}?\n\nThis generates a NEW password and emails it to ${reg.email}. Their current password (if any) will stop working.`
+    );
+    if (!ok) return;
     setProcessing(reg.id);
     try {
       const res = await fetch("/api/admin/form-registrations", {
@@ -124,10 +123,10 @@ export function FormRegistrationsClient({
           emailed: true,
         });
       } else {
-        alert(data.error || "Could not retrieve credentials.");
+        alert(data.error || "Could not reset credentials.");
       }
     } catch {
-      alert("Error retrieving credentials.");
+      alert("Error resetting credentials.");
     } finally {
       setProcessing(null);
     }
@@ -415,16 +414,17 @@ export function FormRegistrationsClient({
 
                         {reg.status === "APPROVED" && (
                           <button
-                            onClick={() => handleViewCredentials(reg)}
+                            onClick={() => handleResetReveal(reg)}
                             disabled={processing === reg.id}
+                            title="Generate a new password, email it to the user, and show it once"
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 font-extrabold text-[10px] border border-amber-500/30 transition cursor-pointer disabled:opacity-50"
                           >
                             {processing === reg.id ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
                             ) : (
-                              <UserCheck className="h-3 w-3" />
+                              <KeyRound className="h-3 w-3" />
                             )}
-                            View Credentials
+                            Reset &amp; Reveal
                           </button>
                         )}
                       </div>
@@ -540,13 +540,13 @@ export function FormRegistrationsClient({
                 <ShieldCheck className="h-8 w-8" />
               </div>
               <h3 className="text-xl font-extrabold text-slate-950 dark:text-white">
-                {credsModal.reissued ? "Password Re-issued!" : "Login Credentials"}
+                {credsModal.reissued ? "Password Reset!" : "Application Approved!"}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
                 {credsModal.reissued ? (
-                  <>A new password was generated and emailed to <span className="font-bold text-emerald-500">{credsModal.name}</span>.</>
+                  <>A new password was generated and emailed to <span className="font-bold text-emerald-500">{credsModal.name}</span>. It replaces any previous one.</>
                 ) : (
-                  <>Login credentials for <span className="font-bold text-emerald-500">{credsModal.name}</span>.</>
+                  <>Credentials have been generated and emailed to <span className="font-bold text-emerald-500">{credsModal.name}</span>.</>
                 )}
               </p>
             </div>
@@ -578,11 +578,7 @@ export function FormRegistrationsClient({
               </div>
 
               <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-3 text-amber-600 dark:text-amber-400 text-[11px]">
-                {credsModal.emailed ? (
-                  <><span className="font-bold">📧 Email Sent:</span> Login credentials have been emailed to {credsModal.email}. The user can log in and change their password.</>
-                ) : (
-                  <><span className="font-bold">🔐 Stored Credentials:</span> This is the password issued to {credsModal.email}. Share it securely; the user can change it after logging in.</>
-                )}
+                <span className="font-bold">📧 Email Sent:</span> These credentials have been emailed to {credsModal.email}. This password is shown only once and is not stored — the user can log in and change it. To retrieve access later, use &quot;Reset &amp; Reveal&quot;.
               </div>
             </div>
 

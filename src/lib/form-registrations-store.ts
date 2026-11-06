@@ -18,7 +18,6 @@ export type FormRegistrationRecord = {
   createdAt: string;
   updatedAt: string;
   generatedUserId?: string;
-  generatedPassword?: string;
   approvedAt?: string;
   declinedAt?: string;
   declineReason?: string;
@@ -82,7 +81,6 @@ export const DEFAULT_REGISTRATIONS: FormRegistrationRecord[] = [
     }),
     status: "APPROVED",
     generatedUserId: "USER-WL-901",
-    generatedPassword: "Partner#2026!Metro",
     approvedAt: "2026-08-12T14:20:00.000Z",
     createdAt: "2026-08-12T09:00:00.000Z",
     updatedAt: "2026-08-12T14:20:00.000Z",
