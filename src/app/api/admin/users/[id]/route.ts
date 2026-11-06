@@ -342,13 +342,20 @@ export async function DELETE(
   if (auth.error) return auth.error;
 
   if (auth.session!.user.id === params.id) {
-    return NextResponse.json({ error: "Cannot delete yourself" }, { status: 400 });
+    return NextResponse.json({ error: "You cannot delete your own account." }, { status: 400 });
   }
 
   try {
+    const id = params.id;
     const user = await prisma.user.findUnique({
-      where: { id: params.id },
-      include: { _count: { select: { properties: true } } },
+      where: { id },
+      include: {
+        teamRel: { select: { name: true } },
+        branchRel: { select: { name: true } },
+        departmentRel: { select: { name: true } },
+        franchiseRel: { select: { name: true } },
+        organizationRel: { select: { name: true } },
+      },
     });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -357,69 +364,114 @@ export async function DELETE(
     if (user.role === Role.SUPERADMIN) {
       const adminCount = await prisma.user.count({ where: { role: Role.SUPERADMIN } });
       if (adminCount <= 1) {
-        return NextResponse.json({ error: "Cannot delete the last super admin" }, { status: 400 });
+        return NextResponse.json({ error: "Cannot delete the last Super Admin." }, { status: 400 });
       }
     }
 
-    const fallbackAgent = await prisma.user.findFirst({
-      where: {
-        role: { in: [Role.SUPERADMIN, Role.EMPLOYEE, Role.AGENT] },
-        id: { not: params.id },
-        active: true,
-      },
-      orderBy: { createdAt: "asc" },
-    });
+    // Safety policy: a user is NEVER hard-deleted while they have history or
+    // relationships in the system — doing so would erase or orphan real records.
+    // We count every association and, if any exist, refuse the delete and return
+    // a full breakdown so the admin can see what is attached and deactivate
+    // instead (which retains all data and is reversible).
+    const [
+      propertiesAsAgent, propertiesSubmitted, transactions, subordinates,
+      loans, meetingsAttended, meetingsCreated, inquiries, favorites,
+      showings, leadsOwned, leadActivities, leadTasks, crmGoals,
+      commissions, subscriptions, bulkJobs, listingDrafts,
+      messagesSent, messagesReceived, kyc,
+      orgsAdministered, franchisesAdministered, branchesManaged,
+      departmentsHeaded, teamsLed,
+    ] = await prisma.$transaction([
+      prisma.property.count({ where: { agentId: id } }),
+      prisma.property.count({ where: { submittedById: id } }),
+      prisma.transaction.count({ where: { userId: id } }),
+      prisma.user.count({ where: { managerId: id } }),
+      prisma.loanApplication.count({ where: { userId: id } }),
+      prisma.meetingInvite.count({ where: { userId: id } }),
+      prisma.meetingInvite.count({ where: { createdById: id } }),
+      prisma.inquiry.count({ where: { userId: id } }),
+      prisma.favorite.count({ where: { userId: id } }),
+      prisma.propertyShowing.count({ where: { userId: id } }),
+      prisma.lead.count({ where: { ownerId: id } }),
+      prisma.leadActivity.count({ where: { userId: id } }),
+      prisma.leadTask.count({ where: { userId: id } }),
+      prisma.crmGoal.count({ where: { ownerId: id } }),
+      prisma.agentCommission.count({ where: { agentId: id } }),
+      prisma.userSubscription.count({ where: { userId: id } }),
+      prisma.bulkJob.count({ where: { createdById: id } }),
+      prisma.listingDraft.count({ where: { userId: id } }),
+      prisma.messageLog.count({ where: { sentById: id } }),
+      prisma.messageLog.count({ where: { recipientId: id } }),
+      prisma.kycProfile.count({ where: { userId: id } }),
+      prisma.organization.count({ where: { whiteLabelAdminId: id } }),
+      prisma.franchise.count({ where: { franchiseAdminId: id } }),
+      prisma.branch.count({ where: { branchManagerId: id } }),
+      prisma.department.count({ where: { departmentHeadId: id } }),
+      prisma.team.count({ where: { teamLeaderId: id } }),
+    ]);
 
-    if (!fallbackAgent) {
-      return NextResponse.json({ error: "No fallback agent to reassign listings" }, { status: 400 });
+    const blockers: { label: string; count: number }[] = [];
+    const add = (label: string, count: number) => { if (count > 0) blockers.push({ label, count }); };
+
+    add("Transactions", transactions);
+    add("Property listings (as agent)", propertiesAsAgent);
+    add("Properties submitted", propertiesSubmitted);
+    add("Team members reporting to them", subordinates);
+    add("Loan applications", loans);
+    add("Meetings", meetingsAttended + meetingsCreated);
+    add("Site-visit requests", showings);
+    add("Inquiries", inquiries);
+    add("Saved / favorite properties", favorites);
+    add("CRM leads owned", leadsOwned);
+    add("CRM lead activities", leadActivities);
+    add("CRM lead tasks", leadTasks);
+    add("CRM goals", crmGoals);
+    add("Commission records", commissions);
+    add("Subscriptions", subscriptions);
+    add("Bulk jobs created", bulkJobs);
+    add("Listing drafts", listingDrafts);
+    add("Messages / notifications", messagesSent + messagesReceived);
+    add("KYC profile", kyc);
+    add("White-label organizations administered", orgsAdministered);
+    add("Franchises administered", franchisesAdministered);
+    add("Branches managed", branchesManaged);
+    add("Departments headed", departmentsHeaded);
+    add("Teams led", teamsLed);
+
+    // Current org-structure membership (a single assignment each).
+    if (user.teamRel) blockers.push({ label: `Member of team: ${user.teamRel.name}`, count: 1 });
+    if (user.branchRel) blockers.push({ label: `Assigned to branch: ${user.branchRel.name}`, count: 1 });
+    if (user.departmentRel) blockers.push({ label: `Assigned to department: ${user.departmentRel.name}`, count: 1 });
+    if (user.franchiseRel) blockers.push({ label: `Assigned to franchise: ${user.franchiseRel.name}`, count: 1 });
+    if (user.organizationRel) blockers.push({ label: `Belongs to organization: ${user.organizationRel.name}`, count: 1 });
+
+    if (blockers.length > 0) {
+      return NextResponse.json(
+        {
+          error: "This user can't be deleted.",
+          reason:
+            "The account has history and active relationships in the system. Deleting it would erase or orphan real records. Deactivate the user instead — this keeps every record intact and can be reversed later.",
+          blockers,
+          canDeactivate: true,
+        },
+        { status: 409 }
+      );
     }
 
-    await prisma.$transaction(async (tx) => {
-      // Reassign listings this user is the agent for (required FK) to a fallback.
-      if (user._count.properties > 0) {
-        await tx.property.updateMany({
-          where: { agentId: params.id },
-          data: { agentId: fallbackAgent.id },
-        });
-      }
-      await tx.favorite.deleteMany({ where: { userId: params.id } });
-      await tx.transaction.deleteMany({ where: { userId: params.id } });
-      await tx.inquiry.updateMany({
-        where: { userId: params.id },
-        data: { userId: null },
-      });
-
-      // The relations below use REQUIRED foreign keys (default Restrict), so any
-      // row referencing this user blocks the delete. Detach what should survive,
-      // remove what is the user's own data.
-
-      // MessageLog.sentById is required — delete logs this user sent (e.g. the
-      // credential email created at approval) and detach any addressed to them.
-      await tx.messageLog.updateMany({ where: { recipientId: params.id }, data: { recipientId: null } });
-      await tx.messageLog.deleteMany({ where: { sentById: params.id } });
-
-      // Meetings: userId and createdById are required; agentId is optional.
-      await tx.meetingInvite.updateMany({ where: { agentId: params.id }, data: { agentId: null } });
-      await tx.meetingInvite.deleteMany({ where: { OR: [{ userId: params.id }, { createdById: params.id }] } });
-
-      // Loan applications belong to the user.
-      await tx.loanApplication.deleteMany({ where: { userId: params.id } });
-
-      // Bulk jobs: createdById is required — reassign so job history survives.
-      await tx.bulkJob.updateMany({ where: { createdById: params.id }, data: { createdById: fallbackAgent.id } });
-
-      await tx.user.delete({ where: { id: params.id } });
-    });
-
+    // No associations at all — safe to hard-delete (e.g. a mistyped test account).
+    await prisma.user.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error(e);
-    // Surface FK blockers instead of a generic message, so a relation we don't
-    // yet clean up is diagnosable from the admin UI.
+    // Belt-and-braces: if a relation we don't yet count still blocks the delete,
+    // surface it rather than a bare 500.
     if (e && typeof e === "object" && (e as { code?: string }).code === "P2003") {
-      const field = (e as { meta?: { field_name?: string } }).meta?.field_name;
       return NextResponse.json(
-        { error: `This user still has linked records${field ? ` (${field})` : ""} that must be removed first. Try deactivating the user instead.` },
+        {
+          error: "This user can't be deleted.",
+          reason: "The account still has linked records in the system. Deactivate the user instead.",
+          canDeactivate: true,
+        },
         { status: 409 }
       );
     }

@@ -89,6 +89,7 @@ export function UsersDirectory({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [blockInfo, setBlockInfo] = useState<{ user: UserRow; reason: string; blockers: { label: string; count: number }[] } | null>(null);
   const exportMenuRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = 5;
 
@@ -103,7 +104,16 @@ export function UsersDirectory({
     try {
       const res = await fetch(`/api/admin/users/${u.id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { showToast("err", data.error || "Could not delete user."); return; }
+      if (!res.ok) {
+        // Deletion blocked because the user has history/relationships — show the
+        // full breakdown so the admin can see what's attached and deactivate.
+        if (res.status === 409) {
+          setBlockInfo({ user: u, reason: data.reason || data.error || "This user has linked records.", blockers: data.blockers || [] });
+          return;
+        }
+        showToast("err", data.error || "Could not delete user.");
+        return;
+      }
       showToast("ok", `Deleted ${u.name}.`);
       router.refresh();
     } catch {
@@ -833,6 +843,62 @@ export function UsersDirectory({
           userIndex={modalUserIndex}
           onClose={() => setModalUser(null)}
         />
+      )}
+
+      {/* Deletion-blocked modal: the user has history/relationships */}
+      {blockInfo && (
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4" onClick={() => setBlockInfo(null)}>
+          <div className="w-full max-w-lg rounded-3xl border border-rose-500/30 bg-white dark:bg-slate-950 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start gap-3 border-b border-slate-100 dark:border-slate-800 p-5">
+              <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-500">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">This user can&apos;t be deleted</h3>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  <span className="font-bold text-slate-700 dark:text-slate-300">{blockInfo.user.name}</span> ({blockInfo.user.userId ?? blockInfo.user.email})
+                </p>
+              </div>
+              <button onClick={() => setBlockInfo(null)} className="ml-auto p-1 text-slate-400 hover:text-slate-600"><X className="h-5 w-5" /></button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-slate-600 dark:text-slate-300">{blockInfo.reason}</p>
+
+              {blockInfo.blockers.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Associated records &amp; relationships</p>
+                  <div className="max-h-64 overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
+                    {blockInfo.blockers.map((b, i) => (
+                      <div key={i} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+                        <span className="text-slate-700 dark:text-slate-200">{b.label}</span>
+                        <span className="shrink-0 rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-bold text-slate-600 dark:text-slate-300">{b.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-3 text-[11px] text-amber-700 dark:text-amber-400">
+                <span className="font-bold">Tip:</span> Deactivating signs the user out and blocks login, but keeps every record intact and is reversible.
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800 p-4">
+              <button onClick={() => setBlockInfo(null)} className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition">
+                Close
+              </button>
+              {blockInfo.user.active && (
+                <button
+                  onClick={() => { const u = blockInfo.user; setBlockInfo(null); handleToggleActive(u); }}
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-md transition"
+                >
+                  <UserX className="h-4 w-4" /> Deactivate instead
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Toast */}
