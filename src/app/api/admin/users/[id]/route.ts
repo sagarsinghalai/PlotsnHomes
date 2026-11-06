@@ -375,6 +375,7 @@ export async function DELETE(
     }
 
     await prisma.$transaction(async (tx) => {
+      // Reassign listings this user is the agent for (required FK) to a fallback.
       if (user._count.properties > 0) {
         await tx.property.updateMany({
           where: { agentId: params.id },
@@ -387,12 +388,41 @@ export async function DELETE(
         where: { userId: params.id },
         data: { userId: null },
       });
+
+      // The relations below use REQUIRED foreign keys (default Restrict), so any
+      // row referencing this user blocks the delete. Detach what should survive,
+      // remove what is the user's own data.
+
+      // MessageLog.sentById is required — delete logs this user sent (e.g. the
+      // credential email created at approval) and detach any addressed to them.
+      await tx.messageLog.updateMany({ where: { recipientId: params.id }, data: { recipientId: null } });
+      await tx.messageLog.deleteMany({ where: { sentById: params.id } });
+
+      // Meetings: userId and createdById are required; agentId is optional.
+      await tx.meetingInvite.updateMany({ where: { agentId: params.id }, data: { agentId: null } });
+      await tx.meetingInvite.deleteMany({ where: { OR: [{ userId: params.id }, { createdById: params.id }] } });
+
+      // Loan applications belong to the user.
+      await tx.loanApplication.deleteMany({ where: { userId: params.id } });
+
+      // Bulk jobs: createdById is required — reassign so job history survives.
+      await tx.bulkJob.updateMany({ where: { createdById: params.id }, data: { createdById: fallbackAgent.id } });
+
       await tx.user.delete({ where: { id: params.id } });
     });
 
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error(e);
+    // Surface FK blockers instead of a generic message, so a relation we don't
+    // yet clean up is diagnosable from the admin UI.
+    if (e && typeof e === "object" && (e as { code?: string }).code === "P2003") {
+      const field = (e as { meta?: { field_name?: string } }).meta?.field_name;
+      return NextResponse.json(
+        { error: `This user still has linked records${field ? ` (${field})` : ""} that must be removed first. Try deactivating the user instead.` },
+        { status: 409 }
+      );
+    }
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }
