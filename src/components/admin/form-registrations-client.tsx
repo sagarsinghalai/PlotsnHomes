@@ -41,6 +41,8 @@ export function FormRegistrationsClient({
     password: string;
     role: string;
     name: string;
+    reissued?: boolean;
+    emailed?: boolean;
   } | null>(null);
 
   // Decline Reason Modal
@@ -78,6 +80,7 @@ export function FormRegistrationsClient({
           password: data.credentials.password,
           role: data.credentials.role,
           name: reg?.name || "",
+          emailed: true,
         });
         showToast(data.message);
       } else {
@@ -85,6 +88,46 @@ export function FormRegistrationsClient({
       }
     } catch {
       alert("Error approving registration.");
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  // "View Credentials" for an already-approved registration. If we stored the
+  // generated password, show it directly. If not (older approvals created before
+  // we persisted it), re-issue a fresh password — the endpoint resets the user's
+  // password, emails it, and persists it — then display it, clearly labeled.
+  const handleViewCredentials = async (reg: FormRegistrationRecord) => {
+    const role = reg.type === "WHITE_LABEL_PARTNER" ? "WHITE_LABEL_ADMIN" : "SELLER";
+    if (reg.generatedPassword) {
+      setCredsModal({ email: reg.email, password: reg.generatedPassword, role, name: reg.name });
+      return;
+    }
+    setProcessing(reg.id);
+    try {
+      const res = await fetch("/api/admin/form-registrations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve", registrationId: reg.id }),
+      });
+      const data = await res.json();
+      if (data.success && data.credentials) {
+        const listRes = await fetch("/api/admin/form-registrations");
+        const listData = await listRes.json();
+        if (listData.registrations) setRegistrations(listData.registrations);
+        setCredsModal({
+          email: data.credentials.email,
+          password: data.credentials.password,
+          role: data.credentials.role,
+          name: reg.name,
+          reissued: true,
+          emailed: true,
+        });
+      } else {
+        alert(data.error || "Could not retrieve credentials.");
+      }
+    } catch {
+      alert("Error retrieving credentials.");
     } finally {
       setProcessing(null);
     }
@@ -370,19 +413,17 @@ export function FormRegistrationsClient({
                           </>
                         )}
 
-                        {reg.status === "APPROVED" && reg.generatedPassword && (
+                        {reg.status === "APPROVED" && (
                           <button
-                            onClick={() =>
-                              setCredsModal({
-                                email: reg.email,
-                                password: reg.generatedPassword!,
-                                role: reg.type === "WHITE_LABEL_PARTNER" ? "WHITE_LABEL_ADMIN" : "SELLER",
-                                name: reg.name,
-                              })
-                            }
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 font-extrabold text-[10px] border border-amber-500/30 transition cursor-pointer"
+                            onClick={() => handleViewCredentials(reg)}
+                            disabled={processing === reg.id}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 font-extrabold text-[10px] border border-amber-500/30 transition cursor-pointer disabled:opacity-50"
                           >
-                            <UserCheck className="h-3 w-3" />
+                            {processing === reg.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <UserCheck className="h-3 w-3" />
+                            )}
                             View Credentials
                           </button>
                         )}
@@ -499,10 +540,14 @@ export function FormRegistrationsClient({
                 <ShieldCheck className="h-8 w-8" />
               </div>
               <h3 className="text-xl font-extrabold text-slate-950 dark:text-white">
-                Application Approved!
+                {credsModal.reissued ? "Password Re-issued!" : "Login Credentials"}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Credentials have been generated and emailed to <span className="font-bold text-emerald-500">{credsModal.name}</span>.
+                {credsModal.reissued ? (
+                  <>A new password was generated and emailed to <span className="font-bold text-emerald-500">{credsModal.name}</span>.</>
+                ) : (
+                  <>Login credentials for <span className="font-bold text-emerald-500">{credsModal.name}</span>.</>
+                )}
               </p>
             </div>
 
@@ -533,7 +578,11 @@ export function FormRegistrationsClient({
               </div>
 
               <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-3 text-amber-600 dark:text-amber-400 text-[11px]">
-                <span className="font-bold">📧 Email Sent:</span> Login credentials have been emailed to {credsModal.email}. The user can log in and change their password.
+                {credsModal.emailed ? (
+                  <><span className="font-bold">📧 Email Sent:</span> Login credentials have been emailed to {credsModal.email}. The user can log in and change their password.</>
+                ) : (
+                  <><span className="font-bold">🔐 Stored Credentials:</span> This is the password issued to {credsModal.email}. Share it securely; the user can change it after logging in.</>
+                )}
               </div>
             </div>
 

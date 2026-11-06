@@ -76,10 +76,12 @@ export async function POST(req: Request) {
       let userId: string;
       if (existingUser) {
         userId = existingUser.id;
-        // Update existing user role if needed
+        // Re-approving / re-issuing: refresh role, reactivate, and reset the
+        // password to the newly generated one so the credentials we return and
+        // email are the ones that actually work.
         await prisma.user.update({
           where: { id: existingUser.id },
-          data: { role: role as any, active: true },
+          data: { role: role as any, active: true, passwordHash },
         });
       } else {
         // Create new user with generated credentials
@@ -113,15 +115,16 @@ export async function POST(req: Request) {
         // MessageLog creation is non-critical
       }
 
-      // Update registration record
+      // Update registration record. We persist the generated password so the
+      // admin can retrieve it later via "View Credentials" (admin-only screen);
+      // re-approving resets it to a fresh value.
       allRegs[idx] = {
         ...reg,
         status: "APPROVED",
         approvedAt: now,
         updatedAt: now,
         generatedUserId: userId,
-        // NOTE: the one-time password is returned in the response below and
-        // emailed to the user; it is intentionally NOT persisted in plaintext.
+        generatedPassword: password,
       };
 
       await saveFormRegistrations(allRegs);
