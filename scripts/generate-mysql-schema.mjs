@@ -84,20 +84,38 @@ const out = lines
     const fm = line.match(/^\s*(\w+)\s+String(\?)?(\s|$)/);
     if (!fm) return line;                              // not a plain String scalar
     const field = fm[1];
-    const nullable = Boolean(fm[2]);
     if (line.includes("@db.")) return line;            // already typed
     if (protectedByModel[model]?.has(field)) return line; // indexed/PK/unique/FK
 
-    const hasDefault = /@default\(/.test(line);
-    const forced = FORCE_TEXT[model]?.includes(field);
+    // Separate any trailing `//` comment so appended attributes don't land inside
+    // it (no schema @default contains `//`, so this split is safe).
+    const ci = line.indexOf("//");
+    let code = ci >= 0 ? line.slice(0, ci) : line;
+    const comment = ci >= 0 ? line.slice(ci).trimEnd() : "";
 
-    if (hasDefault && !nullable && !forced) return line; // short NOT NULL default -> keep VARCHAR
+    // Look at the column's default (if any). Only a simple string-literal default
+    // is handled here; a short one (status/currency/flags) means the column can't
+    // overflow, so we leave it VARCHAR. A JSON-blob default ("[]"/"{}") marks a
+    // column that CAN grow, so it must become TEXT.
+    const defMatch = code.match(/@default\("([^"]*)"\)/);
+    const hasDefault = /@default\(/.test(code);
+    const blobDefault = defMatch && (defMatch[1] === "[]" || defMatch[1] === "{}");
+
+    // Keep VARCHAR when there is a default that is NOT a JSON blob (short values),
+    // or a non-string-literal default we don't rewrite (e.g. cuid()).
+    if (hasDefault && !blobDefault) return line;
 
     applied++;
-    let newLine = line.replace(/\s+$/, "");
-    // MySQL TEXT can't carry a DEFAULT: drop it for nullable blobs we convert.
-    if (hasDefault && nullable) newLine = newLine.replace(/\s*@default\([^)]*\)/, "");
-    return newLine + " @db.Text";
+    code = code.replace(/\s+$/, "");
+    if (blobDefault) {
+      // MySQL forbids a *literal* DEFAULT on TEXT but allows an *expression*
+      // default (MySQL 8.0.13+). Rewrite @default("[]") -> @default(dbgenerated("('[]')"))
+      // so the column stays TEXT, keeps a working default, and stays optional in
+      // the generated client (no required-field build break, no null reads).
+      code = code.replace(/@default\("([^"]*)"\)/, (_m, v) => `@default(dbgenerated("('${v}')"))`);
+    }
+    code += " @db.Text";
+    return comment ? `${code} ${comment}` : code;
   })
   .join("\n");
 
