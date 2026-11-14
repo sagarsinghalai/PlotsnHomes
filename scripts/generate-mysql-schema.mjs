@@ -44,6 +44,8 @@ const TEXT_FIELDS = {
   CustomFieldDef: ["options"],
   UserActivity: ["body", "subject", "outcome", "attachments"],
   ActivityComment: ["body"],
+  AgentCommission: ["notes"],
+  PropertyPriceLog: ["notes"],
 };
 
 const src = readFileSync(SRC, "utf8");
