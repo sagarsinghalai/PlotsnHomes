@@ -31,12 +31,13 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = join(root, "prisma", "schema.prisma");
 const OUT = join(root, "prisma", "schema.mysql.prisma");
 
-// NOT NULL blob columns that already exist as TEXT in production. They keep their
-// @default so the generated Prisma Client keeps them optional in create() (these
-// fields are sometimes omitted by app code). db push leaves them untouched.
-const FORCE_TEXT = {
-  Property: ["images", "priceHistory", "videos", "pdfs", "features", "customFields"],
-};
+// NOT NULL String columns with a @default are left as VARCHAR (see rules above):
+// MySQL forbids a DEFAULT on TEXT, and dropping the default would make the field
+// required in the generated client (build break). These defaulted columns hold
+// short values (status/flags) or JSON arrays that fit VARCHAR(191) in practice;
+// if one genuinely needs to grow, make it nullable in prisma/schema.prisma and it
+// will auto-convert to TEXT. FORCE_TEXT is intentionally empty.
+const FORCE_TEXT = {};
 
 const src = readFileSync(SRC, "utf8");
 if (!/provider\s*=\s*"sqlite"/.test(src)) {
