@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Fraunces } from "next/font/google";
+import { Inter, Cormorant_Garamond } from "next/font/google";
 import { ConditionalFooter } from "@/components/layout/conditional-footer";
 import { ConditionalNavbar } from "@/components/layout/conditional-navbar";
 import { ConditionalMarketTicker } from "@/components/market/conditional-market-ticker";
@@ -17,9 +17,9 @@ const sans = Inter({
   display: "swap",
 });
 
-// Fraunces is the serif display face for headings (warm, editorial real-estate
-// look). Italic is used for accent words inside headings.
-const display = Fraunces({
+// Cormorant Garamond is the serif display face for headings (elegant, premium
+// real-estate look). Italic is used for accent words inside headings.
+const display = Cormorant_Garamond({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",

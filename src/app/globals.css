@@ -84,7 +84,7 @@ body {
 
 @layer utilities {
   .font-display {
-    font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+    font-family: var(--font-display), "Cormorant Garamond", Georgia, Cambria, serif;
   }
 }
 

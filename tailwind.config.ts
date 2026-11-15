@@ -10,53 +10,55 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ── "Apna Ghar" warm real-estate palette: cream + deep pine + gold ──
-        gold: {
-          DEFAULT: "#c9a227",
-          dark: "#a8861f",
-          light: "#d4af4a",
-          soft: "#dfc168",
-          50: "#fbf7ea",
-          100: "#f4e9c4",
+        // ── MyHome-inspired palette: deep navy + muted teal + warm cream. ──
+        // Token names are legacy (pine = navy primary, gold = teal accent,
+        // sage = taupe). See docs/BRAND.md. Change these values to re-theme.
+        gold: {            // teal accent
+          DEFAULT: "#5d9e9b",
+          dark: "#45817e",
+          light: "#7fb8b5",
+          soft: "#9ccbc8",
+          50: "#e7f0ed",
+          100: "#cfe2dd",
         },
         cream: {
-          DEFAULT: "#faf8f2",
-          50: "#faf8f2",   // page background
-          100: "#f3efe4",  // section background
-          200: "#eae2d0",
-          white: "#fdfcf9",
+          DEFAULT: "#faf7f1",
+          50: "#faf7f1",   // page background
+          100: "#f5f1ea",  // section background
+          200: "#e2dcd3",
+          white: "#ffffff",
         },
-        pine: {
-          50: "#eef3f0",
-          100: "#d7e2db",
-          200: "#aec6ba",
-          600: "#40806a",  // medium pine accent
-          700: "#2e6150",
-          800: "#1f4a3c",
-          900: "#1b4136",  // dark sections
-          950: "#16241d",  // footer / darkest
+        pine: {            // navy primary
+          50: "#eaeff5",
+          100: "#d3deeb",
+          200: "#a7bdd7",
+          600: "#3d5a8c",  // secondary / hover navy
+          700: "#2d4a7c",
+          800: "#223c66",
+          900: "#1b365d",  // primary navy — buttons, dark bands
+          950: "#15293d",  // footer / darkest
         },
-        sage: "#5c6f65",   // muted body text on cream
-        // ── Redesign brand (indigo) + semantic tokens ──
+        sage: "#7d7267",   // muted body text (taupe)
+        // ── Admin brand token — navy, matching the public primary ──
         brand: {
-          DEFAULT: "#3347b0",
-          hover: "#293a96",
-          pressed: "#243483",
-          soft: "#eef2ff",
-          50: "#eef2ff",
-          100: "#e0e7ff",
-          200: "#c7d2fe",
-          500: "#3347b0",
-          600: "#293a96",
-          700: "#243483",
+          DEFAULT: "#1b365d",
+          hover: "#15293d",
+          pressed: "#102134",
+          soft: "#eaeff5",
+          50: "#eaeff5",
+          100: "#d3deeb",
+          200: "#a7bdd7",
+          500: "#1b365d",
+          600: "#15293d",
+          700: "#102134",
         },
         teal: {
-          brand: "#0f766e",
+          brand: "#5d9e9b",
         },
       },
       fontFamily: {
-        display: ["var(--font-display)", "Fraunces", "Georgia", "Cambria", "serif"],
-        serif: ["var(--font-display)", "Fraunces", "Georgia", "Cambria", "serif"],
+        display: ["var(--font-display)", "Cormorant Garamond", "Georgia", "Cambria", "serif"],
+        serif: ["var(--font-display)", "Cormorant Garamond", "Georgia", "Cambria", "serif"],
         sans: ["var(--font-geist-sans)", "Inter", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
       },
       borderRadius: {
