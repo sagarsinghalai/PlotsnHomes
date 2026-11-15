@@ -62,8 +62,8 @@ export function InquiryForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-6">
-      <h3 className="text-lg font-semibold text-slate-900">Contact agent</h3>
+    <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-pine-900/10 bg-cream-50 p-6">
+      <h3 className="text-lg font-semibold text-pine-950">Contact agent</h3>
       <div>
         <Label>Name</Label>
         <Input name="name" required defaultValue={defaultName} />

@@ -67,7 +67,7 @@ export function ScheduleTourForm({
         <div><Label>Date</Label><Input name="tourDate" type="date" required /></div>
         <div>
           <Label>Time</Label>
-          <select name="tourTime" required className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm">
+          <select name="tourTime" required className="w-full rounded-xl border border-pine-900/10 px-4 py-2.5 text-sm">
             {times.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>

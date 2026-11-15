@@ -2,6 +2,7 @@
 
 import { Phone, Mail, MessageCircle } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { whatsAppWebUrl } from "@/lib/messaging-settings";
 
 export function AgentCard({
@@ -13,18 +14,25 @@ export function AgentCard({
   propertyTitle: string;
   propertyId: string;
 }) {
-  const currentUrl = typeof window !== "undefined" ? window.location.href : "";
+  // window.location only exists in the browser. Reading it during render makes the
+  // server ("") and client (full URL) markup differ → hydration mismatch. Read it
+  // after mount so the first render matches on both sides, then fill the link.
+  const [currentUrl, setCurrentUrl] = useState("");
+  useEffect(() => {
+    setCurrentUrl(window.location.href);
+  }, []);
+
   const waMsg = `Hello! I am interested in *${propertyTitle}* (ID: ${propertyId})\n🔗 *Property Link:* ${currentUrl}\n\nPlease share more details and schedule a site visit.`;
   const waUrl = agent.phone ? whatsAppWebUrl(agent.phone, waMsg) : null;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg">
+    <div className="rounded-2xl border border-pine-900/10 bg-white p-6 shadow-lg">
       <div className="flex items-center gap-4">
         <div className="h-14 w-14 rounded-full bg-slate-200 flex items-center justify-center text-lg font-bold text-slate-600">
           {agent.name.charAt(0)}
         </div>
         <div>
-          <p className="font-semibold text-slate-900">{agent.name}</p>
+          <p className="font-semibold text-pine-950">{agent.name}</p>
           <p className="text-sm text-slate-500">Licensed agent</p>
         </div>
       </div>
@@ -32,7 +40,7 @@ export function AgentCard({
       <p className="text-sm text-slate-600">{agent.email}</p>
       <div className="mt-4 flex flex-wrap gap-2">
         {agent.phone && (
-          <a href={`tel:${agent.phone}`} className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-2 text-xs text-white">
+          <a href={`tel:${agent.phone}`} className="inline-flex items-center gap-1 rounded-lg bg-pine-900 px-3 py-2 text-xs text-white">
             <Phone className="h-3.5 w-3.5" /> Call
           </a>
         )}
@@ -45,7 +53,7 @@ export function AgentCard({
           </a>
         )}
       </div>
-      <Link href="/login" className="mt-4 block text-center text-xs text-brand-hover hover:underline">
+      <Link href="/login" className="mt-4 block text-center text-xs text-gold-dark hover:underline">
         Contact Me — schedule a showing
       </Link>
     </div>

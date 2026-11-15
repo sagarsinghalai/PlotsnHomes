@@ -143,9 +143,9 @@ type Props = {
   bhkOptions?: string[];
 };
 
-// Premium Glassmorphic / Dark Luxury Field styling
+// Warm, light field styling (cream + pine + gold)
 const fieldClass =
-  "w-full rounded-xl border border-slate-800 bg-slate-950/60 px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/30 transition-all duration-200 hover:border-slate-700 hover:bg-slate-950/80";
+  "w-full rounded-xl border border-pine-900/15 bg-white px-3.5 py-2.5 text-sm text-pine-950 placeholder:text-sage/60 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30 transition-all duration-200 hover:border-pine-900/25";
 
 export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = [], bhkOptions = [] }: Props) {
   const router = useRouter();
@@ -255,10 +255,10 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
   }
 
   return (
-    <div className="mx-auto max-w-4xl rounded-2xl bg-slate-950/85 backdrop-blur-xl border border-white/10 shadow-2xl shadow-slate-950/50 overflow-hidden transition-all duration-300">
+    <div className="mx-auto max-w-4xl rounded-2xl bg-cream-white/95 backdrop-blur-xl border border-pine-900/10 shadow-2xl shadow-pine-950/25 overflow-hidden transition-all duration-300">
       {/* Sale / Rent Tabs Segmented Control */}
-      <div className="flex items-center justify-between border-b border-white/5 bg-slate-900/40 p-4 pb-3">
-        <div className="flex bg-slate-950 p-1 rounded-xl border border-white/5 shadow-inner">
+      <div className="flex items-center justify-between border-b border-pine-900/10 bg-cream-100 p-4 pb-3">
+        <div className="flex bg-cream-200/60 p-1 rounded-xl border border-pine-900/10 shadow-inner">
           {[
             { id: "SALE", label: "Buy Properties" },
             { id: "RENT", label: "Rent / Lease" },
@@ -269,15 +269,15 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               onClick={() => handleTabChange(tab.id)}
               className={`px-5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
                 listingType === tab.id
-                  ? "bg-brand text-white shadow-md font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-white/5"
+                  ? "bg-pine-900 text-cream-white shadow-md font-bold"
+                  : "text-sage hover:text-pine-900 hover:bg-pine-900/5"
               }`}
             >
               {tab.label}
             </button>
           ))}
         </div>
-        <div className="hidden sm:block text-[10px] font-bold text-brand tracking-widest uppercase">
+        <div className="hidden sm:block text-[10px] font-bold text-gold-dark tracking-widest uppercase">
           PlotsnHomes Portal
         </div>
       </div>
@@ -285,7 +285,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
       {/* Furnishing quick-pick — shown for RENT only */}
       {listingType === "RENT" && (
         <div className="flex items-center gap-2 px-5 pt-4 pb-0 flex-wrap">
-          <span className="text-[10px] font-bold text-brand/80 uppercase tracking-wider">Furnishing:</span>
+          <span className="text-[10px] font-bold text-gold uppercase tracking-wider">Furnishing:</span>
           {FURNISHING_OPTIONS.map((opt) => (
             <button
               key={opt.value}
@@ -293,8 +293,8 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               onClick={() => setFurnishing(furnishing === opt.value ? "" : opt.value)}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-semibold transition-all duration-150 ${
                 furnishing === opt.value
-                  ? "border-brand bg-brand text-white shadow-sm"
-                  : "border-white/10 bg-slate-900/40 text-slate-300 hover:border-brand/50 hover:bg-brand/10 hover:text-brand"
+                  ? "border-pine-900 bg-pine-900 text-cream-white shadow-sm"
+                  : "border-pine-900/15 bg-white text-sage hover:border-gold/50 hover:bg-gold/10 hover:text-gold-dark"
               }`}
             >
               {furnishing === opt.value && <X className="h-3 w-3" />}
@@ -309,7 +309,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4">
           {/* Bedrooms */}
           <div className="lg:col-span-3">
-            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-pine-700 uppercase tracking-widest mb-1.5">
               Bedrooms
             </label>
             <div className="relative">
@@ -319,31 +319,31 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                 value={bhk}
                 onChange={(e) => setBhk(e.target.value)}
               >
-                <option value="" className="bg-slate-950 text-slate-100">Any Bedrooms</option>
+                <option value="" className="bg-cream-white text-pine-900">Any Bedrooms</option>
                 {BEDROOM_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt} className="bg-slate-950 text-slate-100">
+                  <option key={opt} value={opt} className="bg-cream-white text-pine-900">
                     {opt}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold h-4 w-4" />
             </div>
           </div>
 
           {/* Search Box */}
           <div className="lg:col-span-6 relative">
-            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-pine-700 uppercase tracking-widest mb-1.5">
               Search Property
             </label>
             <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-brand/80" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gold" />
               <input
                 name="q"
                 type="text"
                 list="property-suggestions"
                 defaultValue={params.get("q") ?? ""}
                 placeholder="Property name, symbol ID (e.g. BV-TN-0012), or city..."
-                className="w-full rounded-xl border border-slate-800 bg-slate-950/60 pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/30 transition-all duration-200 hover:border-slate-700 hover:bg-slate-950/80"
+                className="w-full rounded-xl border border-pine-900/15 bg-white pl-10 pr-4 py-2.5 text-sm text-pine-950 placeholder:text-sage/60 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold/30 transition-all duration-200 hover:border-pine-900/25"
               />
               {suggestions.length > 0 && (
                 <datalist id="property-suggestions">
@@ -359,7 +359,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
 
           {/* Category */}
           <div className="lg:col-span-3">
-            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-pine-700 uppercase tracking-widest mb-1.5">
               Category
             </label>
             <div className="relative">
@@ -369,54 +369,54 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
-                <option value="" className="bg-slate-950 text-slate-100">All Categories</option>
+                <option value="" className="bg-cream-white text-pine-900">All Categories</option>
                 {dynamicCategories.map((c) => (
-                  <option key={c} value={c} className="bg-slate-950 text-slate-100">{c}</option>
+                  <option key={c} value={c} className="bg-cream-white text-pine-900">{c}</option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold h-4 w-4" />
             </div>
           </div>
 
           {/* City */}
           <div className="lg:col-span-2">
-            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-pine-700 uppercase tracking-widest mb-1.5">
               City
             </label>
             <div className="relative">
               <select name="city" defaultValue={params.get("city") ?? ""} className={fieldClass + " appearance-none"}>
-                <option value="" className="bg-slate-950 text-slate-100">All Cities</option>
+                <option value="" className="bg-cream-white text-pine-900">All Cities</option>
                 {cities.map((c) => (
-                  <option key={`${c.city}-${c.state}`} value={c.city} className="bg-slate-950 text-slate-100">
+                  <option key={`${c.city}-${c.state}`} value={c.city} className="bg-cream-white text-pine-900">
                     {c.city}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold h-4 w-4" />
             </div>
           </div>
 
           {/* Area */}
           <div className="lg:col-span-3">
-            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-pine-700 uppercase tracking-widest mb-1.5">
               Area / Locality
             </label>
             <div className="relative">
               <select name="area" defaultValue={params.get("area") ?? ""} className={fieldClass + " appearance-none"}>
-                <option value="" className="bg-slate-950 text-slate-100">All Areas</option>
+                <option value="" className="bg-cream-white text-pine-900">All Areas</option>
                 {areas.map((a) => (
-                  <option key={a} value={a} className="bg-slate-950 text-slate-100">
+                  <option key={a} value={a} className="bg-cream-white text-pine-900">
                     {a}
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold h-4 w-4" />
             </div>
           </div>
 
           {/* Min Price */}
           <div className="lg:col-span-2">
-            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-pine-700 uppercase tracking-widest mb-1.5">
               Min Price
             </label>
             <div className="space-y-1.5">
@@ -429,26 +429,26 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                   className={fieldClass + " appearance-none"}
                 >
                   {displayMinOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="bg-slate-950 text-slate-100">
+                    <option key={opt.value} value={opt.value} className="bg-cream-white text-pine-900">
                       {opt.label}
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
+                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold h-4 w-4" />
               </div>
               <input
                 type="number"
                 placeholder="Custom amount"
                 value={customMinPrice}
                 onChange={(e) => setCustomMinPrice(e.target.value)}
-                className="w-full rounded-xl border border-dashed border-slate-800 bg-slate-950/20 px-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none"
+                className="w-full rounded-xl border border-dashed border-pine-900/20 bg-cream-50 px-3 py-1.5 text-xs text-pine-950 placeholder:text-sage/60 focus:border-gold focus:outline-none"
               />
             </div>
           </div>
 
           {/* Max Price */}
           <div className="lg:col-span-2">
-            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
+            <label className="block text-[10px] font-bold text-pine-700 uppercase tracking-widest mb-1.5">
               Max Price
             </label>
             <div className="space-y-1.5">
@@ -461,35 +461,35 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                   className={fieldClass + " appearance-none"}
                 >
                   {displayMaxOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="bg-slate-950 text-slate-100">
+                    <option key={opt.value} value={opt.value} className="bg-cream-white text-pine-900">
                       {opt.label}
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
+                <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold h-4 w-4" />
               </div>
               <input
                 type="number"
                 placeholder="Custom amount"
                 value={customMaxPrice}
                 onChange={(e) => setCustomMaxPrice(e.target.value)}
-                className="w-full rounded-xl border border-dashed border-slate-800 bg-slate-950/20 px-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none"
+                className="w-full rounded-xl border border-dashed border-pine-900/20 bg-cream-50 px-3 py-1.5 text-xs text-pine-950 placeholder:text-sage/60 focus:border-gold focus:outline-none"
               />
             </div>
           </div>
 
           {/* Search Button */}
           <div className="lg:col-span-3 flex flex-col justify-end">
-            <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5 opacity-0 select-none hidden lg:block">
+            <label className="block text-[10px] font-bold text-pine-700 uppercase tracking-widest mb-1.5 opacity-0 select-none hidden lg:block">
               Submit
             </label>
             <div className="flex gap-2">
               <button
                 type="submit"
                 disabled={pending}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand via-brand to-brand-hover hover:brightness-110 active:scale-[0.98] px-4 py-2.5 text-sm font-bold text-slate-950 shadow-md shadow-brand/10 hover:shadow-lg hover:shadow-brand/25 transition-all duration-200 disabled:opacity-50 h-[44px]"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gold hover:bg-gold-dark active:scale-[0.98] px-4 py-2.5 text-sm font-bold text-pine-950 shadow-md shadow-gold/20 hover:shadow-lg hover:shadow-gold/30 transition-all duration-200 disabled:opacity-50 h-[44px]"
               >
-                <Search className="h-4 w-4 text-slate-950 stroke-[2.5px]" />
+                <Search className="h-4 w-4 text-pine-950 stroke-[2.5px]" />
                 {pending ? "Searching…" : "Search"}
               </button>
               <button
@@ -503,7 +503,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
                   setPriceRange([0, 999999999]);
                   router.push("/properties");
                 }}
-                className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-slate-900/40 px-3 py-2 text-xs font-bold text-slate-300 hover:bg-slate-900 hover:text-white transition-all h-[44px]"
+                className="inline-flex items-center justify-center rounded-xl border border-pine-900/15 bg-cream-100 px-3 py-2 text-xs font-bold text-pine-800 hover:bg-pine-100 hover:text-pine-950 transition-all h-[44px]"
                 title="Clear Filters"
               >
                 Clear
@@ -513,11 +513,11 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
         </div>
 
         {/* Collapsible Section for Advanced Filters */}
-        <div className="mt-6 border-t border-white/5 pt-4">
+        <div className="mt-6 border-t border-pine-900/10 pt-4">
           <button
             type="button"
             onClick={() => setShowMore((v) => !v)}
-            className="flex items-center gap-1.5 text-xs font-bold text-brand/85 hover:text-brand uppercase tracking-wider transition-all duration-150"
+            className="flex items-center gap-1.5 text-xs font-bold text-pine-700 hover:text-brand uppercase tracking-wider transition-all duration-150"
           >
             <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showMore ? "rotate-180" : ""}`} />
             {showMore ? "Hide Advanced Filters" : "Show Advanced Filters"}
@@ -526,29 +526,29 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
           {showMore && (
             <div className="mt-5 space-y-4">
               {/* Secondary Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-900/30 p-4 rounded-xl border border-white/5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-cream-100 p-4 rounded-xl border border-pine-900/10">
 
                 {/* Bathrooms */}
                 <div>
-                  <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-bold text-pine-700 uppercase tracking-widest mb-1.5">
                     Bathrooms
                   </label>
                   <div className="relative">
                     <select name="minBaths" defaultValue={params.get("minBaths") ?? ""} className={fieldClass + " appearance-none"}>
-                      <option value="" className="bg-slate-950 text-slate-100">Any Bathrooms</option>
+                      <option value="" className="bg-cream-white text-pine-900">Any Bathrooms</option>
                       {[1, 2, 3, 4, 5].map((n) => (
-                        <option key={n} value={n} className="bg-slate-950 text-slate-100">
+                        <option key={n} value={n} className="bg-cream-white text-pine-900">
                           {n}+ baths
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
+                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold h-4 w-4" />
                   </div>
                 </div>
 
                 {/* Min sq.ft */}
                 <div>
-                  <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-1.5">
+                  <label className="block text-[10px] font-bold text-pine-700 uppercase tracking-widest mb-1.5">
                     Min sq.ft
                   </label>
                   <input
@@ -562,80 +562,80 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               </div>
 
               {/* Property Extras */}
-              <div className="bg-slate-900/30 p-4 rounded-xl border border-white/5">
-                <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-3">
+              <div className="bg-cream-100 p-4 rounded-xl border border-pine-900/10">
+                <label className="block text-[10px] font-bold text-pine-700 uppercase tracking-widest mb-3">
                   Property Extras
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Balconies</label>
+                    <label className="block text-[9px] font-bold text-sage uppercase tracking-wider mb-1.5">Balconies</label>
                     <div className="relative">
                       <select name="minBalconies" defaultValue={params.get("minBalconies") ?? ""} className={fieldClass + " appearance-none"}>
-                        <option value="" className="bg-slate-950 text-slate-100">Any</option>
-                        {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n} className="bg-slate-950 text-slate-100">{n}+ balconies</option>)}
+                        <option value="" className="bg-cream-white text-pine-900">Any</option>
+                        {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n} className="bg-cream-white text-pine-900">{n}+ balconies</option>)}
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
+                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold h-4 w-4" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Lift Type</label>
+                    <label className="block text-[9px] font-bold text-sage uppercase tracking-wider mb-1.5">Lift Type</label>
                     <div className="relative">
                       <select name="liftType" defaultValue={params.get("liftType") ?? ""} className={fieldClass + " appearance-none"}>
-                        <option value="" className="bg-slate-950 text-slate-100">Any</option>
-                        <option value="Common Lift" className="bg-slate-950 text-slate-100">Common Lift</option>
-                        <option value="Personal Lift" className="bg-slate-950 text-slate-100">Personal Lift</option>
-                        <option value="No Lift" className="bg-slate-950 text-slate-100">No Lift</option>
+                        <option value="" className="bg-cream-white text-pine-900">Any</option>
+                        <option value="Common Lift" className="bg-cream-white text-pine-900">Common Lift</option>
+                        <option value="Personal Lift" className="bg-cream-white text-pine-900">Personal Lift</option>
+                        <option value="No Lift" className="bg-cream-white text-pine-900">No Lift</option>
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
+                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold h-4 w-4" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Flats/Floor</label>
+                    <label className="block text-[9px] font-bold text-sage uppercase tracking-wider mb-1.5">Flats/Floor</label>
                     <input name="flatsPerFloor" type="number" min={1} defaultValue={params.get("flatsPerFloor") ?? ""} placeholder="Any" className={fieldClass} />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Availability</label>
+                    <label className="block text-[9px] font-bold text-sage uppercase tracking-wider mb-1.5">Availability</label>
                     <div className="relative">
                       <select name="availabilityStatus" defaultValue={params.get("availabilityStatus") ?? ""} className={fieldClass + " appearance-none"}>
-                        <option value="" className="bg-slate-950 text-slate-100">Any</option>
-                        <option value="Available" className="bg-slate-950 text-slate-100">Available</option>
-                        <option value="Sold" className="bg-slate-950 text-slate-100">Sold</option>
-                        <option value="Rented" className="bg-slate-950 text-slate-100">Rented</option>
+                        <option value="" className="bg-cream-white text-pine-900">Any</option>
+                        <option value="Available" className="bg-cream-white text-pine-900">Available</option>
+                        <option value="Sold" className="bg-cream-white text-pine-900">Sold</option>
+                        <option value="Rented" className="bg-cream-white text-pine-900">Rented</option>
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-brand/80 h-4 w-4" />
+                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-gold h-4 w-4" />
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-white/5 pt-4">
-                  <label className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-brand/50 has-[:checked]:bg-brand/10 has-[:checked]:text-brand hover:scale-[1.02] active:scale-[0.98]">
-                    <input type="checkbox" name="servantRoom" value="1" defaultChecked={params.get("servantRoom") === "1"} className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-brand focus:ring-brand/30 transition duration-150 cursor-pointer" />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-pine-900/10 pt-4">
+                  <label className="inline-flex items-center gap-2 rounded-xl border border-pine-900/10 bg-white px-3.5 py-2.5 text-xs text-sage hover:text-pine-900 hover:border-pine-900/20 hover:bg-cream-100 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-gold/60 has-[:checked]:bg-gold/10 has-[:checked]:text-gold-dark hover:scale-[1.02] active:scale-[0.98]">
+                    <input type="checkbox" name="servantRoom" value="1" defaultChecked={params.get("servantRoom") === "1"} className="h-4 w-4 rounded border-pine-900/30 bg-white text-gold focus:ring-gold/30 transition duration-150 cursor-pointer" />
                     <span>Servant Room</span>
                   </label>
-                  <label className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-brand/50 has-[:checked]:bg-brand/10 has-[:checked]:text-brand hover:scale-[1.02] active:scale-[0.98]">
-                    <input type="checkbox" name="pujaRoom" value="1" defaultChecked={params.get("pujaRoom") === "1"} className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-brand focus:ring-brand/30 transition duration-150 cursor-pointer" />
+                  <label className="inline-flex items-center gap-2 rounded-xl border border-pine-900/10 bg-white px-3.5 py-2.5 text-xs text-sage hover:text-pine-900 hover:border-pine-900/20 hover:bg-cream-100 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-gold/60 has-[:checked]:bg-gold/10 has-[:checked]:text-gold-dark hover:scale-[1.02] active:scale-[0.98]">
+                    <input type="checkbox" name="pujaRoom" value="1" defaultChecked={params.get("pujaRoom") === "1"} className="h-4 w-4 rounded border-pine-900/30 bg-white text-gold focus:ring-gold/30 transition duration-150 cursor-pointer" />
                     <span>Puja Ghar</span>
                   </label>
-                  <label className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-brand/50 has-[:checked]:bg-brand/10 has-[:checked]:text-brand hover:scale-[1.02] active:scale-[0.98]">
-                    <input type="checkbox" name="studyRoom" value="1" defaultChecked={params.get("studyRoom") === "1"} className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-brand focus:ring-brand/30 transition duration-150 cursor-pointer" />
+                  <label className="inline-flex items-center gap-2 rounded-xl border border-pine-900/10 bg-white px-3.5 py-2.5 text-xs text-sage hover:text-pine-900 hover:border-pine-900/20 hover:bg-cream-100 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-gold/60 has-[:checked]:bg-gold/10 has-[:checked]:text-gold-dark hover:scale-[1.02] active:scale-[0.98]">
+                    <input type="checkbox" name="studyRoom" value="1" defaultChecked={params.get("studyRoom") === "1"} className="h-4 w-4 rounded border-pine-900/30 bg-white text-gold focus:ring-gold/30 transition duration-150 cursor-pointer" />
                     <span>Study Room</span>
                   </label>
                 </div>
               </div>
 
               {/* Amenities */}
-              <div className="bg-slate-900/30 p-4 rounded-xl border border-white/5">
-                <label className="block text-[10px] font-bold text-brand/85 uppercase tracking-widest mb-3">
+              <div className="bg-cream-100 p-4 rounded-xl border border-pine-900/10">
+                <label className="block text-[10px] font-bold text-pine-700 uppercase tracking-widest mb-3">
                   Amenities
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {AMENITIES.map(([key, label]) => (
-                    <label key={key} className="inline-flex items-center gap-2 rounded-xl border border-white/5 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 hover:text-white hover:border-white/10 hover:bg-slate-900/40 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-brand/50 has-[:checked]:bg-brand/10 has-[:checked]:text-brand hover:scale-[1.02] active:scale-[0.98]">
+                    <label key={key} className="inline-flex items-center gap-2 rounded-xl border border-pine-900/10 bg-white px-3.5 py-2.5 text-xs text-sage hover:text-pine-900 hover:border-pine-900/20 hover:bg-cream-100 cursor-pointer select-none transition-all duration-200 has-[:checked]:border-gold/60 has-[:checked]:bg-gold/10 has-[:checked]:text-gold-dark hover:scale-[1.02] active:scale-[0.98]">
                       <input
                         type="checkbox"
                         name={key}
                         value="1"
                         defaultChecked={params.get(key) === "1"}
-                        className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-brand focus:ring-brand/30 transition duration-150 cursor-pointer"
+                        className="h-4 w-4 rounded border-pine-900/30 bg-white text-gold focus:ring-gold/30 transition duration-150 cursor-pointer"
                       />
                       <span>{label}</span>
                     </label>

@@ -18,19 +18,19 @@ export function Footer() {
   }, []);
 
   return (
-    <footer className="bg-slate-950 text-slate-400 border-t border-slate-800/60 font-sans">
+    <footer className="bg-pine-950 text-pine-100/70 border-t border-pine-800/40 font-sans">
       {/* Main footer grid */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-12 justify-between">
           {/* Brand column — Left side */}
           <div className="w-full lg:w-[36%] space-y-4 shrink-0">
-            <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-bold text-white">
-              <Building2 className="h-6 w-6 text-brand" />
+            <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-bold text-cream-white">
+              <Building2 className="h-6 w-6 text-gold" />
               {footer.brandName || "PlotsnHomes"}
             </Link>
             
             {footer.boilerplateText && (
-              <p className="text-sm leading-relaxed text-slate-400 max-w-sm">
+              <p className="text-sm leading-relaxed text-pine-100/70 max-w-sm">
                 {footer.boilerplateText}
               </p>
             )}
@@ -42,9 +42,9 @@ export function Footer() {
                   <Link
                     key={b.id || idx}
                     href={b.url || "#"}
-                    className="flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900 px-3.5 py-1.5 text-xs font-medium text-slate-300 transition-all duration-300 hover:border-brand/40 hover:bg-slate-800/80 hover:text-brand"
+                    className="flex items-center gap-1.5 rounded-full border border-pine-800/50 bg-pine-900 px-3.5 py-1.5 text-xs font-medium text-pine-100 transition-all duration-300 hover:border-gold/40 hover:bg-pine-800/70 hover:text-gold"
                   >
-                    <span className="text-brand">
+                    <span className="text-gold">
                       {idx === 0 ? <Shield className="h-3.5 w-3.5" /> : idx === 1 ? <TrendingUp className="h-3.5 w-3.5" /> : <Wallet className="h-3.5 w-3.5" />}
                     </span>
                     {b.label}
@@ -64,7 +64,7 @@ export function Footer() {
                       href={s.url || "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 bg-slate-900/60 text-slate-400 transition-all duration-300 hover:border-brand hover:text-brand hover:scale-110"
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-pine-800/50 bg-pine-900/60 text-pine-100/70 transition-all duration-300 hover:border-gold hover:text-gold hover:scale-110"
                       aria-label={s.platform}
                     >
                       {platformLower.includes("twitter") || platformLower.includes("x") ? (
@@ -105,11 +105,11 @@ export function Footer() {
             >
               {footer.columns.map((col) => (
                 <div key={col.id} className="min-w-0 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-brand mb-4 truncate">{col.columnTitle}</h4>
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-gold mb-4 truncate">{col.columnTitle}</h4>
                   <ul className="space-y-2.5 text-sm">
                     {col.links && col.links.map((link) => (
                       <li key={link.id} className="truncate">
-                        <Link href={link.url || "#"} className="transition hover:text-white">
+                        <Link href={link.url || "#"} className="transition hover:text-cream-white">
                           {link.label}
                         </Link>
                       </li>
@@ -123,12 +123,12 @@ export function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-slate-800/60">
+      <div className="border-t border-pine-800/40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-pine-200/60">
             {footer.copyrightText || "© 2026 PlotsnHomes Pvt. Ltd. · CIN: U70200DL2024PTC000001"}
           </p>
-          <p className="text-xs text-slate-600">
+          <p className="text-xs text-pine-200/50">
             {footer.disclaimerText || footer.poweredByText || "Investment in real estate is subject to market risks. Read all documents carefully."}
           </p>
         </div>

@@ -30,13 +30,13 @@ export function CurrencyConverter({ amountUsd, baseCurrency = DEFAULT_CURRENCY }
   const converted = amountUsd * rate;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+    <div className="rounded-xl border border-pine-900/10 bg-cream-50/80 px-4 py-3">
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-sm text-slate-600">Price in</span>
         <select
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium"
+          className="rounded-lg border border-pine-900/10 bg-white px-3 py-1.5 text-sm font-medium"
         >
           {currencies.map((c) => (
             <option key={c} value={c}>
@@ -44,7 +44,7 @@ export function CurrencyConverter({ amountUsd, baseCurrency = DEFAULT_CURRENCY }
             </option>
           ))}
         </select>
-        <span className="text-lg font-semibold text-slate-900">
+        <span className="text-lg font-semibold text-pine-950">
           {formatCurrency(converted, currency)}
         </span>
         {currency !== baseCurrency && (

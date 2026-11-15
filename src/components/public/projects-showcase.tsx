@@ -53,7 +53,7 @@ function priceLabel(p: ShowcaseProject): string {
 
 function statusTone(status: string | null): string {
   const s = (status || "").toLowerCase();
-  if (s.includes("new") || s.includes("launch")) return "bg-brand-soft text-brand border-brand/20";
+  if (s.includes("new") || s.includes("launch")) return "bg-pine-900-soft text-gold-dark border-gold/20";
   if (s.includes("ongoing") || s.includes("construction")) return "bg-amber-50 text-amber-700 border-amber-200";
   if (s.includes("ready") || s.includes("complete")) return "bg-emerald-50 text-emerald-700 border-emerald-200";
   if (s.includes("upcoming")) return "bg-indigo-50 text-indigo-700 border-indigo-200";
@@ -94,7 +94,7 @@ export function ProjectsShowcase({ projects }: { projects: ShowcaseProject[] }) 
   const hasFilters = category !== ALL || ptype !== ALL || status !== ALL || city !== ALL || search.trim() !== "";
   const clear = () => { setCategory(ALL); setPtype(ALL); setStatus(ALL); setCity(ALL); setSearch(""); };
 
-  const selectCls = "h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
+  const selectCls = "h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-gold focus:ring-2 focus:ring-gold/20";
 
   if (projects.length === 0) return null;
 
@@ -102,7 +102,7 @@ export function ProjectsShowcase({ projects }: { projects: ShowcaseProject[] }) 
     <section id="projects" className="bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-brand">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gold-dark">
             <Sparkles className="h-4 w-4" /> Developer Projects
           </span>
           <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-slate-900">Explore new &amp; upcoming projects</h2>
@@ -120,7 +120,7 @@ export function ProjectsShowcase({ projects }: { projects: ShowcaseProject[] }) 
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search project, developer, city…"
               aria-label="Search projects"
-              className="w-full h-11 rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+              className="w-full h-11 rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20"
             />
           </div>
           <select value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Category" className={selectCls}>
@@ -144,7 +144,7 @@ export function ProjectsShowcase({ projects }: { projects: ShowcaseProject[] }) 
         <div className="mt-3 flex items-center justify-between text-sm text-slate-500">
           <span><b className="text-slate-900">{filtered.length}</b> project{filtered.length !== 1 ? "s" : ""}</span>
           {hasFilters && (
-            <button type="button" onClick={clear} className="inline-flex items-center gap-1 font-semibold text-brand hover:underline">
+            <button type="button" onClick={clear} className="inline-flex items-center gap-1 font-semibold text-gold-dark hover:underline">
               <X className="h-3.5 w-3.5" /> Clear filters
             </button>
           )}
@@ -193,14 +193,14 @@ export function ProjectsShowcase({ projects }: { projects: ShowcaseProject[] }) 
                       {p.projectType && <span className="rounded bg-slate-100 px-2 py-0.5">{p.projectType}</span>}
                     </div>
                     {href ? (
-                      <Link href={href} className="mt-2 text-base font-bold text-slate-900 line-clamp-1 hover:text-brand">{p.name}</Link>
+                      <Link href={href} className="mt-2 text-base font-bold text-slate-900 line-clamp-1 hover:text-gold-dark">{p.name}</Link>
                     ) : (
                       <h3 className="mt-2 text-base font-bold text-slate-900 line-clamp-1">{p.name}</h3>
                     )}
                     {p.developerName && <p className="text-xs font-semibold text-slate-500 mt-0.5">by {p.developerName}</p>}
                     {loc && (
                       <p className="mt-1.5 flex items-center gap-1 text-xs text-slate-600">
-                        <MapPin className="h-3.5 w-3.5 text-brand shrink-0" /> <span className="truncate">{loc}</span>
+                        <MapPin className="h-3.5 w-3.5 text-gold-dark shrink-0" /> <span className="truncate">{loc}</span>
                       </p>
                     )}
                     <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
@@ -211,13 +211,13 @@ export function ProjectsShowcase({ projects }: { projects: ShowcaseProject[] }) 
                       <button
                         type="button"
                         onClick={() => setInterest(p)}
-                        className="inline-flex items-center justify-center rounded-lg bg-brand px-3.5 py-2 text-xs font-bold text-white hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                        className="inline-flex items-center justify-center rounded-lg bg-pine-900 px-3.5 py-2 text-xs font-bold text-white hover:bg-pine-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
                       >
                         Show Interest
                       </button>
                     </div>
                     {href && (
-                      <Link href={href} className="mt-3 inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 py-2 text-xs font-bold text-slate-700 hover:border-brand/40 hover:text-brand transition">
+                      <Link href={href} className="mt-3 inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 py-2 text-xs font-bold text-slate-700 hover:border-gold/40 hover:text-gold-dark transition">
                         View full details <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     )}
@@ -276,14 +276,14 @@ function InterestModal({ project, onClose }: { project: ShowcaseProject; onClose
     }
   }
 
-  const input = "w-full h-11 rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
+  const input = "w-full h-11 rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose} role="dialog" aria-modal="true" aria-label={`Register interest in ${project.name}`}>
       <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-slate-100 bg-slate-50">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-brand">Register interest</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-gold-dark">Register interest</p>
             <h3 className="text-base font-bold text-slate-900">{project.name}</h3>
             <p className="text-xs text-slate-500">{[project.area, project.city].filter(Boolean).join(", ")}</p>
           </div>
@@ -306,7 +306,7 @@ function InterestModal({ project, onClose }: { project: ShowcaseProject; onClose
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name *" aria-label="Full name" className={input} />
             </div>
             <div className="flex gap-2">
-              <select value={code} onChange={(e) => setCode(e.target.value)} aria-label="Country code" className="h-11 rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-brand">
+              <select value={code} onChange={(e) => setCode(e.target.value)} aria-label="Country code" className="h-11 rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-gold">
                 {COUNTRY_DIAL_CODES.map((c, i) => <option key={`${c.code}-${i}`} value={c.code}>{c.code}</option>)}
               </select>
               <div className="relative flex-1">
@@ -318,9 +318,9 @@ function InterestModal({ project, onClose }: { project: ShowcaseProject; onClose
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email (optional)" type="email" aria-label="Email" className={input} />
             </div>
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Anything specific you're looking for? (optional)" aria-label="Note" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 resize-none" />
+            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Anything specific you're looking for? (optional)" aria-label="Note" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 resize-none" />
             {err && <p className="text-xs font-semibold text-rose-600">{err}</p>}
-            <button type="submit" disabled={state === "loading"} className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3 text-sm font-bold text-white hover:bg-brand-hover disabled:opacity-60">
+            <button type="submit" disabled={state === "loading"} className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-pine-900 px-4 py-3 text-sm font-bold text-white hover:bg-pine-950 disabled:opacity-60">
               {state === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Submit interest
             </button>

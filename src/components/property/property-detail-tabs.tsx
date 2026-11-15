@@ -220,7 +220,7 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
 
   return (
     <div>
-      <div className="flex flex-wrap gap-1 border-b border-slate-200 overflow-x-auto">
+      <div className="flex flex-wrap gap-1 border-b border-pine-900/10 overflow-x-auto">
         {TABS.map((t) => (
           <button
             key={t}
@@ -228,7 +228,7 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
             onClick={() => setTab(t)}
             className={`whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 transition ${
               tab === t
-                ? "border-brand text-brand-hover"
+                ? "border-gold text-gold-dark"
                 : "border-transparent text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -278,10 +278,10 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
               const appPct = baseRate > 0 ? ((current - baseRate) / baseRate) * 100 : 0;
 
               return (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 space-y-5">
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div className="rounded-2xl border border-pine-900/10 bg-cream-50 p-6 space-y-5">
+                  <div className="flex items-center justify-between border-b border-pine-900/10 pb-3">
                     <div>
-                      <h3 className="text-base font-bold text-slate-900">Price Filters & Stage Appreciation Matrix</h3>
+                      <h3 className="text-base font-bold text-pine-950">Price Filters & Stage Appreciation Matrix</h3>
                       <p className="text-xs text-slate-500">Historical launch stage progression & calculated capital appreciation (PriceFilters.xlsx)</p>
                     </div>
                     <span className="rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-xs font-bold text-emerald-800">
@@ -291,9 +291,9 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
 
                   {/* 4 Distinct Boxes (Soft Launch, Pre Launch, Launch Price, Current Price) */}
                   <div className="grid gap-3 sm:grid-cols-4">
-                    <div className="rounded-xl bg-white p-3.5 border border-slate-200 space-y-0.5">
+                    <div className="rounded-xl bg-white p-3.5 border border-pine-900/10 space-y-0.5">
                       <span className="text-xs text-slate-500 font-medium block">Soft Launch</span>
-                      <span className="text-base font-bold text-slate-900 block">
+                      <span className="text-base font-bold text-pine-950 block">
                         ₹{soft.toLocaleString("en-IN")} / sqft
                       </span>
                       <span className="text-[11px] text-slate-500 block">
@@ -301,9 +301,9 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
                       </span>
                     </div>
 
-                    <div className="rounded-xl bg-white p-3.5 border border-slate-200 space-y-0.5">
+                    <div className="rounded-xl bg-white p-3.5 border border-pine-900/10 space-y-0.5">
                       <span className="text-xs text-slate-500 font-medium block">Pre Launch</span>
-                      <span className="text-base font-bold text-slate-900 block">
+                      <span className="text-base font-bold text-pine-950 block">
                         ₹{pre.toLocaleString("en-IN")} / sqft
                       </span>
                       <span className="text-[11px] text-slate-500 block">
@@ -311,9 +311,9 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
                       </span>
                     </div>
 
-                    <div className="rounded-xl bg-white p-3.5 border border-slate-200 space-y-0.5">
+                    <div className="rounded-xl bg-white p-3.5 border border-pine-900/10 space-y-0.5">
                       <span className="text-xs text-slate-500 font-medium block">Launch Price</span>
-                      <span className="text-base font-bold text-slate-900 block">
+                      <span className="text-base font-bold text-pine-950 block">
                         ₹{launch.toLocaleString("en-IN")} / sqft
                       </span>
                       <span className="text-[11px] text-slate-500 block">
@@ -333,42 +333,42 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
                   </div>
 
                   {/* PriceFilters.xlsx Exact Table Matrix */}
-                  <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                  <div className="overflow-x-auto rounded-xl border border-pine-900/10 bg-white">
                     <table className="w-full text-left text-xs">
-                      <thead className="border-b border-slate-200 bg-slate-100/80 text-slate-600 font-bold uppercase tracking-wider">
+                      <thead className="border-b border-pine-900/10 bg-cream-100/80 text-slate-600 font-bold uppercase tracking-wider">
                         <tr>
                           <th className="px-4 py-3">Stage / Parameter</th>
                           <th className="px-4 py-3 text-emerald-700">rate/sqft</th>
                           <th className="px-4 py-3 text-slate-700">Area (sqft)</th>
-                          <th className="px-4 py-3 text-brand-hover">Total Price</th>
+                          <th className="px-4 py-3 text-gold-dark">Total Price</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
                         <tr>
-                          <td className="px-4 py-2.5 font-bold text-slate-900">Soft Launch</td>
+                          <td className="px-4 py-2.5 font-bold text-pine-950">Soft Launch</td>
                           <td className="px-4 py-2.5 font-mono">{soft}</td>
                           <td className="px-4 py-2.5 font-mono">{sqft}</td>
-                          <td className="px-4 py-2.5 font-mono font-bold text-slate-900">₹{softTotal.toLocaleString("en-IN")}</td>
+                          <td className="px-4 py-2.5 font-mono font-bold text-pine-950">₹{softTotal.toLocaleString("en-IN")}</td>
                         </tr>
                         <tr>
-                          <td className="px-4 py-2.5 font-bold text-slate-900">Pre Launch</td>
+                          <td className="px-4 py-2.5 font-bold text-pine-950">Pre Launch</td>
                           <td className="px-4 py-2.5 font-mono">{pre}</td>
                           <td className="px-4 py-2.5 font-mono">{sqft}</td>
-                          <td className="px-4 py-2.5 font-mono font-bold text-slate-900">₹{preTotal.toLocaleString("en-IN")}</td>
+                          <td className="px-4 py-2.5 font-mono font-bold text-pine-950">₹{preTotal.toLocaleString("en-IN")}</td>
                         </tr>
                         <tr>
-                          <td className="px-4 py-2.5 font-bold text-slate-900">Launch Price</td>
+                          <td className="px-4 py-2.5 font-bold text-pine-950">Launch Price</td>
                           <td className="px-4 py-2.5 font-mono">{launch}</td>
                           <td className="px-4 py-2.5 font-mono">{sqft}</td>
-                          <td className="px-4 py-2.5 font-mono font-bold text-slate-900">₹{launchTotal.toLocaleString("en-IN")}</td>
+                          <td className="px-4 py-2.5 font-mono font-bold text-pine-950">₹{launchTotal.toLocaleString("en-IN")}</td>
                         </tr>
                         <tr className="bg-emerald-50/70 font-bold">
                           <td className="px-4 py-2.5 text-emerald-900">Current Price</td>
                           <td className="px-4 py-2.5 font-mono text-emerald-800">{current}</td>
-                          <td className="px-4 py-2.5 font-mono text-slate-900">{sqft}</td>
+                          <td className="px-4 py-2.5 font-mono text-pine-950">{sqft}</td>
                           <td className="px-4 py-2.5 font-mono text-emerald-800">₹{currentTotal.toLocaleString("en-IN")}</td>
                         </tr>
-                        <tr className="bg-amber-50/60 font-bold border-t-2 border-slate-200">
+                        <tr className="bg-amber-50/60 font-bold border-t-2 border-pine-900/10">
                           <td className="px-4 py-2.5 text-amber-900">Appreciation (%)</td>
                           <td className="px-4 py-2.5 font-mono text-emerald-700">+{appPct.toFixed(2)}%</td>
                           <td className="px-4 py-2.5 text-slate-400">—</td>
@@ -396,44 +396,44 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
             </p>
 
             {/* Backend Listing Information Matrix */}
-            <div className="mt-8 pt-6 border-t border-slate-200 space-y-3">
+            <div className="mt-8 pt-6 border-t border-pine-900/10 space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 Property Listing Overview
               </h3>
-              <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/80 text-xs">
+              <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-cream-50 p-4 rounded-xl border border-pine-900/10/80 text-xs">
                 <div>
                   <dt className="text-slate-500 font-medium mb-0.5">Listing type</dt>
-                  <dd className="font-bold text-slate-900 capitalize">{property.listingType === "SALE" ? "Sales" : property.listingType}</dd>
+                  <dd className="font-bold text-pine-950 capitalize">{property.listingType === "SALE" ? "Sales" : property.listingType}</dd>
                 </div>
                 <div>
                   <dt className="text-slate-500 font-medium mb-0.5">Category</dt>
-                  <dd className="font-bold text-slate-900">{property.category || "—"}</dd>
+                  <dd className="font-bold text-pine-950">{property.category || "—"}</dd>
                 </div>
                 <div>
                   <dt className="text-slate-500 font-medium mb-0.5">Area / neighborhood</dt>
-                  <dd className="font-bold text-slate-900">{property.area || "—"}</dd>
+                  <dd className="font-bold text-pine-950">{property.area || "—"}</dd>
                 </div>
                 <div>
                   <dt className="text-slate-500 font-medium mb-0.5">Type</dt>
-                  <dd className="font-bold text-slate-900">{property.type || "RESIDENTIAL"}</dd>
+                  <dd className="font-bold text-pine-950">{property.type || "RESIDENTIAL"}</dd>
                 </div>
                 <div>
                   <dt className="text-slate-500 font-medium mb-0.5">Status</dt>
-                  <dd className="font-bold text-slate-900">{property.status || "ACTIVE"}</dd>
+                  <dd className="font-bold text-pine-950">{property.status || "ACTIVE"}</dd>
                 </div>
                 <div>
                   <dt className="text-slate-500 font-medium mb-0.5">Agent</dt>
-                  <dd className="font-bold text-slate-900 truncate" title={property.agent ? `${property.agent.name} (${property.agent.email})` : "Representative"}>
+                  <dd className="font-bold text-pine-950 truncate" title={property.agent ? `${property.agent.name} (${property.agent.email})` : "Representative"}>
                     {property.agent?.name || "Representative"}
                   </dd>
                 </div>
                 <div>
                   <dt className="text-slate-500 font-medium mb-0.5">Builder / developer</dt>
-                  <dd className="font-bold text-slate-900">{property.developer?.name || property.developerName || "—"}</dd>
+                  <dd className="font-bold text-pine-950">{property.developer?.name || property.developerName || "—"}</dd>
                 </div>
                 <div>
                   <dt className="text-slate-500 font-medium mb-0.5">Project</dt>
-                  <dd className="font-bold text-slate-900">{property.project?.name || "—"}</dd>
+                  <dd className="font-bold text-pine-950">{property.project?.name || "—"}</dd>
                 </div>
               </dl>
             </div>
@@ -459,13 +459,13 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
                 ].map(([k, v]) => (
                   <div key={k}>
                     <dt className="text-slate-500">{k}</dt>
-                    <dd className="font-medium text-slate-900 mt-0.5">{v}</dd>
+                    <dd className="font-medium text-pine-950 mt-0.5">{v}</dd>
                   </div>
                 ))}
               </dl>
             </div>
             <div>
-              <div className="rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-slate-50">
+              <div className="rounded-xl overflow-hidden shadow-sm border border-pine-900/10 bg-cream-50">
                 <iframe
                   title="Map"
                   className="w-full h-80 border-0"
@@ -539,7 +539,7 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
                 return allItems.map(([k, v], idx) => (
                   <div key={k + idx} className="flex justify-between border-b py-2">
                     <span className="text-slate-500">{k}</span>
-                    <span className="font-medium text-slate-900 break-all pl-2">{v}</span>
+                    <span className="font-medium text-pine-950 break-all pl-2">{v}</span>
                   </div>
                 ));
               })()}
@@ -563,7 +563,7 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
               ].map((f) => (
                 <span
                   key={f}
-                  className="rounded-full bg-slate-100 px-3 py-1 text-sm"
+                  className="rounded-full bg-cream-100 px-3 py-1 text-sm"
                 >
                   {f}
                 </span>
@@ -577,7 +577,7 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
         {tab === "Video" &&
           (allVideos.length > 0 ? (
             <div className="space-y-4">
-              <div className="aspect-video rounded-xl overflow-hidden bg-slate-900 shadow-md">
+              <div className="aspect-video rounded-xl overflow-hidden bg-pine-900 shadow-md">
                 {isEmbedUrl(allVideos[activeVideoIndex]) ? (
                   <iframe
                     src={getEmbedUrl(allVideos[activeVideoIndex])}
@@ -603,8 +603,8 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
                       onClick={() => setActiveVideoIndex(index)}
                       className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
                         activeVideoIndex === index
-                          ? "bg-amber-100 text-brand-hover border-brand shadow-sm"
-                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                          ? "bg-amber-100 text-gold-dark border-gold shadow-sm"
+                          : "bg-white text-slate-600 border-pine-900/10 hover:bg-cream-50"
                       }`}
                     >
                       Video {index + 1}
@@ -664,7 +664,7 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
             </div>
             <a
               href="/calculators"
-              className="text-brand-hover text-sm font-medium hover:underline"
+              className="text-gold-dark text-sm font-medium hover:underline"
             >
               Open full loan calculator →
             </a>
@@ -701,14 +701,14 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
         )}
 
         {tab === "Transactions" && (
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+          <div className="overflow-hidden rounded-xl border border-pine-900/10 bg-white">
+            <div className="bg-cream-50 px-6 py-4 border-b border-pine-900/10">
               <h3 className="font-semibold text-slate-800 text-base">Property Transaction Ledger</h3>
               <p className="text-xs text-slate-500 mt-0.5">Payment history, split payouts & platform broker fees</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50/70 text-slate-500 font-semibold text-[11px] uppercase tracking-wider border-b">
+                <thead className="bg-cream-50/70 text-slate-500 font-semibold text-[11px] uppercase tracking-wider border-b">
                   <tr>
                     <th className="px-6 py-3">Date</th>
                     <th className="px-6 py-3">Buyer</th>
@@ -727,20 +727,24 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
                       const platShare = tx.brokerageAmount ?? (isOffline ? 0.0 : tx.amount * (rate / 100));
                       const sellerPayout = tx.sellerAmount ?? (tx.amount - platShare);
                       return (
-                        <tr key={tx.id} className="hover:bg-slate-50/35 transition-colors text-slate-800">
+                        <tr key={tx.id} className="hover:bg-cream-50/35 transition-colors text-slate-800">
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="font-mono text-xs text-slate-600">{new Date(tx.createdAt).toLocaleDateString()}</span>
+                            <span className="font-mono text-xs text-slate-600">
+                              {new Date(tx.createdAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "short", year: "numeric" })}
+                            </span>
                             <br />
-                            <span className="text-[10px] text-slate-400 font-mono">{new Date(tx.createdAt).toLocaleTimeString()}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {new Date(tx.createdAt).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" })}
+                            </span>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="font-semibold text-slate-900 block leading-tight">{tx.user?.name ?? "—"}</span>
+                            <span className="font-semibold text-pine-950 block leading-tight">{tx.user?.name ?? "—"}</span>
                             <span className="text-slate-400 text-xs font-mono">{tx.user?.email ?? "—"}</span>
                           </td>
                           <td className="px-6 py-4 text-slate-600 font-medium">
                             {tx.paymentMethod ? tx.paymentMethod.toUpperCase().replace("_", " ") : "—"}
                           </td>
-                          <td className="px-6 py-4 font-bold text-slate-900">{formatCurrency(tx.amount)}</td>
+                          <td className="px-6 py-4 font-bold text-pine-950">{formatCurrency(tx.amount)}</td>
                           <td className="px-6 py-4 text-amber-700 font-semibold">
                             {formatCurrency(platShare)} {platShare > 0 ? `(${rate.toFixed(1)}%)` : ""}
                           </td>
@@ -785,7 +789,7 @@ export function PropertyDetailTabs({ property }: { property: PropertyData }) {
                   href={p.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-brand-hover hover:underline text-sm"
+                  className="text-gold-dark hover:underline text-sm"
                 >
                   {p.name}
                 </a>

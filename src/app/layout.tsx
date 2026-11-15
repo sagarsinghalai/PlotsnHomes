@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Fraunces } from "next/font/google";
 import { ConditionalFooter } from "@/components/layout/conditional-footer";
 import { ConditionalNavbar } from "@/components/layout/conditional-navbar";
 import { ConditionalMarketTicker } from "@/components/market/conditional-market-ticker";
@@ -17,11 +17,14 @@ const sans = Inter({
   display: "swap",
 });
 
-const display = Inter({
+// Fraunces is the serif display face for headings (warm, editorial real-estate
+// look). Italic is used for accent words inside headings.
+const display = Fraunces({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
-  weight: ["600", "700"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {

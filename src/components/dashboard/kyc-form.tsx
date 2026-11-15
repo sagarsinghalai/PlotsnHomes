@@ -278,7 +278,7 @@ export function KycForm() {
           <h2 className="text-2xl font-bold text-slate-900 mb-2">KYC Submitted!</h2>
           <p className="text-slate-500 mb-6">{msg}</p>
           <StatusBadge status="PENDING" />
-          <div className="mt-8 grid grid-cols-3 gap-4 text-sm">
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             {[
               { icon: "🔒", label: "Secure Encryption", desc: "All data is encrypted" },
               { icon: "⏱️", label: "24–48 hrs Review", desc: "Fast verification" },

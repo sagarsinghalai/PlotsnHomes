@@ -78,18 +78,19 @@ export function PropertyPrintBrochure(props: PropertyPrintBrochureProps) {
     ? `${formatCurrencyBrochure(rentMonthly ?? price)} / mo`
     : formatCurrencyBrochure(price);
 
-  const pageUrl = typeof window !== "undefined"
-    ? window.location.href
-    : slug ? `/properties/${slug}` : "";
+  // Deterministic on the first render (identical on server and client) so React
+  // can hydrate without a mismatch; upgraded to the absolute URL after mount.
+  const [pageUrl, setPageUrl] = useState(slug ? `/properties/${slug}` : "");
 
   // Derive display area
   const displayArea = sqft != null && sqft > 0
-    ? `${sqft.toLocaleString()} sq ft`
+    ? `${sqft.toLocaleString("en-IN")} sq ft`
     : areaText ?? null;
 
   const [printDate, setPrintDate] = useState("");
   useEffect(() => {
     setPrintDate(new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }));
+    setPageUrl(window.location.href);
   }, []);
 
   return (

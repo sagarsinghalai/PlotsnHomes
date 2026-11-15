@@ -676,7 +676,7 @@ export function LoanApplicationForm() {
                   <p className="text-xs font-extrabold uppercase tracking-wider text-blue-900 dark:text-blue-300">
                     Eligibility Snapshot
                   </p>
-                  <div className="grid grid-cols-3 gap-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div>
                       <p className="text-slate-500 dark:text-slate-400 font-medium">Monthly Income</p>
                       <p className="font-extrabold text-slate-900 dark:text-white text-sm mt-0.5">{fmt(annualIncome / 12)}</p>

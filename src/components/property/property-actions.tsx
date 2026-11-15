@@ -152,7 +152,7 @@ export function PropertyActions({
 
         <button
           onClick={handlePrint}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-pine-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-cream-50 transition-colors shadow-sm"
         >
           <Printer className="h-3.5 w-3.5" />
           Print
@@ -161,25 +161,25 @@ export function PropertyActions({
         <div className="relative">
           <button
             onClick={handleShare}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-pine-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-cream-50 transition-colors shadow-sm"
           >
             <Share2 className="h-3.5 w-3.5" />
             Share
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-100 bg-white p-1 shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute right-0 mt-2 w-56 rounded-xl border border-pine-900/5 bg-white p-1 shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-150">
               <button
                 onClick={handleWhatsAppShare}
                 disabled={sharingLoading}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-cream-50 disabled:opacity-50"
               >
                 <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />
                 {sharingLoading ? "Sending..." : "Share on WhatsApp"}
               </button>
               <button
                 onClick={handleCopyLink}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-cream-50"
               >
                 {copied ? (
                   <>

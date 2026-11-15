@@ -13,7 +13,7 @@ export function PropertyGallery({ images, title }: { images: string[]; title: st
 
   return (
     <div className="space-y-3">
-      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-slate-100">
+      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-cream-100">
         <Image src={list[idx]} alt={title} fill className="object-cover" priority />
         {list.length > 1 && (
           <>
@@ -31,7 +31,7 @@ export function PropertyGallery({ images, title }: { images: string[]; title: st
             >
               <ChevronRight className="h-5 w-5" />
             </button>
-            <span className="absolute bottom-3 right-3 rounded-full bg-slate-900/80 px-3 py-1 text-xs text-white">
+            <span className="absolute bottom-3 right-3 rounded-full bg-pine-900/80 px-3 py-1 text-xs text-white">
               See all {list.length} photos
             </span>
           </>
@@ -45,7 +45,7 @@ export function PropertyGallery({ images, title }: { images: string[]; title: st
               type="button"
               onClick={() => setIdx(i)}
               className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 ${
-                i === idx ? "border-brand" : "border-transparent"
+                i === idx ? "border-gold" : "border-transparent"
               }`}
             >
               <Image src={src} alt="" fill className="object-cover" />

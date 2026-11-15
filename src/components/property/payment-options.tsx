@@ -45,8 +45,8 @@ const STATUS_COLORS: Record<string, string> = {
   netbanking: "bg-sky-50 border-sky-200 text-sky-700",
   wallet: "bg-pink-50 border-pink-200 text-pink-700",
   emi: "bg-orange-50 border-orange-200 text-orange-700",
-  cheque: "bg-slate-50 border-slate-300 text-slate-700",
-  neft_rtgs: "bg-slate-50 border-slate-300 text-slate-700",
+  cheque: "bg-cream-50 border-pine-900/15 text-slate-700",
+  neft_rtgs: "bg-cream-50 border-pine-900/15 text-slate-700",
   all: "bg-emerald-50 border-emerald-200 text-emerald-700",
 };
 
@@ -213,14 +213,14 @@ export function PaymentOptions({
           {offlineSuccess.referenceNo && (
             <div className="rounded-xl bg-white border border-emerald-200 px-4 py-2.5 flex items-center justify-between">
               <span className="text-xs text-slate-500 font-medium">Reference No.</span>
-              <span className="font-mono font-bold text-slate-900 text-sm">{offlineSuccess.referenceNo}</span>
+              <span className="font-mono font-bold text-pine-950 text-sm">{offlineSuccess.referenceNo}</span>
             </div>
           )}
         </div>
 
         {methodId === "neft_rtgs" && (
-          <div className="rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100 overflow-hidden">
-            <div className="px-4 py-3 bg-slate-50">
+          <div className="rounded-2xl border border-pine-900/10 bg-white divide-y divide-slate-100 overflow-hidden">
+            <div className="px-4 py-3 bg-cream-50">
               <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">NEFT / RTGS Transfer Details</p>
             </div>
             {[
@@ -233,7 +233,7 @@ export function PaymentOptions({
             ].map(([label, value]) => (
               <div key={label} className="flex items-center justify-between px-4 py-2.5">
                 <span className="text-xs text-slate-500">{label}</span>
-                <span className="text-xs font-semibold text-slate-900 font-mono">{value}</span>
+                <span className="text-xs font-semibold text-pine-950 font-mono">{value}</span>
               </div>
             ))}
             <div className="px-4 py-3 bg-amber-50 border-t border-amber-100">
@@ -246,13 +246,13 @@ export function PaymentOptions({
         )}
 
         {methodId === "cheque" && (
-          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-            <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+          <div className="rounded-2xl border border-pine-900/10 bg-white overflow-hidden">
+            <div className="px-4 py-3 bg-cream-50 border-b border-pine-900/5">
               <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Cheque Payment Details</p>
             </div>
             <div className="px-4 py-4 space-y-2 text-sm">
               <p className="text-slate-700">
-                Draw cheque in favour of: <span className="font-bold text-slate-900">{PLOTSNHOMES_BANK.accountName}</span>
+                Draw cheque in favour of: <span className="font-bold text-pine-950">{PLOTSNHOMES_BANK.accountName}</span>
               </p>
               <p className="text-xs text-slate-500">
                 Write your Ref. No. <strong>{offlineSuccess.referenceNo}</strong> on the back of the cheque.
@@ -271,7 +271,7 @@ export function PaymentOptions({
 
         <button
           onClick={() => router.push("/dashboard/transactions")}
-          className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-pine-900 py-3 text-sm font-semibold text-white hover:bg-pine-800 transition-colors"
         >
           <ExternalLink className="h-4 w-4" />
           View Transaction History
@@ -296,8 +296,8 @@ export function PaymentOptions({
                 key={plan.id}
                 className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${
                   selected
-                    ? "border-brand bg-amber-50/80 ring-1 ring-brand/40"
-                    : "border-slate-200 hover:border-slate-300 bg-white"
+                    ? "border-gold bg-amber-50/80 ring-1 ring-gold/40"
+                    : "border-pine-900/10 hover:border-pine-900/15 bg-white"
                 }`}
               >
                 <input
@@ -309,8 +309,8 @@ export function PaymentOptions({
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-slate-900">{plan.label}</span>
-                    <span className="font-mono text-sm font-bold text-brand-hover shrink-0">
+                    <span className="font-semibold text-pine-950">{plan.label}</span>
+                    <span className="font-mono text-sm font-bold text-gold-dark shrink-0">
                       {formatCurrency(amt)}
                     </span>
                   </div>
@@ -341,11 +341,11 @@ export function PaymentOptions({
                 className={`flex flex-col items-start gap-1 rounded-xl border p-2.5 text-left transition-all ${
                   selected
                     ? `${colorClass} ring-1 ring-current/40 shadow-sm`
-                    : "border-slate-200 hover:border-slate-300 bg-white"
+                    : "border-pine-900/10 hover:border-pine-900/15 bg-white"
                 }`}
               >
                 <Icon className={`h-4 w-4 ${selected ? "text-current" : "text-slate-500"}`} />
-                <span className="text-[11px] font-bold text-slate-900 leading-tight">{method.label}</span>
+                <span className="text-[11px] font-bold text-pine-950 leading-tight">{method.label}</span>
                 <span className="text-[9px] text-slate-500 leading-snug">{method.description}</span>
               </button>
             );
@@ -354,15 +354,15 @@ export function PaymentOptions({
       </div>
 
       {/* ── Dual Beneficiary Breakdown ───────────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-        <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-100">
+      <div className="rounded-2xl border border-pine-900/10 bg-white overflow-hidden">
+        <div className="px-4 py-2.5 bg-cream-50 border-b border-pine-900/5">
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Payment Breakdown</p>
         </div>
         <div className="divide-y divide-slate-100">
           {/* Total */}
           <div className="flex items-center justify-between px-4 py-2.5">
             <span className="text-xs text-slate-600">Total Payment</span>
-            <span className="font-mono font-bold text-slate-900">{formatCurrency(amount)}</span>
+            <span className="font-mono font-bold text-pine-950">{formatCurrency(amount)}</span>
           </div>
           {/* Platform fee */}
           <div className="flex items-center justify-between px-4 py-2.5">
@@ -421,12 +421,12 @@ export function PaymentOptions({
           </div>
 
           <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-violet-100">
-            <div className="shrink-0 bg-slate-900 text-white p-2 rounded-xl text-center">
+            <div className="shrink-0 bg-pine-900 text-white p-2 rounded-xl text-center">
               <Smartphone className="h-6 w-6 mx-auto text-amber-400" />
               <span className="text-[9px] font-bold block mt-0.5">Scan or Tap</span>
             </div>
             <div className="text-xs space-y-0.5 min-w-0 flex-1">
-              <p className="font-bold text-slate-900">VPA: brickvest@axisbank</p>
+              <p className="font-bold text-pine-950">VPA: brickvest@axisbank</p>
               <p className="text-[11px] text-slate-500 truncate">Deep-links directly to installed mobile UPI apps</p>
             </div>
             <a
@@ -464,7 +464,7 @@ export function PaymentOptions({
             preferredMethod={selectedMethod?.razorpayMethod}
             onError={(err) => setError(err)}
             onDismiss={() => setCheckout(null)}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand py-3 px-4 font-semibold text-white shadow-sm hover:bg-brand-hover transition-colors disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-pine-900 py-3 px-4 font-semibold text-white shadow-sm hover:bg-pine-950 transition-colors disabled:opacity-60"
           >
             <Sparkles className="h-4 w-4" />
             Pay {formatCurrency(amount)} via Razorpay

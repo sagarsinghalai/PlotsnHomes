@@ -65,20 +65,20 @@ export default async function PropertiesPage({
   const areas = areasRaw.map((a) => a.area).filter(Boolean) as string[];
 
   return (
-    <div className="bg-slate-50 min-h-screen">
+    <div className="bg-cream-50 min-h-screen">
       {/* Compact page header — no hero image */}
-      <div className="border-b border-slate-200 bg-white">
+      <div className="border-b border-pine-900/10 bg-cream-white">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-brand-hover">PlotsnHomes</p>
-            <h1 className="mt-1 font-display text-2xl font-bold text-slate-900">All Properties</h1>
+            <p className="text-xs font-semibold uppercase tracking-widest text-gold-dark">PlotsnHomes</p>
+            <h1 className="mt-1 font-display text-3xl font-medium text-pine-950">All Properties</h1>
           </div>
-          <p className="text-sm text-slate-500">{total.toLocaleString()} listings · Buy &amp; rent</p>
+          <p className="text-sm text-sage">{total.toLocaleString()} listings · Buy &amp; rent</p>
         </div>
 
         {/* Search filters directly under the header */}
         <div className="mx-auto max-w-7xl px-4 pb-4 sm:px-6 lg:px-8">
-          <Suspense fallback={<div className="h-24 bg-slate-100 rounded-xl animate-pulse" />}>
+          <Suspense fallback={<div className="h-24 bg-cream-100 rounded-xl animate-pulse" />}>
             <WpHeroSearch
               priceMin={priceRange._min.price ?? 0}
               priceMax={priceRange._max.price ?? 2000000}
@@ -94,11 +94,11 @@ export default async function PropertiesPage({
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-sage">
               {total.toLocaleString()} properties
               {filters.listingType ? ` · ${filters.listingType === "RENT" ? "Rentals" : "Sales"}` : ""}
             </p>
-            <Link href="/dashboard/list-property" className="text-sm font-medium text-brand-hover hover:underline">
+            <Link href="/dashboard/list-property" className="text-sm font-medium text-gold-dark hover:underline">
               + List your property
             </Link>
           </div>
@@ -110,8 +110,8 @@ export default async function PropertiesPage({
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-16 text-center">
-              <p className="text-lg font-medium text-slate-700">No properties match your filters</p>
+            <div className="rounded-2xl border border-dashed border-pine-900/20 bg-cream-white p-16 text-center">
+              <p className="text-lg font-medium text-pine-900">No properties match your filters</p>
             </div>
           )}
 

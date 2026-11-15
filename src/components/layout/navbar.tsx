@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
@@ -49,7 +49,6 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
     if ("scrollTarget" in link && link.scrollTarget) {
       e.preventDefault();
       if (pathname === "/") {
-        // Already on home page – smooth-scroll
         const el = document.getElementById(link.scrollTarget);
         if (el) {
           el.scrollIntoView({ behavior: "smooth" });
@@ -64,18 +63,28 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
   }
 
   const isHome = pathname === "/";
+  // Links sit over the dark hero image on the home page (light text) and on the
+  // cream navbar everywhere else (dark text).
+  const linkCls = isHome
+    ? "text-cream-100 hover:text-cream-white"
+    : "text-pine-800 hover:text-pine-950";
 
   return (
     <header
       className={`h-16 w-full shrink-0 ${
         isHome
-          ? "absolute left-0 right-0 z-50 border-b border-white/5 bg-transparent"
-          : "relative z-50 border-b border-slate-800 bg-slate-950"
+          ? "absolute left-0 right-0 z-50 bg-transparent"
+          : "relative z-50 border-b border-pine-900/10 bg-cream-white shadow-sm"
       }`}
     >
       <div className="mx-auto flex h-full w-full max-w-[1536px] items-center justify-between px-4 sm:px-6 lg:px-8 flex-nowrap">
-        {/* Utmost Left: Logo & Title */}
-        <BrandLogo href="/" brandName={brandName} logoUrl={logoUrl} />
+        {/* Left: Logo & Title — light text over the dark hero, dark on the cream navbar */}
+        <BrandLogo
+          href="/"
+          brandName={brandName}
+          logoUrl={logoUrl}
+          textClassName={isHome ? "text-cream-white" : "text-pine-950"}
+        />
 
         {/* Center: Navigation Links */}
         <nav className="hidden items-center gap-2 sm:gap-3 lg:gap-4 xl:gap-6 md:flex shrink-0 flex-nowrap">
@@ -84,7 +93,7 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
               key={l.href}
               href={l.href}
               onClick={(e) => handleNavClick(e, l)}
-              className="text-xs xl:text-sm font-medium whitespace-nowrap text-slate-300 transition hover:text-white"
+              className={`text-xs xl:text-sm font-medium whitespace-nowrap transition ${linkCls}`}
             >
               {l.label}
             </Link>
@@ -96,27 +105,27 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
                   ? "/admin"
                   : "/dashboard"
               }
-              className="text-xs xl:text-sm font-semibold whitespace-nowrap text-brand hover:text-brand-hover border border-brand/40 rounded-xl px-3 py-1.5 bg-brand/10 hover:bg-brand/20 transition shadow-sm"
+              className="text-xs xl:text-sm font-semibold whitespace-nowrap text-gold-dark hover:text-gold border border-gold/40 rounded-xl px-3 py-1.5 bg-gold/10 hover:bg-gold/20 transition shadow-sm"
             >
               {getRoleLabel(session.user.role)}
             </Link>
           )}
         </nav>
 
-        {/* Utmost Right: User Session Controls */}
+        {/* Right: User Session Controls */}
         <div className="hidden items-center gap-3 md:flex shrink-0">
           {session ? (
             <div className="flex items-center gap-3">
               <Link
                 href="/dashboard/profile"
                 title="Profile & account settings"
-                className="text-xs xl:text-sm font-medium whitespace-nowrap text-slate-300 hover:text-white max-w-[160px] truncate"
+                className={`text-xs xl:text-sm font-medium whitespace-nowrap max-w-[160px] truncate ${linkCls}`}
               >
                 {session.user.name}
               </Link>
               <Button
                 variant="ghost"
-                className="text-xs xl:text-sm whitespace-nowrap text-slate-300 hover:text-white hover:bg-slate-800"
+                className={`text-xs xl:text-sm whitespace-nowrap ${linkCls} hover:bg-pine-900/5`}
                 onClick={() => signOut({ callbackUrl: "/login" })}
               >
                 Sign out
@@ -125,12 +134,12 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
           ) : (
             <div className="flex items-center gap-2">
               <Link href="/login">
-                <Button variant="ghost" className="text-xs xl:text-sm whitespace-nowrap text-slate-300 hover:text-white hover:bg-slate-800/40">
+                <Button variant="ghost" className={`text-xs xl:text-sm whitespace-nowrap ${linkCls} hover:bg-pine-900/5`}>
                   Log in
                 </Button>
               </Link>
               <Link href="/register">
-                <Button variant="gold" className="text-xs xl:text-sm whitespace-nowrap">
+                <Button variant="gold" className="text-xs xl:text-sm whitespace-nowrap rounded-full">
                   Get started
                 </Button>
               </Link>
@@ -140,7 +149,7 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
 
         <button
           type="button"
-          className="md:hidden rounded-lg p-2 text-slate-300 hover:text-white shrink-0"
+          className={`md:hidden rounded-lg p-2 shrink-0 ${linkCls}`}
           onClick={() => setOpen(!open)}
           aria-label="Menu"
         >
@@ -149,12 +158,12 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
       </div>
 
       {open && (
-        <div className="border-t border-slate-800 bg-slate-950 px-4 py-4 md:hidden">
+        <div className="border-t border-pine-900/10 bg-cream-white px-4 py-4 md:hidden shadow-lg">
           {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="block py-2 text-slate-300 hover:text-white"
+              className="block py-2 text-pine-800 hover:text-pine-950"
               onClick={(e) => handleNavClick(e, l)}
             >
               {l.label}
@@ -163,7 +172,7 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
           {(session?.user?.role === "SUPERADMIN" || session?.user?.role === "EMPLOYEE") && (
             <Link
               href="/admin"
-              className="block py-2 font-semibold text-brand"
+              className="block py-2 font-semibold text-gold-dark"
               onClick={() => setOpen(false)}
             >
               Admin Panel
@@ -171,20 +180,20 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
           )}
           {session ? (
             <>
-              <Link href="/dashboard/profile" className="block py-2 font-medium text-slate-300 hover:text-white" onClick={() => setOpen(false)}>
+              <Link href="/dashboard/profile" className="block py-2 font-medium text-pine-800 hover:text-pine-950" onClick={() => setOpen(false)}>
                 Profile &amp; settings
               </Link>
-              <Button variant="ghost" className="mt-2 w-full text-slate-300 hover:text-white" onClick={() => signOut({ callbackUrl: "/login" })}>
+              <Button variant="ghost" className="mt-2 w-full text-pine-800 hover:text-pine-950 hover:bg-pine-900/5" onClick={() => signOut({ callbackUrl: "/login" })}>
                 Sign out
               </Button>
             </>
           ) : (
             <div className="mt-4 flex flex-col gap-2">
               <Link href="/login" onClick={() => setOpen(false)}>
-                <Button variant="secondary" className="w-full bg-slate-800 text-white border-slate-700 hover:bg-slate-700">Log in</Button>
+                <Button variant="secondary" className="w-full border-pine-900/15 bg-cream-100 text-pine-900 hover:bg-pine-100">Log in</Button>
               </Link>
               <Link href="/register" onClick={() => setOpen(false)}>
-                <Button variant="gold" className="w-full">Register</Button>
+                <Button variant="gold" className="w-full rounded-full">Register</Button>
               </Link>
             </div>
           )}

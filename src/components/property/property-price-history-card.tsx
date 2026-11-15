@@ -148,11 +148,11 @@ export function PropertyPriceHistoryCard({
   return (
     <div className="space-y-6">
       {/* Header Container - Clean White Box */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-slate-200 text-slate-900 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-pine-900/10 text-pine-950 shadow-sm">
         <div>
           <div className="flex items-center gap-2">
             <History className="h-5 w-5 text-amber-600" />
-            <h3 className="text-lg font-bold tracking-tight text-slate-900">
+            <h3 className="text-lg font-bold tracking-tight text-pine-950">
               Property Price History &amp; Appreciation Log
             </h3>
           </div>
@@ -165,10 +165,10 @@ export function PropertyPriceHistoryCard({
           <button
             type="button"
             onClick={fetchPriceHistory}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-bold text-xs border border-slate-300 shadow-sm transition"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-cream-100 text-pine-950 font-bold text-xs border border-pine-900/15 shadow-sm transition"
             title="Refresh Price History"
           >
-            <RefreshCw className={`h-3.5 w-3.5 text-slate-900 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 text-pine-950 ${loading ? "animate-spin" : ""}`} />
             <span>Refresh</span>
           </button>
 
@@ -188,7 +188,7 @@ export function PropertyPriceHistoryCard({
       {/* 4 Appreciation Metric Boxes */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* 7-Day Appreciation */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">
+        <div className="rounded-2xl border border-pine-900/10 bg-white p-4 shadow-sm transition hover:border-pine-900/15">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
             <span>7-Day Yield</span>
             <Clock className="h-4 w-4 text-blue-600" />
@@ -204,7 +204,7 @@ export function PropertyPriceHistoryCard({
         </div>
 
         {/* 30-Day Appreciation */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">
+        <div className="rounded-2xl border border-pine-900/10 bg-white p-4 shadow-sm transition hover:border-pine-900/15">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
             <span>30-Day Yield</span>
             <Calendar className="h-4 w-4 text-indigo-600" />
@@ -220,7 +220,7 @@ export function PropertyPriceHistoryCard({
         </div>
 
         {/* 90-Day Appreciation */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">
+        <div className="rounded-2xl border border-pine-900/10 bg-white p-4 shadow-sm transition hover:border-pine-900/15">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
             <span>90-Day Yield</span>
             <TrendingUp className="h-4 w-4 text-purple-600" />
@@ -236,7 +236,7 @@ export function PropertyPriceHistoryCard({
         </div>
 
         {/* Annual Appreciation (YTD / 365d) */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">
+        <div className="rounded-2xl border border-pine-900/10 bg-white p-4 shadow-sm transition hover:border-pine-900/15">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-wider">
             <span>Annual Yield</span>
             <Building className="h-4 w-4 text-amber-600" />
@@ -253,9 +253,9 @@ export function PropertyPriceHistoryCard({
       </div>
 
       {/* Price Logs Table */}
-      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-          <h4 className="text-sm font-bold text-slate-900">
+      <div className="rounded-2xl border border-pine-900/10 bg-white overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-pine-900/10 flex items-center justify-between">
+          <h4 className="text-sm font-bold text-pine-950">
             Individual Price Change Log History ({metrics?.logs.length || 0} entries)
           </h4>
           <span className="text-xs text-slate-500 font-medium">Chronological record of price revisions</span>
@@ -263,7 +263,7 @@ export function PropertyPriceHistoryCard({
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider">
+            <thead className="bg-cream-50 border-b border-pine-900/10 text-slate-700 font-bold uppercase tracking-wider">
               <tr>
                 <th className="p-3.5">Timestamp</th>
                 <th className="p-3.5">Stage / Event</th>
@@ -274,7 +274,7 @@ export function PropertyPriceHistoryCard({
                 <th className="p-3.5">Logged By</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-slate-900">
+            <tbody className="divide-y divide-slate-100 font-medium text-pine-950">
               {metrics && metrics.logs.length > 0 ? (
                 metrics.logs.map((log, idx) => {
                   const prevLog = idx > 0 ? metrics.logs[idx - 1] : null;
@@ -282,7 +282,7 @@ export function PropertyPriceHistoryCard({
                   const diffPct = prevLog && prevLog.price > 0 ? (diffAmount / prevLog.price) * 100 : 0;
 
                   return (
-                    <tr key={log.id} className="hover:bg-slate-50 transition">
+                    <tr key={log.id} className="hover:bg-cream-50 transition">
                       {/* Timestamp */}
                       <td className="p-3.5 text-slate-600 font-mono text-[11px]">
                         {new Date(log.createdAt).toLocaleString("en-IN", {
@@ -296,7 +296,7 @@ export function PropertyPriceHistoryCard({
 
                       {/* Stage */}
                       <td className="p-3.5">
-                        <span className="font-bold text-slate-900 bg-white border border-slate-300 px-2.5 py-0.5 rounded-lg shadow-sm">
+                        <span className="font-bold text-pine-950 bg-white border border-pine-900/15 px-2.5 py-0.5 rounded-lg shadow-sm">
                           {log.stage || "Current Price"}
                         </span>
                         {log.notes && (
@@ -305,7 +305,7 @@ export function PropertyPriceHistoryCard({
                       </td>
 
                       {/* Log Price */}
-                      <td className="p-3.5 font-bold text-slate-900 text-sm">
+                      <td className="p-3.5 font-bold text-pine-950 text-sm">
                         {formatCurrency(log.price)}
                       </td>
 
@@ -370,9 +370,9 @@ export function PropertyPriceHistoryCard({
       {/* Add Price Log Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4 text-slate-900">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+          <div className="w-full max-w-md rounded-2xl border border-pine-900/10 bg-white p-6 shadow-2xl space-y-4 text-pine-950">
+            <div className="flex items-center justify-between border-b border-pine-900/10 pb-3">
+              <h3 className="text-base font-bold text-pine-950 flex items-center gap-2">
                 <Plus className="h-5 w-5 text-amber-600" />
                 Log Price Update
               </h3>
@@ -396,7 +396,7 @@ export function PropertyPriceHistoryCard({
                   required
                   value={newPrice}
                   onChange={(e) => setNewPrice(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-bold text-slate-900 outline-none focus:border-slate-400 shadow-sm"
+                  className="w-full rounded-xl border border-pine-900/15 bg-white px-3.5 py-2 text-sm font-bold text-pine-950 outline-none focus:border-slate-400 shadow-sm"
                   placeholder="Enter updated price..."
                 />
               </div>
@@ -408,7 +408,7 @@ export function PropertyPriceHistoryCard({
                 <select
                   value={newStage}
                   onChange={(e) => setNewStage(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-900 outline-none focus:border-slate-400 shadow-sm"
+                  className="w-full rounded-xl border border-pine-900/15 bg-white px-3.5 py-2 text-xs font-bold text-pine-950 outline-none focus:border-slate-400 shadow-sm"
                 >
                   <option value="Current Price">Current Price</option>
                   <option value="Soft Launch">Soft Launch</option>
@@ -427,15 +427,15 @@ export function PropertyPriceHistoryCard({
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="e.g. Q3 Market Price Revision..."
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 outline-none focus:border-slate-400 shadow-sm"
+                  className="w-full rounded-xl border border-pine-900/15 bg-white px-3.5 py-2 text-xs text-pine-950 outline-none focus:border-slate-400 shadow-sm"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-pine-900/10">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 shadow-sm transition"
+                  className="rounded-xl border border-pine-900/15 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-cream-100 shadow-sm transition"
                 >
                   Cancel
                 </button>
