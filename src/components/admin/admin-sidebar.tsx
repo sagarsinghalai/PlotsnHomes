@@ -50,6 +50,7 @@ import {
   FileSpreadsheet,
   FileUp,
   Bell,
+  Image as ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -161,6 +162,7 @@ const DEFAULT_NAV: NavGroup[] = [
       { href: "/admin/settings/project-defaults", label: "Project Defaults", icon: SlidersHorizontal },
       { href: "/admin/settings/analytics-integration", label: "Analytics Integration", icon: Plug },
       { href: "/admin/settings/webpage-editor", label: "Webpage Editor", icon: Globe },
+      { href: "/admin/media", label: "Media Library", icon: ImageIcon },
       { href: "/admin/settings/footer", label: "Footer", icon: Layout },
       { href: "/admin/variables-templates", label: "Variables & Templates", icon: SlidersHorizontal },
       { href: "/admin/settings/white-label", label: "White-Label & Subscription Hub", icon: Crown },

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { authOptions } from "@/lib/auth-options";
+import { prisma } from "@/lib/prisma";
 import { v2 as cloudinary } from "cloudinary";
 import {
   detectMediaKind,
@@ -107,12 +108,33 @@ export async function POST(req: Request) {
     }
 
 
+    // Record the upload in the Media Library (non-fatal if it fails).
+    let mediaId: string | undefined;
+    try {
+      const asset = await prisma.mediaAsset.create({
+        data: {
+          url,
+          title: file.name,
+          fileName: file.name,
+          mimeType: file.type || null,
+          kind,
+          size: buffer.length,
+          tenantId: (session.user as { tenantId?: string }).tenantId ?? null,
+          uploadedById: (session.user as { id?: string }).id ?? null,
+        },
+      });
+      mediaId = asset.id;
+    } catch (e) {
+      console.warn("[upload] media library record skipped:", e);
+    }
+
     return NextResponse.json({
       ok: true,
       url,
       name: file.name,
       type: file.type,
       kind,
+      mediaId,
     });
   } catch (e) {
     console.error(e);

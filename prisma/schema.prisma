@@ -1257,3 +1257,24 @@ model AuditEvent {
   @@index([createdAt])
 }
 
+
+// ── Media library: every upload is recorded here with editable metadata. ──
+model MediaAsset {
+  id           String   @id @default(cuid())
+  url          String
+  title        String?
+  description  String?
+  altText      String?
+  fileName     String?
+  mimeType     String?
+  kind         String?  // image | video | pdf | audio | raw
+  size         Int?     // bytes
+  tenantId     String?
+  uploadedById String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([createdAt])
+  @@index([kind])
+}
