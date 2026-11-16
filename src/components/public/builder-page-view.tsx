@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SectionRenderer } from "@/components/admin/webpage-editor/section-renderer";
+import { FullPageCode } from "@/components/public/full-page-code";
 import { PublicFooter } from "@/components/public/public-footer";
 import type { CustomPage, NavSettings, FooterSettings } from "@/lib/webpage-editor-store";
 
@@ -17,6 +18,16 @@ export function BuilderPageView({
   nav: NavSettings;
   footer: FooterSettings;
 }) {
+  // Full-page code mode: the admin's hand-written code IS the entire page body
+  // (rendered full-bleed in a sandbox), instead of the stacked section blocks.
+  if (page.renderMode === "code" && page.fullPageCode) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-slate-950">
+        <FullPageCode code={page.fullPageCode} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col justify-between font-sans">
       <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">

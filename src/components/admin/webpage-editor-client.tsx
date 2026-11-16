@@ -245,6 +245,13 @@ export function WebpageEditorClient({
     }
   }
 
+  // Update the active page in local state only (persisted on Save). Used for the
+  // full-page code editor so we don't hit the server on every keystroke.
+  function updateActivePage(updates: Partial<CustomPage>) {
+    if (!activePage) return;
+    setPages((prev) => prev.map((p) => (p.id === activePage.id ? { ...p, ...updates } : p)));
+  }
+
   async function handleDeletePage(id: string) {
     if (!confirm("Are you sure you want to delete this page?")) return;
     try {
@@ -551,7 +558,44 @@ export function WebpageEditorClient({
                 </div>
               </div>
 
-              {/* LIVE FRONTEND SCROLLABLE SECTIONS LIST */}
+              {/* PAGE MODE: visual sections vs full-page custom code */}
+              {activePage && (
+                <div className="bg-slate-950 border-b border-slate-800/80 px-6 py-2.5 flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Page mode</span>
+                  {(["sections", "code"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => savePageMeta(activePage.id, { renderMode: m })}
+                      className={`px-3 py-1 rounded-lg text-[11px] font-bold transition ${
+                        (activePage.renderMode ?? "sections") === m
+                          ? "bg-brand text-white"
+                          : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      }`}
+                    >
+                      {m === "sections" ? "Visual sections" : "Full-page code"}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {activePage?.renderMode === "code" ? (
+                /* FULL-PAGE CODE EDITOR */
+                <div className="p-4 sm:p-6 bg-slate-950 min-h-[700px] space-y-2">
+                  <p className="text-[11px] text-slate-400">
+                    Paste the entire page&apos;s HTML, CSS and JavaScript — it renders full-bleed in a secure
+                    sandbox. Click <b className="text-slate-200">Save</b> to publish it live at this page&apos;s URL.
+                  </p>
+                  <textarea
+                    value={activePage?.fullPageCode ?? ""}
+                    onChange={(e) => updateActivePage({ fullPageCode: e.target.value })}
+                    spellCheck={false}
+                    placeholder={"<style>\n  body { font-family: system-ui; margin: 0; }\n  .hero { padding: 90px 24px; text-align: center; }\n</style>\n\n<section class=\"hero\">\n  <h1>My custom page</h1>\n  <p>Full HTML + CSS + JS here.</p>\n</section>\n\n<script>\n  console.log('page loaded');\n</script>"}
+                    className="w-full h-[620px] rounded-xl border border-slate-800 bg-slate-900 p-4 font-mono text-xs leading-relaxed text-slate-100 outline-none focus:border-brand resize-y"
+                  />
+                </div>
+              ) : (
+              /* LIVE FRONTEND SCROLLABLE SECTIONS LIST */
               <div className="p-4 sm:p-6 space-y-6 bg-slate-950 min-h-[700px]">
                 {activePage?.sections.map((section, index) => {
                   const isSelected = selectedSectionId === section.id;
@@ -718,6 +762,7 @@ export function WebpageEditorClient({
                   )}
                 </div>
               </div>
+              )}
             </div>
           </div>
 

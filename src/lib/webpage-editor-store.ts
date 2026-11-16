@@ -81,6 +81,11 @@ export type CustomPage = {
   // When set, this page OVERRIDES (takes over) an existing real route — e.g. "/"
   // or "/pricing" — whenever it is published. Empty = a normal /p/<slug> page.
   targetRoute?: string;
+  // "sections" (default): the page is built from the section blocks below.
+  // "code": the WHOLE page body is `fullPageCode` (HTML + CSS + JS), rendered
+  // full-bleed in a safe sandbox — a blank-canvas page for hand-written code.
+  renderMode?: "sections" | "code";
+  fullPageCode?: string;
   sections: SectionBlock[];
   createdAt: string;
   updatedAt: string;
@@ -342,6 +347,8 @@ export async function saveCustomPage(pageData: Partial<CustomPage> & { title: st
         showInNavbar: pageData.showInNavbar ?? true,
         showInFooter: pageData.showInFooter ?? true,
         targetRoute: pageData.targetRoute,
+        renderMode: pageData.renderMode,
+        fullPageCode: pageData.fullPageCode,
         sections: pageData.sections || [],
         createdAt: now,
         updatedAt: now,
@@ -359,6 +366,8 @@ export async function saveCustomPage(pageData: Partial<CustomPage> & { title: st
       showInNavbar: pageData.showInNavbar ?? true,
       showInFooter: pageData.showInFooter ?? true,
       targetRoute: pageData.targetRoute,
+      renderMode: pageData.renderMode,
+      fullPageCode: pageData.fullPageCode,
       sections: pageData.sections || [],
       createdAt: now,
       updatedAt: now,
