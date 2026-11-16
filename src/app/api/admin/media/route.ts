@@ -3,18 +3,22 @@ import { readdir, stat, unlink } from "fs/promises";
 import path from "path";
 import { requireAdminApi } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
+import { isSuperAdmin } from "@/lib/roles";
 import { detectMediaKind } from "@/lib/media-limits";
 
 export const dynamic = "force-dynamic";
 
-// GET: list media assets (optionally filtered by ?kind=). ?sync=1 imports any
+// GET: list the caller's OWN media (super-admins see everything for platform
+// management). Optional ?kind= / ?q= filters; ?sync=1 (super-admin only) imports
 // files already in /public/uploads that aren't recorded yet.
 export async function GET(req: Request) {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
+  const userId = auth.session.user.id;
+  const isAdmin = isSuperAdmin(auth.session.user.role);
 
   const url = new URL(req.url);
-  if (url.searchParams.get("sync") === "1") {
+  if (url.searchParams.get("sync") === "1" && isAdmin) {
     await syncUploadsFolder();
   }
   const kind = url.searchParams.get("kind") || undefined;
@@ -22,6 +26,8 @@ export async function GET(req: Request) {
 
   const media = await prisma.mediaAsset.findMany({
     where: {
+      // Ownership scope: a user only sees media they uploaded; super-admins see all.
+      ...(isAdmin ? {} : { uploadedById: userId }),
       ...(kind && kind !== "all" ? { kind } : {}),
       ...(q
         ? { OR: [{ title: { contains: q } }, { fileName: { contains: q } }, { description: { contains: q } }] }
@@ -37,31 +43,43 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
+  const userId = auth.session.user.id;
+  const isAdmin = isSuperAdmin(auth.session.user.role);
   const { id, title, description, altText } = await req.json();
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-  try {
-    const media = await prisma.mediaAsset.update({
-      where: { id },
-      data: {
-        ...(title !== undefined && { title }),
-        ...(description !== undefined && { description }),
-        ...(altText !== undefined && { altText }),
-      },
-    });
-    return NextResponse.json({ ok: true, media });
-  } catch {
-    return NextResponse.json({ error: "Media not found" }, { status: 404 });
+
+  const existing = await prisma.mediaAsset.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "Media not found" }, { status: 404 });
+  // Only the owner (or a super-admin) may edit it.
+  if (!isAdmin && existing.uploadedById !== userId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+
+  const media = await prisma.mediaAsset.update({
+    where: { id },
+    data: {
+      ...(title !== undefined && { title }),
+      ...(description !== undefined && { description }),
+      ...(altText !== undefined && { altText }),
+    },
+  });
+  return NextResponse.json({ ok: true, media });
 }
 
 // DELETE: remove a media item (and its local file, best-effort).
 export async function DELETE(req: Request) {
   const auth = await requireAdminApi();
   if (auth.error) return auth.error;
+  const userId = auth.session.user.id;
+  const isAdmin = isSuperAdmin(auth.session.user.role);
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
   const asset = await prisma.mediaAsset.findUnique({ where: { id } });
   if (!asset) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  // Only the owner (or a super-admin) may delete it.
+  if (!isAdmin && asset.uploadedById !== userId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   if (asset.url?.startsWith("/uploads/")) {
     try {
       await unlink(path.join(process.cwd(), "public", asset.url.replace(/^\/+/, "")));
