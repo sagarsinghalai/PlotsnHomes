@@ -96,7 +96,7 @@ export function MediaLibraryClient() {
     setSyncing(true);
     await load({ sync: true });
     setSyncing(false);
-    showToast("Synced the uploads folder.");
+    showToast("Imported existing media from uploads and site listings.");
   }
 
   async function saveSelected(updates: Partial<MediaAsset>) {
@@ -149,7 +149,7 @@ export function MediaLibraryClient() {
           disabled={syncing}
           className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
         >
-          {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Sync folder
+          {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Sync media
         </button>
         <button
           onClick={() => fileRef.current?.click()}
@@ -182,7 +182,7 @@ export function MediaLibraryClient() {
         <div className="flex justify-center py-20 text-slate-400"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : media.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-16 text-center">
-          <p className="text-sm font-medium text-slate-600">No media yet. Click <b>Upload</b>, or <b>Sync folder</b> to import existing files.</p>
+          <p className="text-sm font-medium text-slate-600">No media yet. Click <b>Upload</b>, or <b>Sync media</b> to import existing property, project and uploaded files.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
