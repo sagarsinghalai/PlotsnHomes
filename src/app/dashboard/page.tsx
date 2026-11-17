@@ -132,7 +132,7 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        {hasAnyAdminPermission() && (
+        {hasAdminPanelAccess(userRole) && hasAnyAdminPermission() && (
           <Link
             href={getFirstAllowedAdminRoute()}
             className="inline-flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs px-5 py-3 shadow-md transition shrink-0"

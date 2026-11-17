@@ -261,6 +261,12 @@ for (const k of TENANT_GOVERNANCE_KEYS) subLeaderPerms[k] = { ...NONE };
 
 const endUserPerms = fillPermissions(END_USER_BASE, { ...NONE });
 
+// Buyers are pure customers: they never use the staff admin console, only the
+// customer hub at /dashboard (which is scoped to their own data). So they get NO
+// admin-panel view rights at all — this hides the "Open Customer Panel" entry on
+// the dashboard and makes every /admin route fall through to /dashboard.
+const buyerPerms = fillPermissions({}, { ...NONE });
+
 export const DEFAULT_PERMISSIONS: RolePermissionsConfig = {
   // The platform owner. Always full — never clamped, never editable. SUPERADMIN
   // also bypasses hasPermission() entirely; this row exists so the UI can show
@@ -277,7 +283,7 @@ export const DEFAULT_PERMISSIONS: RolePermissionsConfig = {
   EMPLOYEE: subLeaderPerms,
   AGENT: subLeaderPerms,
   SELLER: endUserPerms,
-  BUYER: endUserPerms,
+  BUYER: buyerPerms,
   DEMO: endUserPerms,
 };
 

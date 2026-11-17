@@ -351,7 +351,7 @@ export function UsersDirectory({
                 <span
                   className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-extrabold ${
                     active
-                      ? "bg-slate-950/15 text-slate-950"
+                      ? "bg-white/25 text-white"
                       : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300"
                   }`}
                 >

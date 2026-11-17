@@ -27,7 +27,10 @@ export const ADMIN_PANEL_ROLES: Role[] = [
   Role.EMPLOYEE,
   Role.AGENT,
   Role.SELLER,
-  Role.BUYER,
+  // NOTE: BUYER is intentionally NOT here. Buyers are customers, not staff — they
+  // only get the customer hub at /dashboard (scoped to their own data). Giving
+  // them admin-panel access exposed the org-level console, so they're excluded
+  // from both the /admin layout guard and the admin-API guard (requireAdminApi).
 ];
 
 /** Full platform control (user deletion, last-superadmin guard) */
