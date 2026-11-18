@@ -164,7 +164,7 @@ export function LeadCaptureForm({
         <button
           type="submit"
           disabled={status === "loading"}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-pine-900 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-pine-950 disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#B4F06B] py-3 text-sm font-bold text-slate-950 shadow-sm transition hover:brightness-95 disabled:opacity-60"
         >
           {status === "loading" ? (
             <>

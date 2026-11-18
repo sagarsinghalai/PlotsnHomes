@@ -413,7 +413,7 @@ export const DEFAULT_FOOTER_SETTINGS: FooterSettings = {
   badges: [
     { id: "bdg-1", label: "SEBI Compliant", url: "/properties" },
     { id: "bdg-2", label: "8–14% Returns", url: "/calculators" },
-    { id: "bdg-3", label: "Instant Withdrawal", url: "/#payments" },
+    { id: "bdg-3", label: "Instant Withdrawal", url: "/dashboard" },
   ],
   columns: [
     {
@@ -422,7 +422,7 @@ export const DEFAULT_FOOTER_SETTINGS: FooterSettings = {
       links: [
         { id: "fl-inv-1", label: "Browse Properties", url: "/properties", order: 1 },
         { id: "fl-inv-2", label: "How It Works", url: "/#how-it-works", order: 2 },
-        { id: "fl-inv-3", label: "Payment Options", url: "/#payments", order: 3 },
+        { id: "fl-inv-3", label: "Talk to an advisor", url: "/#get-in-touch", order: 3 },
         { id: "fl-inv-4", label: "Trading Guide", url: "/#trading", order: 4 },
         { id: "fl-inv-5", label: "ROI Calculator", url: "/calculators", order: 5 },
       ],
