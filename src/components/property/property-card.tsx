@@ -17,9 +17,9 @@ export function PropertyCard({ property }: { property: PropertyWithAgent }) {
   return (
     <div
       onClick={() => router.push(`/properties/${property.slug}`)}
-      className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-pine-900/10 bg-cream-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+      className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-cream-100">
+      <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
         <Image
           src={img}
           alt={property.title}
@@ -27,62 +27,49 @@ export function PropertyCard({ property }: { property: PropertyWithAgent }) {
           className="object-cover transition duration-500 group-hover:scale-105"
           sizes="(max-width:768px) 100vw, 33vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-pine-950/85 via-pine-950/10 to-transparent" />
-
-        {/* Badges: top-left */}
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+          <span className="rounded-full bg-[#B4F06B] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-950 shadow-sm">
+            {property.listingType === "RENT" ? "For Rent" : "For Sale"}
+          </span>
           {property.featured && (
-            <span className="rounded-full bg-gold px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-pine-950 shadow-sm">
+            <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-950 shadow-sm">
               Premium
             </span>
           )}
-          {property.category && (
-            <span className="rounded-full bg-cream-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-pine-900 backdrop-blur">
-              {property.category}
-            </span>
-          )}
         </div>
-
-        {/* Status: top-right */}
-        <span className="absolute right-3 top-3 rounded-full bg-pine-950/40 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-cream-white backdrop-blur">
-          {property.listingType === "RENT" ? "For Rent" : "For Sale"}
-        </span>
-
-        {/* Price: overlaid bottom-left, serif */}
-        <p
-          className="absolute bottom-3 left-4 font-display text-2xl font-semibold text-cream-white drop-shadow-md"
-          suppressHydrationWarning
-        >
-          {property.listingType === "RENT" && property.rentMonthly
-            ? `${formatCurrency(property.rentMonthly)}/mo`
-            : formatCurrency(property.price)}
-        </p>
       </div>
 
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-lg font-medium leading-snug text-pine-950 line-clamp-1">
+        <h3 className="text-base font-semibold leading-snug text-slate-950 line-clamp-1">
           {property.title}
         </h3>
-        <p className="mt-1.5 flex items-center gap-1.5 text-sm text-sage">
-          <MapPin className="h-4 w-4 shrink-0 text-gold" />
+        <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-500">
+          <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
           <span className="line-clamp-1">
-            {[property.area, property.city, property.state].filter(Boolean).join(", ")}
+            {[property.area, property.city, property.state].filter(Boolean).join(", ") || "Location on request"}
           </span>
         </p>
 
-        {/* Specs + Details link */}
-        <div className="mt-4 flex items-center gap-4 border-t border-pine-900/10 pt-4 text-xs font-medium text-sage">
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-slate-500">
           {property.bedrooms > 0 && (
-            <span className="flex items-center gap-1.5"><Bed className="h-4 w-4 text-pine-600" /> {property.bedrooms}</span>
+            <span className="flex items-center gap-1.5"><Bed className="h-4 w-4" /> {property.bedrooms} Beds</span>
           )}
           {property.bathrooms > 0 && (
-            <span className="flex items-center gap-1.5"><Bath className="h-4 w-4 text-pine-600" /> {property.bathrooms}</span>
+            <span className="flex items-center gap-1.5"><Bath className="h-4 w-4" /> {property.bathrooms} Baths</span>
           )}
           {property.sqft ? (
-            <span className="flex items-center gap-1.5"><Maximize2 className="h-4 w-4 text-pine-600" /> {property.sqft.toLocaleString()} ft²</span>
+            <span className="flex items-center gap-1.5"><Maximize2 className="h-4 w-4" /> {property.sqft.toLocaleString()} ft²</span>
           ) : null}
-          <span className="ml-auto inline-flex items-center gap-1 font-semibold text-gold-dark transition group-hover:gap-1.5">
-            Details <ArrowRight className="h-3.5 w-3.5" />
+        </div>
+
+        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+          <p className="text-lg font-bold text-slate-950" suppressHydrationWarning>
+            {property.listingType === "RENT" && property.rentMonthly
+              ? `${formatCurrency(property.rentMonthly)}/mo`
+              : formatCurrency(property.price)}
+          </p>
+          <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-950">
+            Details <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
           </span>
         </div>
 
@@ -96,7 +83,7 @@ export function PropertyCard({ property }: { property: PropertyWithAgent }) {
               const phone = (property as any).contactPhone || property.agent?.phone || "+919958343556";
               window.location.href = `tel:${phone}`;
             }}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-pine-900/15 bg-pine-50 py-2.5 text-pine-800 transition hover:bg-pine-100"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-slate-800 transition hover:border-[#B4F06B] hover:bg-[#B4F06B]/40"
           >
             <Phone className="h-3.5 w-3.5" /> Call
           </button>
@@ -108,7 +95,7 @@ export function PropertyCard({ property }: { property: PropertyWithAgent }) {
               const email = (property as any).contactEmail || property.agent?.email || "info@plotsnhomes.com";
               window.location.href = `mailto:${email}`;
             }}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-pine-900/15 bg-pine-50 py-2.5 text-pine-800 transition hover:bg-pine-100"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-slate-800 transition hover:border-[#B4F06B] hover:bg-[#B4F06B]/40"
           >
             <Mail className="h-3.5 w-3.5" /> Email
           </button>
@@ -121,7 +108,7 @@ export function PropertyCard({ property }: { property: PropertyWithAgent }) {
               const waMsg = buildPropertyWhatsAppMessage(property);
               window.open(whatsAppWebUrl(whatsapp, waMsg), "_blank");
             }}
-            className="flex w-10 shrink-0 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold-dark transition hover:bg-gold/20"
+            className="flex w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-[#B4F06B] text-slate-950 transition hover:brightness-95"
             title="Contact via WhatsApp with Property Info & Link"
           >
             <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

@@ -102,7 +102,7 @@ export function ProjectsShowcase({ projects }: { projects: ShowcaseProject[] }) 
     <section id="projects" className="bg-white py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gold-dark">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#B4F06B] px-3 py-1 text-xs font-bold uppercase tracking-widest text-slate-950">
             <Sparkles className="h-4 w-4" /> Developer Projects
           </span>
           <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-slate-900">Explore new &amp; upcoming projects</h2>
@@ -211,7 +211,7 @@ export function ProjectsShowcase({ projects }: { projects: ShowcaseProject[] }) 
                       <button
                         type="button"
                         onClick={() => setInterest(p)}
-                        className="inline-flex items-center justify-center rounded-lg bg-pine-900 px-3.5 py-2 text-xs font-bold text-white hover:bg-pine-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+                        className="inline-flex items-center justify-center rounded-lg bg-[#B4F06B] px-3.5 py-2 text-xs font-bold text-slate-950 hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B4F06B] focus-visible:ring-offset-2"
                       >
                         Show Interest
                       </button>
@@ -320,7 +320,7 @@ function InterestModal({ project, onClose }: { project: ShowcaseProject; onClose
             </div>
             <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Anything specific you're looking for? (optional)" aria-label="Note" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 resize-none" />
             {err && <p className="text-xs font-semibold text-rose-600">{err}</p>}
-            <button type="submit" disabled={state === "loading"} className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-pine-900 px-4 py-3 text-sm font-bold text-white hover:bg-pine-950 disabled:opacity-60">
+            <button type="submit" disabled={state === "loading"} className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#B4F06B] px-4 py-3 text-sm font-bold text-slate-950 hover:brightness-95 disabled:opacity-60">
               {state === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Submit interest
             </button>

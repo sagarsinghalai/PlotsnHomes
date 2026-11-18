@@ -25,10 +25,12 @@ export async function MarketTicker() {
     items = dbItems as any;
   }
 
+  if (!items.length) return null;
+
   const doubled = [...items, ...items];
 
   return (
-    <div className="border-b border-pine-800/40 bg-pine-950 overflow-hidden">
+    <div className="border-b border-slate-200 bg-white overflow-hidden">
       <div className="relative flex overflow-hidden">
         <div 
           className="flex animate-ticker gap-8 whitespace-nowrap py-2.5 px-4"
@@ -40,12 +42,12 @@ export async function MarketTicker() {
               href={`/properties/${item.slug}`}
               className="inline-flex items-center gap-3 text-sm hover:opacity-80 transition"
             >
-              <span className="font-mono font-bold text-gold">{item.symbol}</span>
-              <span className="text-cream-white font-medium">{formatCurrency(Number(item.price))}</span>
+              <span className="rounded-full bg-[#B4F06B] px-2 py-0.5 font-mono font-bold text-slate-950">{item.symbol}</span>
+              <span className="text-slate-950 font-medium">{formatCurrency(Number(item.price))}</span>
               <span className={`font-mono ${changeColor(Number(item.change24h))}`}>
                 {formatChangePercent(Number(item.change24h))}
               </span>
-              <span className="text-pine-200/60 text-xs">Yield {Number(item.yieldRate).toFixed(2)}%</span>
+              <span className="text-slate-500 text-xs">Yield {Number(item.yieldRate).toFixed(2)}%</span>
             </Link>
           ))}
         </div>

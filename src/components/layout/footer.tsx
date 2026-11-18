@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Building2, Shield, TrendingUp, Wallet, Globe } from "lucide-react";
+import { Shield, TrendingUp, Wallet, Globe } from "lucide-react";
 import { DEFAULT_FOOTER_SETTINGS, FooterSettings } from "@/lib/webpage-editor-store";
+import { BrandLogo } from "@/components/ui/brand-logo";
+
+function isDeadPaymentLink(label?: string, url?: string) {
+  const text = `${label || ""} ${url || ""}`.toLowerCase();
+  return text.includes("payment option") || text.includes("#payments");
+}
 
 export function Footer() {
   const [footer, setFooter] = useState<FooterSettings>(DEFAULT_FOOTER_SETTINGS);
@@ -17,45 +23,61 @@ export function Footer() {
       .catch(() => {});
   }, []);
 
+  const columns = useMemo(
+    () =>
+      (footer.columns || [])
+        .map((col) => ({
+          ...col,
+          links: (col.links || []).filter((link) => !isDeadPaymentLink(link.label, link.url)),
+        }))
+        .filter((col) => col.links.length > 0),
+    [footer.columns],
+  );
+
+  const badges = useMemo(
+    () =>
+      (footer.badges || []).map((badge) =>
+        badge.url?.includes("#payments") ? { ...badge, url: "/#get-in-touch" } : badge,
+      ),
+    [footer.badges],
+  );
+
   return (
-    <footer className="bg-pine-950 text-pine-100/70 border-t border-pine-800/40 font-sans">
-      {/* Main footer grid */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex flex-col lg:flex-row gap-10 lg:gap-12 justify-between">
-          {/* Brand column — Left side */}
-          <div className="w-full lg:w-[36%] space-y-4 shrink-0">
-            <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-bold text-cream-white">
-              <Building2 className="h-6 w-6 text-gold" />
-              {footer.brandName || "PlotsnHomes"}
-            </Link>
-            
+    <footer className="bg-[#f7f6f2] font-sans text-slate-600">
+      <div className="h-1 bg-[#B4F06B]" />
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="grid gap-12 lg:grid-cols-[minmax(240px,320px)_1fr] lg:gap-16">
+          <div>
+            <BrandLogo
+              brandName={footer.brandName || "PlotsnHomes"}
+              iconClassName="border-transparent bg-[#B4F06B] text-slate-950 shadow-none"
+              textClassName="text-slate-950"
+            />
             {footer.boilerplateText && (
-              <p className="text-sm leading-relaxed text-pine-100/70 max-w-sm">
+              <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-600">
                 {footer.boilerplateText}
               </p>
             )}
-            
-            {/* Trust badges */}
-            {footer.badges && footer.badges.length > 0 && (
-              <div className="flex flex-wrap gap-2.5 pt-1">
-                {footer.badges.map((b, idx) => (
+
+            {badges.length > 0 && (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {badges.map((badge, idx) => (
                   <Link
-                    key={b.id || idx}
-                    href={b.url || "#"}
-                    className="flex items-center gap-1.5 rounded-full border border-pine-800/50 bg-pine-900 px-3.5 py-1.5 text-xs font-medium text-pine-100 transition-all duration-300 hover:border-gold/40 hover:bg-pine-800/70 hover:text-gold"
+                    key={badge.id || idx}
+                    href={badge.url || "#"}
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 transition hover:border-[#B4F06B]"
                   >
-                    <span className="text-gold">
-                      {idx === 0 ? <Shield className="h-3.5 w-3.5" /> : idx === 1 ? <TrendingUp className="h-3.5 w-3.5" /> : <Wallet className="h-3.5 w-3.5" />}
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#B4F06B] text-slate-950">
+                      {idx === 0 ? <Shield className="h-3 w-3" /> : idx === 1 ? <TrendingUp className="h-3 w-3" /> : <Wallet className="h-3 w-3" />}
                     </span>
-                    {b.label}
+                    {badge.label}
                   </Link>
                 ))}
               </div>
             )}
 
-            {/* Social Media Links */}
             {footer.socialLinks && footer.socialLinks.length > 0 && (
-              <div className="flex gap-3 pt-2">
+              <div className="mt-5 flex gap-2">
                 {footer.socialLinks.map((s) => {
                   const platformLower = (s.platform || "").toLowerCase();
                   return (
@@ -64,10 +86,10 @@ export function Footer() {
                       href={s.url || "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-pine-800/50 bg-pine-900/60 text-pine-100/70 transition-all duration-300 hover:border-gold hover:text-gold hover:scale-110"
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-transparent hover:bg-[#B4F06B] hover:text-slate-950"
                       aria-label={s.platform}
                     >
-                      {platformLower.includes("twitter") || platformLower.includes("x") ? (
+                      {platformLower.includes("twitter") || platformLower === "x" || platformLower.includes("x.com") ? (
                         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                         </svg>
@@ -95,21 +117,17 @@ export function Footer() {
             )}
           </div>
 
-          {/* Navigation Columns — Right side (INVEST, ACCOUNT, COMPANY, TEST, etc.) */}
-          {footer.columns && footer.columns.length > 0 && (
-            <div
-              className="w-full lg:w-[60%] grid gap-6 min-w-0"
-              style={{
-                gridTemplateColumns: `repeat(${Math.max(1, footer.columns.length)}, minmax(0, 1fr))`,
-              }}
-            >
-              {footer.columns.map((col) => (
-                <div key={col.id} className="min-w-0 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-gold mb-4 truncate">{col.columnTitle}</h4>
-                  <ul className="space-y-2.5 text-sm">
-                    {col.links && col.links.map((link) => (
-                      <li key={link.id} className="truncate">
-                        <Link href={link.url || "#"} className="transition hover:text-cream-white">
+          {columns.length > 0 && (
+            <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-4">
+              {columns.map((col) => (
+                <div key={col.id}>
+                  <h4 className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-950">
+                    {col.columnTitle}
+                  </h4>
+                  <ul className="mt-4 space-y-2.5 text-sm">
+                    {col.links.map((link) => (
+                      <li key={link.id}>
+                        <Link href={link.url || "#"} className="leading-snug transition hover:text-slate-950">
                           {link.label}
                         </Link>
                       </li>
@@ -122,13 +140,10 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div className="border-t border-pine-800/40">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-pine-200/60">
-            {footer.copyrightText || "© 2026 PlotsnHomes Pvt. Ltd. · CIN: U70200DL2024PTC000001"}
-          </p>
-          <p className="text-xs text-pine-200/50">
+      <div className="border-t border-slate-200/80">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <p>{footer.copyrightText || "© 2026 PlotsnHomes Pvt. Ltd."}</p>
+          <p className="max-w-xl sm:text-right">
             {footer.disclaimerText || footer.poweredByText || "Investment in real estate is subject to market risks. Read all documents carefully."}
           </p>
         </div>
