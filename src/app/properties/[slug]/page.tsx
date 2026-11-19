@@ -148,7 +148,7 @@ export default async function PropertyDetailPage({
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="border-b bg-cream-50">
+      <div className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-3 text-sm text-slate-500 flex items-center gap-1.5 flex-wrap">
           <Link href="/">Home</Link>
           {" / "}
@@ -172,7 +172,7 @@ export default async function PropertyDetailPage({
                 {property.listingType === "RENT" ? "Rentals" : "Sales"}
               </span>
               {property.category && (
-                <span className="rounded bg-cream-100 px-2 py-0.5 text-xs font-medium text-slate-700">{property.category}</span>
+                <span className="rounded bg-[#E8F0FE] px-2 py-0.5 text-xs font-medium text-[#2563EB]">{property.category}</span>
               )}
               {developerName && (
                 <span className="rounded-md bg-amber-50 border border-amber-300/80 px-2.5 py-0.5 text-xs font-extrabold text-amber-950 inline-flex items-center gap-1 shadow-2xs">
@@ -181,10 +181,10 @@ export default async function PropertyDetailPage({
                 </span>
               )}
               {property.featured && (
-                <span className="rounded bg-pine-900 px-2 py-0.5 text-xs font-bold">Featured</span>
+                <span className="rounded bg-[#2563EB] px-2 py-0.5 text-xs font-bold text-white">Featured</span>
               )}
             </div>
-            <h1 className="font-display text-3xl font-bold text-pine-950">{property.title}</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-950">{property.title}</h1>
             <p className="mt-1 text-slate-600">
               {property.address}, {property.city}, {property.state}
             </p>
@@ -193,7 +193,7 @@ export default async function PropertyDetailPage({
             {property.pricePerSqft && (
               <p className="text-sm text-slate-500">${property.pricePerSqft.toFixed(0)} / sq ft</p>
             )}
-            <p className="text-3xl font-bold text-pine-950" suppressHydrationWarning>
+            <p className="text-3xl font-extrabold tracking-tight text-slate-950" suppressHydrationWarning>
               {property.listingType === "RENT"
                 ? `${formatCurrency(property.rentMonthly ?? property.price)}/mo`
                 : formatCurrency(property.price)}
@@ -253,7 +253,7 @@ export default async function PropertyDetailPage({
             />
             {session ? (
               <>
-                <div className="rounded-2xl border border-pine-900/10 bg-white p-6">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6">
                   <PaymentOptions
                     propertyId={property.id}
                     propertyPrice={property.price}
@@ -265,14 +265,14 @@ export default async function PropertyDetailPage({
                 </div>
                 <Link
                   href="/dashboard/loans"
-                  className="block text-center rounded-xl border border-gold bg-amber-50 py-3 text-sm font-semibold text-gold-dark hover:bg-amber-100"
+                  className="block rounded-xl bg-[#2563EB] py-3 text-center text-sm font-semibold text-white hover:brightness-110"
                 >
                   Apply for a loan on this property
                 </Link>
               </>
             ) : (
               <p className="text-sm text-center text-slate-600">
-                <Link href="/login" className="text-gold-dark underline">Log in</Link> to invest or apply for a loan
+                <Link href="/login" className="font-semibold text-[#2563EB] underline">Log in</Link> to invest or apply for a loan
               </p>
             )}
             <LeadCaptureForm

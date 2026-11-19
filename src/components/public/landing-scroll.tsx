@@ -1,116 +1,91 @@
 "use client";
 
 import { useEffect } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
 
 export function LandingScroll() {
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const bar = document.querySelector<HTMLElement>("[data-scroll-bar]");
+    const rail = document.querySelector<HTMLElement>("[data-scroll-rail]");
 
-    let scan = () => {};
-    let late = 0;
+    const groups: Array<{ items: HTMLElement[]; trigger: HTMLElement; played: boolean }> = [];
 
-    const ctx = gsap.context(() => {
-      const bar = document.querySelector<HTMLElement>("[data-scroll-bar]");
-      const rail = document.querySelector<HTMLElement>("[data-scroll-rail]");
-
-      if (bar) {
-        gsap.to(bar, {
-          scaleX: 1,
-          ease: "none",
-          scrollTrigger: { start: 0, end: "max", scrub: 0.35 },
-        });
-      }
-      if (rail) {
-        gsap.to(rail, {
-          scaleY: 1,
-          ease: "none",
-          scrollTrigger: { start: 0, end: "max", scrub: 0.35 },
-        });
-      }
-
-      if (reduce) return;
-
-      const pending: Array<{ targets: HTMLElement[]; trigger: HTMLElement; stagger: number; played: boolean }> = [];
-
-      const play = (entry: (typeof pending)[number]) => {
-        if (entry.played) return;
-        entry.played = true;
-        gsap.fromTo(
-          entry.targets,
-          { y: 24 },
-          {
-            y: 0,
-            autoAlpha: 1,
-            duration: 0.7,
-            stagger: entry.stagger,
-            ease: "power3.out",
-            overwrite: "auto",
-          },
-        );
-      };
-
-      scan = () => {
-        const view = window.innerHeight * 0.94;
-        pending.forEach((entry) => {
-          if (entry.played) return;
-          const box = entry.trigger.getBoundingClientRect();
-          if (box.top < view && box.bottom > 0) play(entry);
-        });
-      };
-
-      const queue = (targets: HTMLElement[], trigger: HTMLElement, stagger = 0) => {
-        const box = trigger.getBoundingClientRect();
-        const inView = box.top < window.innerHeight * 0.94 && box.bottom > 0;
-        if (!inView) gsap.set(targets, { autoAlpha: 0, y: 28 });
-        const entry = { targets, trigger, stagger, played: false };
-        pending.push(entry);
-        if (inView) play(entry);
-      };
-
-      gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) => queue([el], el));
-      gsap.utils.toArray<HTMLElement>("[data-reveal-group]").forEach((group) => {
-        const items = Array.from(group.querySelectorAll<HTMLElement>("[data-reveal-item]"));
-        if (items.length) queue(items, group, 0.08);
-      });
-
-      scan();
-      window.addEventListener("scroll", scan, { passive: true });
-      window.addEventListener("hashchange", scan);
-      late = window.setTimeout(scan, 600);
-
-      gsap.utils.toArray<HTMLElement>("[data-parallax]").forEach((el) => {
-        gsap.fromTo(
-          el,
-          { yPercent: -8 },
-          {
-            yPercent: 8,
-            ease: "none",
-            scrollTrigger: {
-              trigger: el.parentElement ?? el,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: true,
-            },
-          },
-        );
-      });
+    document.querySelectorAll<HTMLElement>("[data-reveal]").forEach((el) => {
+      groups.push({ items: [el], trigger: el, played: false });
+    });
+    document.querySelectorAll<HTMLElement>("[data-reveal-group]").forEach((group) => {
+      const items = Array.from(group.querySelectorAll<HTMLElement>("[data-reveal-item]"));
+      if (items.length) groups.push({ items, trigger: group, played: false });
     });
 
-    const refresh = () => ScrollTrigger.refresh();
-    window.addEventListener("load", refresh);
-    const timer = window.setTimeout(refresh, 400);
+    if (!reduce) {
+      groups.forEach((group) => {
+        group.items.forEach((el) => {
+          el.style.opacity = "0";
+          el.style.transform = "translateY(28px)";
+          el.style.transition =
+            "opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)";
+        });
+      });
+    }
+
+    const parallax = reduce
+      ? []
+      : Array.from(document.querySelectorAll<HTMLElement>("[data-parallax]"));
+
+    const play = (group: (typeof groups)[number]) => {
+      if (group.played || reduce) return;
+      group.played = true;
+      group.items.forEach((el, index) => {
+        window.setTimeout(() => {
+          el.style.opacity = "1";
+          el.style.transform = "translateY(0)";
+        }, index * 80);
+      });
+    };
+
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+      if (bar) bar.style.transform = `scaleX(${progress})`;
+      if (rail) rail.style.transform = `scaleY(${progress})`;
+
+      const view = window.innerHeight * 0.94;
+      groups.forEach((group) => {
+        if (group.played) return;
+        const box = group.trigger.getBoundingClientRect();
+        if (box.top < view && box.bottom > 0) play(group);
+      });
+
+      parallax.forEach((el) => {
+        const parent = el.parentElement ?? el;
+        const box = parent.getBoundingClientRect();
+        const range = window.innerHeight + box.height;
+        const passed = window.innerHeight - box.top;
+        const t = range > 0 ? Math.min(1, Math.max(0, passed / range)) : 0;
+        el.style.transform = `translateY(${-8 + t * 16}%)`;
+      });
+    };
+
+    const onScroll = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    window.addEventListener("hashchange", onScroll);
+    const late = window.setTimeout(update, 600);
 
     return () => {
-      window.removeEventListener("load", refresh);
-      window.removeEventListener("scroll", scan);
-      window.removeEventListener("hashchange", scan);
-      window.clearTimeout(timer);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("hashchange", onScroll);
       window.clearTimeout(late);
-      ctx.revert();
+      if (raf) window.cancelAnimationFrame(raf);
     };
   }, []);
 

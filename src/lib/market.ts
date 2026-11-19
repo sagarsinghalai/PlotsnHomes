@@ -21,15 +21,15 @@ export function changeColor(value: number) {
 }
 
 export function changeBg(value: number) {
-  if (value > 0) return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
-  if (value < 0) return "bg-red-500/15 text-red-400 border-red-500/30";
-  return "bg-slate-500/15 text-slate-400 border-slate-500/30";
+  if (value > 0) return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  if (value < 0) return "bg-red-50 text-red-700 border-red-200";
+  return "bg-slate-50 text-slate-600 border-slate-200";
 }
 
 export function marketRatingColor(rating: string) {
-  if (rating.startsWith("A")) return "text-emerald-400";
-  if (rating.startsWith("B")) return "text-brand";
-  return "text-slate-400";
+  if (rating.startsWith("A")) return "text-emerald-600";
+  if (rating.startsWith("B")) return "text-[#2563EB]";
+  return "text-slate-500";
 }
 
 /** Build SVG sparkline path from price history */

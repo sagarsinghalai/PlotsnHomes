@@ -17,7 +17,7 @@ export function Sparkline({
   const fill = positive ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)";
 
   if (!line) {
-    return <div className={`bg-slate-800/50 rounded ${className}`} style={{ width, height }} />;
+    return <div className={`rounded bg-slate-100 ${className}`} style={{ width, height }} />;
   }
 
   return (

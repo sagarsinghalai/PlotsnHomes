@@ -92,15 +92,15 @@ export function AreaValueCalculator() {
   const appPct = baseSimRate > 0 && cRate > 0 ? ((cRate - baseSimRate) / baseSimRate) * 100 : 0;
 
   return (
-    <div className="space-y-12 text-slate-100">
+    <div className="space-y-12 text-slate-900">
       {/* ─── SECTION 1: Google-Style Area Unit Converter ─────────────────────────── */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 shadow-xl backdrop-blur-sm sm:p-8">
-        <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-          <div className="rounded-xl bg-brand/10 p-3 text-brand">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
+          <div className="rounded-xl bg-[#E8F0FE] p-3 text-[#2563EB]">
             <ArrowLeftRight className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">Google Area Value & Unit Converter</h2>
+            <h2 className="text-xl font-bold text-slate-950">Area unit converter</h2>
             <p className="text-xs text-slate-400">
               Convert between Square Feet, Square Meters, Gaj / Square Yards, Acres, Bigha, Katha, Guntha & Marla instantly.
             </p>
@@ -117,7 +117,7 @@ export function AreaValueCalculator() {
               value={convertVal}
               onChange={(e) => setConvertVal(e.target.value)}
               placeholder="e.g. 1000"
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-lg font-bold text-white focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-lg font-bold text-slate-950 focus:border-[#2563EB] focus:outline-none focus:ring-1 focus:ring-[#2563EB]/30"
             />
           </div>
 
@@ -127,7 +127,7 @@ export function AreaValueCalculator() {
             <select
               value={fromUnit}
               onChange={(e) => setFromUnit(e.target.value as AreaUnit)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-semibold text-white focus:border-brand focus:outline-none"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-950 focus:border-[#2563EB] focus:outline-none"
             >
               {AREA_UNITS.map((u) => (
                 <option key={u.key} value={u.key}>
@@ -143,7 +143,7 @@ export function AreaValueCalculator() {
               type="button"
               onClick={handleSwapUnits}
               title="Swap units"
-              className="rounded-full border border-slate-700 bg-slate-800 p-3 text-brand hover:bg-brand hover:text-white transition-all shadow-md"
+              className="rounded-full border border-slate-200 bg-white p-3 text-[#2563EB] shadow-sm transition hover:bg-[#2563EB] hover:text-white"
             >
               <ArrowLeftRight className="h-5 w-5" />
             </button>
@@ -155,7 +155,7 @@ export function AreaValueCalculator() {
             <select
               value={toUnit}
               onChange={(e) => setToUnit(e.target.value as AreaUnit)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-semibold text-white focus:border-brand focus:outline-none"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-950 focus:border-[#2563EB] focus:outline-none"
             >
               {AREA_UNITS.map((u) => (
                 <option key={u.key} value={u.key}>
@@ -167,15 +167,15 @@ export function AreaValueCalculator() {
         </div>
 
         {/* Live Conversion Banner */}
-        <div className="mt-8 rounded-xl border border-brand/30 bg-gradient-to-r from-slate-950 via-slate-900 to-brand-hover/40 p-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#2563EB]/15 bg-[#E8F0FE] p-6">
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Conversion Output</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Conversion output</span>
             <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-brand">
+              <span className="text-3xl font-extrabold text-slate-950">
                 {numConvertVal.toLocaleString()} {AREA_UNITS.find((u) => u.key === fromUnit)?.symbol}
               </span>
               <span className="text-xl font-bold text-slate-400">=</span>
-              <span className="text-3xl font-extrabold text-emerald-400">
+              <span className="text-3xl font-extrabold text-[#2563EB]">
                 {convertedResult < 0.0001
                   ? convertedResult.toExponential(4)
                   : convertedResult.toLocaleString(undefined, { maximumFractionDigits: 4 })}{" "}
@@ -184,9 +184,9 @@ export function AreaValueCalculator() {
             </div>
           </div>
 
-          <div className="text-right text-xs text-slate-400 border-l border-slate-800 pl-4 hidden sm:block">
+          <div className="text-right text-xs text-slate-400 border-l border-slate-200 pl-4 hidden sm:block">
             <p>1 {AREA_UNITS.find((u) => u.key === fromUnit)?.label.split("(")[0]} =</p>
-            <p className="font-semibold text-white">
+            <p className="font-semibold text-slate-950">
               {(fromFactor / toFactor).toLocaleString(undefined, { maximumFractionDigits: 6 })}{" "}
               {AREA_UNITS.find((u) => u.key === toUnit)?.symbol}
             </p>
@@ -195,20 +195,20 @@ export function AreaValueCalculator() {
       </div>
 
       {/* ─── SECTION 2: Final Price Per Unit Matrix ─────────────────────────── */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 shadow-xl backdrop-blur-sm sm:p-8 space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 space-y-6">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-emerald-500/10 p-3 text-emerald-400">
+            <div className="rounded-xl bg-[#E8F0FE] p-3 text-[#2563EB]">
               <Calculator className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Final Price Per Unit Table Matrix</h2>
+              <h2 className="text-xl font-bold text-slate-950">Final Price Per Unit Table Matrix</h2>
               <p className="text-xs text-slate-400">
                 Enter total property price and area to calculate the exact rate across all standard units simultaneously.
               </p>
             </div>
           </div>
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 rounded-full px-3 py-1">
+          <span className="inline-flex items-center gap-1 rounded-full border border-[#2563EB]/20 bg-[#E8F0FE] px-3 py-1 text-xs font-semibold text-[#2563EB]">
             <Sparkles className="h-3.5 w-3.5" /> All Units Calculated
           </span>
         </div>
@@ -223,7 +223,7 @@ export function AreaValueCalculator() {
               value={propertyPrice}
               onChange={(e) => setPropertyPrice(e.target.value)}
               placeholder="e.g. 7300000"
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-base font-bold text-white focus:border-brand focus:outline-none"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-950 focus:border-[#2563EB] focus:outline-none"
             />
             <span className="text-[11px] text-slate-500">{formatCurrency(totalPrice)}</span>
           </div>
@@ -236,7 +236,7 @@ export function AreaValueCalculator() {
               value={propertyArea}
               onChange={(e) => setPropertyArea(e.target.value)}
               placeholder="e.g. 1000"
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-base font-bold text-white focus:border-brand focus:outline-none"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base font-bold text-slate-950 focus:border-[#2563EB] focus:outline-none"
             />
           </div>
 
@@ -245,7 +245,7 @@ export function AreaValueCalculator() {
             <select
               value={areaUnit}
               onChange={(e) => setAreaUnit(e.target.value as AreaUnit)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white focus:border-brand focus:outline-none"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-950 focus:border-[#2563EB] focus:outline-none"
             >
               {AREA_UNITS.map((u) => (
                 <option key={u.key} value={u.key}>
@@ -257,16 +257,16 @@ export function AreaValueCalculator() {
         </div>
 
         {/* Price Per Unit Breakdown Table */}
-        <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-800 bg-slate-900 text-xs text-slate-400 uppercase tracking-wider">
+            <thead className="border-b border-slate-200 bg-slate-50 text-xs text-slate-400 uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-3.5 font-semibold">Unit Name</th>
                 <th className="px-6 py-3.5 font-semibold">Equivalent Area</th>
                 <th className="px-6 py-3.5 font-semibold">Final Rate / Price Per Unit</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-medium">
+            <tbody className="divide-y divide-slate-100/60 font-medium">
               {AREA_UNITS.map((u) => {
                 const equivalentUnits = totalSqft / u.sqftFactor;
                 const pricePerThisUnit = equivalentUnits > 0 ? totalPrice / equivalentUnits : 0;
@@ -276,17 +276,17 @@ export function AreaValueCalculator() {
                   <tr
                     key={u.key}
                     className={`transition-colors ${
-                      isSelected ? "bg-amber-950/30 text-brand" : "hover:bg-slate-900/60 text-slate-200"
+                      isSelected ? "bg-[#E8F0FE] text-[#2563EB]" : "hover:bg-[#E8F0FE] text-slate-700"
                     }`}
                   >
                     <td className="px-6 py-3.5 flex items-center gap-2">
-                      {isSelected && <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0" />}
+                      {isSelected && <CheckCircle2 className="h-4 w-4 text-[#2563EB] flex-shrink-0" />}
                       <span className="font-semibold">{u.label}</span>
                     </td>
                     <td className="px-6 py-3.5 text-slate-400">
                       {equivalentUnits.toLocaleString(undefined, { maximumFractionDigits: 4 })} {u.symbol}
                     </td>
-                    <td className="px-6 py-3.5 font-bold text-emerald-400">
+                    <td className="px-6 py-3.5 font-bold text-[#2563EB]">
                       ₹{Math.round(pricePerThisUnit).toLocaleString("en-IN")} / {u.symbol}
                     </td>
                   </tr>
@@ -298,20 +298,20 @@ export function AreaValueCalculator() {
       </div>
 
       {/* ─── SECTION 3: Launch Stage Pricing & Appreciation (PriceFilters.xlsx) ─── */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 shadow-xl backdrop-blur-sm sm:p-8 space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 space-y-6">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-brand/10 p-3 text-brand">
+            <div className="rounded-xl bg-[#E8F0FE] p-3 text-[#2563EB]">
               <TrendingUp className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Price Filters & Stage Appreciation Calculator</h2>
+              <h2 className="text-xl font-bold text-slate-950">Price Filters & Stage Appreciation Calculator</h2>
               <p className="text-xs text-slate-400">
                 Formula logic based on PriceFilters.xlsx (Base, Soft Launch, Pre-Launch, Launch Price & Appreciation)
               </p>
             </div>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 border border-brand/30 px-3 py-1 text-xs font-semibold text-brand">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F0FE] border border-[#2563EB]/20 px-3 py-1 text-xs font-semibold text-[#2563EB]">
             Excel Formula Sync
           </span>
         </div>
@@ -324,7 +324,7 @@ export function AreaValueCalculator() {
               type="number"
               value={simAreaSqft}
               onChange={(e) => setSimAreaSqft(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950"
             />
           </div>
           <div className="space-y-1.5">
@@ -333,7 +333,7 @@ export function AreaValueCalculator() {
               type="number"
               value={softRate}
               onChange={(e) => setSoftRate(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950"
             />
           </div>
           <div className="space-y-1.5">
@@ -342,7 +342,7 @@ export function AreaValueCalculator() {
               type="number"
               value={preRate}
               onChange={(e) => setPreRate(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950"
             />
           </div>
           <div className="space-y-1.5">
@@ -351,98 +351,98 @@ export function AreaValueCalculator() {
               type="number"
               value={launchRate}
               onChange={(e) => setLaunchRate(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950"
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold uppercase text-emerald-400">Current Price (₹/sqft)</label>
+            <label className="text-xs font-semibold uppercase text-[#2563EB]">Current Price (₹/sqft)</label>
             <input
               type="number"
               value={currentRate}
               onChange={(e) => setCurrentRate(e.target.value)}
-              className="w-full rounded-xl border border-emerald-700/60 bg-emerald-950/30 px-3 py-2 text-sm font-bold text-emerald-300"
+              className="w-full rounded-xl border border-[#2563EB]/30 bg-[#E8F0FE] px-3 py-2 text-sm font-bold text-slate-950"
             />
           </div>
         </div>
 
         {/* 4 Stage Boxes (Divided Launch & Current into separate boxes) */}
         <div className="grid gap-4 sm:grid-cols-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 space-y-1">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-1">
             <span className="text-xs font-semibold text-slate-400">Soft Launch</span>
-            <p className="text-xl font-bold text-white">₹{sRate.toLocaleString("en-IN")} / sqft</p>
+            <p className="text-xl font-bold text-slate-950">₹{sRate.toLocaleString("en-IN")} / sqft</p>
             <p className="text-xs text-slate-400">Total: ₹{sTotal.toLocaleString("en-IN")}</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 space-y-1">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-1">
             <span className="text-xs font-semibold text-slate-400">Pre Launch</span>
-            <p className="text-xl font-bold text-white">₹{pRate.toLocaleString("en-IN")} / sqft</p>
+            <p className="text-xl font-bold text-slate-950">₹{pRate.toLocaleString("en-IN")} / sqft</p>
             <p className="text-xs text-slate-400">Total: ₹{pTotal.toLocaleString("en-IN")}</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4 space-y-1">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-1">
             <span className="text-xs font-semibold text-slate-400">Launch Price</span>
-            <p className="text-xl font-bold text-white">₹{lRate.toLocaleString("en-IN")} / sqft</p>
+            <p className="text-xl font-bold text-slate-950">₹{lRate.toLocaleString("en-IN")} / sqft</p>
             <p className="text-xs text-slate-400">Total: ₹{lTotal.toLocaleString("en-IN")}</p>
           </div>
 
-          <div className="rounded-2xl border border-emerald-800/60 bg-emerald-950/40 p-4 space-y-1">
-            <span className="text-xs text-emerald-400 font-bold">Current Price</span>
-            <p className="text-xl font-extrabold text-emerald-300">₹{cRate.toLocaleString("en-IN")} / sqft</p>
-            <p className="text-xs text-emerald-400/80 font-medium">Total: ₹{cTotal.toLocaleString("en-IN")}</p>
+          <div className="space-y-1 rounded-2xl border border-[#2563EB]/20 bg-[#E8F0FE] p-4">
+            <span className="text-xs font-bold text-[#2563EB]">Current Price</span>
+            <p className="text-xl font-extrabold text-slate-950">₹{cRate.toLocaleString("en-IN")} / sqft</p>
+            <p className="text-xs font-medium text-slate-600">Total: ₹{cTotal.toLocaleString("en-IN")}</p>
           </div>
         </div>
 
         {/* Exact Excel Matrix matching PriceFilters.xlsx */}
         <div className="space-y-3 pt-2">
-          <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+          <h3 className="text-sm font-bold text-slate-600 uppercase tracking-wider">
             PriceFilters.xlsx Data Matrix
           </h3>
-          <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-800 bg-slate-900 text-xs text-slate-400 uppercase tracking-wider">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs text-slate-400 uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-3.5 font-bold">Stage / Parameter</th>
-                  <th className="px-6 py-3.5 font-bold text-emerald-400">rate/sqft</th>
-                  <th className="px-6 py-3.5 font-bold text-slate-300">Area (sqft)</th>
-                  <th className="px-6 py-3.5 font-bold text-brand">Total Price</th>
+                  <th className="px-6 py-3.5 font-bold text-slate-600">rate/sqft</th>
+                  <th className="px-6 py-3.5 font-bold text-slate-600">Area (sqft)</th>
+                  <th className="px-6 py-3.5 font-bold text-[#2563EB]">Total Price</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-medium text-slate-200">
+              <tbody className="divide-y divide-slate-100/60 font-medium text-slate-700">
                 <tr>
-                  <td className="px-6 py-3.5 font-semibold text-white">Soft Launch</td>
+                  <td className="px-6 py-3.5 font-semibold text-slate-950">Soft Launch</td>
                   <td className="px-6 py-3.5 font-mono">{sRate}</td>
                   <td className="px-6 py-3.5 font-mono">{simArea}</td>
-                  <td className="px-6 py-3.5 font-mono font-bold text-brand">₹{sTotal.toLocaleString("en-IN")}</td>
+                  <td className="px-6 py-3.5 font-mono font-bold text-[#2563EB]">₹{sTotal.toLocaleString("en-IN")}</td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-3.5 font-semibold text-white">Pre Launch</td>
+                  <td className="px-6 py-3.5 font-semibold text-slate-950">Pre Launch</td>
                   <td className="px-6 py-3.5 font-mono">{pRate}</td>
                   <td className="px-6 py-3.5 font-mono">{simArea}</td>
-                  <td className="px-6 py-3.5 font-mono font-bold text-brand">₹{pTotal.toLocaleString("en-IN")}</td>
+                  <td className="px-6 py-3.5 font-mono font-bold text-[#2563EB]">₹{pTotal.toLocaleString("en-IN")}</td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-3.5 font-semibold text-white">Launch Price</td>
+                  <td className="px-6 py-3.5 font-semibold text-slate-950">Launch Price</td>
                   <td className="px-6 py-3.5 font-mono">{lRate}</td>
                   <td className="px-6 py-3.5 font-mono">{simArea}</td>
-                  <td className="px-6 py-3.5 font-mono font-bold text-brand">₹{lTotal.toLocaleString("en-IN")}</td>
+                  <td className="px-6 py-3.5 font-mono font-bold text-[#2563EB]">₹{lTotal.toLocaleString("en-IN")}</td>
                 </tr>
-                <tr className="bg-emerald-950/20 font-bold">
-                  <td className="px-6 py-3.5 text-emerald-300">Current Price</td>
-                  <td className="px-6 py-3.5 font-mono text-emerald-400">{cRate}</td>
-                  <td className="px-6 py-3.5 font-mono text-slate-200">{simArea}</td>
-                  <td className="px-6 py-3.5 font-mono text-emerald-400">₹{cTotal.toLocaleString("en-IN")}</td>
+                <tr className="bg-[#E8F0FE] font-bold">
+                  <td className="px-6 py-3.5 text-[#2563EB]">Current Price</td>
+                  <td className="px-6 py-3.5 font-mono text-slate-950">{cRate}</td>
+                  <td className="px-6 py-3.5 font-mono text-slate-700">{simArea}</td>
+                  <td className="px-6 py-3.5 font-mono text-[#2563EB]">₹{cTotal.toLocaleString("en-IN")}</td>
                 </tr>
-                <tr className="bg-amber-950/20 font-bold border-t-2 border-slate-700">
-                  <td className="px-6 py-3.5 text-amber-300">Appreciation (%)</td>
-                  <td className="px-6 py-3.5 font-mono text-emerald-400">+{appPct.toFixed(2)}%</td>
+                <tr className="border-t-2 border-slate-200 bg-emerald-50 font-bold">
+                  <td className="px-6 py-3.5 text-emerald-700">Appreciation (%)</td>
+                  <td className="px-6 py-3.5 font-mono text-emerald-700">+{appPct.toFixed(2)}%</td>
                   <td className="px-6 py-3.5 text-slate-500">—</td>
-                  <td className="px-6 py-3.5 font-mono text-emerald-400">+{appPct.toFixed(2)}%</td>
+                  <td className="px-6 py-3.5 font-mono text-emerald-700">+{appPct.toFixed(2)}%</td>
                 </tr>
-                <tr className="bg-amber-950/30 font-extrabold">
-                  <td className="px-6 py-3.5 text-brand">Appreciation (amount)</td>
-                  <td className="px-6 py-3.5 font-mono text-brand">+{appRate} / sqft</td>
+                <tr className="bg-[#E8F0FE] font-extrabold">
+                  <td className="px-6 py-3.5 text-[#2563EB]">Appreciation (amount)</td>
+                  <td className="px-6 py-3.5 font-mono text-[#2563EB]">+{appRate} / sqft</td>
                   <td className="px-6 py-3.5 font-mono text-slate-500">—</td>
-                  <td className="px-6 py-3.5 font-mono text-brand">+₹{appTotalVal.toLocaleString("en-IN")}</td>
+                  <td className="px-6 py-3.5 font-mono text-[#2563EB]">+₹{appTotalVal.toLocaleString("en-IN")}</td>
                 </tr>
               </tbody>
             </table>

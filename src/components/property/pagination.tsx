@@ -37,7 +37,7 @@ export function PropertyPagination({
           href={href(p)}
           className={cn(
             "rounded-lg px-4 py-2 text-sm font-medium",
-            p === page ? "bg-slate-900 text-white" : "border border-slate-200 hover:bg-slate-50"
+            p === page ? "bg-[#2563EB] text-white" : "border border-slate-200 text-slate-700 hover:bg-slate-50"
           )}
         >
           {p}
