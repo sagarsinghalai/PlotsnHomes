@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Cormorant_Garamond } from "next/font/google";
 import { ConditionalFooter } from "@/components/layout/conditional-footer";
+import { ScrollJump } from "@/components/layout/scroll-jump";
 import { ConditionalNavbar } from "@/components/layout/conditional-navbar";
 import { ConditionalMarketTicker } from "@/components/market/conditional-market-ticker";
 import { MarketTicker } from "@/components/market/market-ticker";
@@ -64,6 +65,7 @@ export default async function RootLayout({
           <ConditionalNavbar brandName={brand?.companyName} logoUrl={brand?.logoUrl} />
           <main className="min-h-screen">{children}</main>
           <ConditionalFooter />
+          <ScrollJump />
         </Providers>
       </body>
     </html>
