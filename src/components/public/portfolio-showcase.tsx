@@ -159,13 +159,13 @@ export function PortfolioShowcase({ slides }: { slides: PortfolioSlide[] }) {
     >
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#B4F06B]/50 blur-3xl"
+        className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#2563EB]/50 blur-3xl"
         animate={reduce ? undefined : { scale: [1, 1.15, 1], opacity: [0.45, 0.7, 0.45] }}
         transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute -right-16 bottom-0 h-64 w-64 rounded-full bg-[#B4F06B]/35 blur-3xl"
+        className="pointer-events-none absolute -right-16 bottom-0 h-64 w-64 rounded-full bg-[#2563EB]/35 blur-3xl"
         animate={reduce ? undefined : { y: [0, -18, 0], scale: [1, 1.08, 1] }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
@@ -174,7 +174,7 @@ export function PortfolioShowcase({ slides }: { slides: PortfolioSlide[] }) {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-xl">
             <motion.p
-              className="inline-flex rounded-full bg-[#B4F06B] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-950"
+              className="inline-flex rounded-full bg-[#2563EB] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white"
               initial={reduce ? false : { opacity: 0, y: 12, scale: 0.92 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
@@ -232,7 +232,7 @@ export function PortfolioShowcase({ slides }: { slides: PortfolioSlide[] }) {
                   {on && (
                     <motion.span
                       layoutId="portfolio-filter"
-                      className="absolute inset-0 rounded-full bg-[#B4F06B]"
+                      className="absolute inset-0 rounded-full bg-[#2563EB] text-white"
                       transition={{ type: "spring", stiffness: 380, damping: 32 }}
                     />
                   )}
@@ -269,7 +269,7 @@ export function PortfolioShowcase({ slides }: { slides: PortfolioSlide[] }) {
               <div className="flex items-center justify-between">
                 <motion.span
                   key={`${active.id}-chip`}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#B4F06B] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-950"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#2563EB] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white"
                   initial={reduce ? false : { opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
@@ -289,7 +289,7 @@ export function PortfolioShowcase({ slides }: { slides: PortfolioSlide[] }) {
                   exit={{ opacity: 0, y: -16 }}
                   transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <p className="text-sm font-medium text-[#B4F06B]">{active.highlight}</p>
+                  <p className="text-sm font-medium text-[#2563EB]">{active.highlight}</p>
                   <h3 className="mt-2 font-display text-5xl font-medium leading-none text-white sm:text-7xl">
                     {active.area}
                   </h3>
@@ -303,7 +303,7 @@ export function PortfolioShowcase({ slides }: { slides: PortfolioSlide[] }) {
                     </div>
                     <Link
                       href={`/properties?area=${encodeURIComponent(active.area)}`}
-                      className="group inline-flex items-center gap-2 rounded-full bg-[#B4F06B] px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:brightness-95"
+                      className="group inline-flex items-center gap-2 rounded-full bg-[#2563EB] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-95"
                     >
                       View properties
                       <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
@@ -317,7 +317,7 @@ export function PortfolioShowcase({ slides }: { slides: PortfolioSlide[] }) {
               <div className="absolute inset-x-0 bottom-0 h-1 bg-white/15">
                 <motion.div
                   key={`${active.id}-${paused ? "pause" : "play"}`}
-                  className="h-full origin-left bg-[#B4F06B]"
+                  className="h-full origin-left bg-[#2563EB] text-white"
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: paused ? 0.15 : 1 }}
                   transition={{ duration: paused ? 0.3 : 4.6, ease: "linear" }}
@@ -349,7 +349,7 @@ export function PortfolioShowcase({ slides }: { slides: PortfolioSlide[] }) {
                     {on && (
                       <motion.span
                         layoutId="portfolio-rail"
-                        className="absolute inset-0 rounded-2xl ring-2 ring-[#B4F06B]"
+                        className="absolute inset-0 rounded-2xl ring-2 ring-[#2563EB]"
                         transition={{ type: "spring", stiffness: 360, damping: 30 }}
                       />
                     )}

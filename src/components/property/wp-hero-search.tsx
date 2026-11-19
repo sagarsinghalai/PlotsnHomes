@@ -269,7 +269,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               onClick={() => handleTabChange(tab.id)}
               className={`px-5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
                 listingType === tab.id
-                  ? "bg-[#B4F06B] text-slate-950 shadow-md font-bold"
+                  ? "bg-[#2563EB] text-white shadow-md font-bold"
                   : "text-slate-600 hover:text-slate-950 hover:bg-white"
               }`}
             >
@@ -277,7 +277,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
             </button>
           ))}
         </div>
-        <div className="hidden sm:block rounded-full bg-[#B4F06B] px-3 py-1 text-[10px] font-bold tracking-widest uppercase text-slate-950">
+        <div className="hidden sm:block rounded-full bg-[#2563EB] px-3 py-1 text-[10px] font-bold tracking-widest uppercase text-white">
           PlotsnHomes Portal
         </div>
       </div>
@@ -293,8 +293,8 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               onClick={() => setFurnishing(furnishing === opt.value ? "" : opt.value)}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-semibold transition-all duration-150 ${
                 furnishing === opt.value
-                  ? "border-[#B4F06B] bg-[#B4F06B] text-slate-950 shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-[#B4F06B] hover:bg-[#B4F06B]/30 hover:text-slate-950"
+                  ? "border-[#2563EB] bg-[#2563EB] text-white shadow-sm"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-[#2563EB] hover:bg-[#2563EB]/30 hover:text-slate-950"
               }`}
             >
               {furnishing === opt.value && <X className="h-3 w-3" />}
@@ -487,7 +487,7 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               <button
                 type="submit"
                 disabled={pending}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#B4F06B] hover:brightness-95 active:scale-[0.98] px-4 py-2.5 text-sm font-bold text-slate-950 shadow-sm transition-all duration-200 disabled:opacity-50 h-[44px]"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#2563EB] hover:brightness-95 active:scale-[0.98] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all duration-200 disabled:opacity-50 h-[44px]"
               >
                 <Search className="h-4 w-4 text-slate-950 stroke-[2.5px]" />
                 {pending ? "Searching…" : "Search"}

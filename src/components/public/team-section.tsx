@@ -54,7 +54,7 @@ export function TeamSection({ members }: { members: TeamMemberItem[] }) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="inline-flex rounded-full bg-[#B4F06B] px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-950">
+            <p className="inline-flex rounded-full bg-[#2563EB] px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-white">
               Our agents
             </p>
             <h2 className="mt-4 font-display text-4xl font-medium text-slate-950 sm:text-5xl">Meet our team</h2>
@@ -76,7 +76,7 @@ export function TeamSection({ members }: { members: TeamMemberItem[] }) {
                   aria-selected={selected}
                   onClick={() => setActive(index)}
                   className={`group overflow-hidden rounded-2xl border bg-white text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg ${
-                    selected ? "border-[#B4F06B] ring-2 ring-[#B4F06B]" : "border-slate-200"
+                    selected ? "border-[#2563EB] ring-2 ring-[#2563EB]" : "border-slate-200"
                   }`}
                 >
                   <span className="relative block aspect-[3/4] overflow-hidden bg-slate-100">
@@ -86,7 +86,7 @@ export function TeamSection({ members }: { members: TeamMemberItem[] }) {
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                     />
                     {selected && (
-                      <span className="absolute left-2 top-2 rounded-full bg-[#B4F06B] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-950">
+                      <span className="absolute left-2 top-2 rounded-full bg-[#2563EB] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
                         Selected
                       </span>
                     )}
@@ -115,7 +115,7 @@ export function TeamSection({ members }: { members: TeamMemberItem[] }) {
               {dial && (
                 <a
                   href={`tel:${dial}`}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#B4F06B] px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:brightness-95"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95"
                 >
                   <Phone className="h-4 w-4" />
                   {phoneLabel(person)}
@@ -123,7 +123,7 @@ export function TeamSection({ members }: { members: TeamMemberItem[] }) {
               )}
               <a
                 href="#get-in-touch"
-                className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:border-[#B4F06B]"
+                className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:border-[#2563EB]"
               >
                 Request a callback <ArrowRight className="h-4 w-4" />
               </a>

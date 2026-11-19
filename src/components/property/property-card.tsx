@@ -28,7 +28,7 @@ export function PropertyCard({ property }: { property: PropertyWithAgent }) {
           sizes="(max-width:768px) 100vw, 33vw"
         />
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-          <span className="rounded-full bg-[#B4F06B] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-950 shadow-sm">
+          <span className="rounded-full bg-[#2563EB] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
             {property.listingType === "RENT" ? "For Rent" : "For Sale"}
           </span>
           {property.featured && (
@@ -83,7 +83,7 @@ export function PropertyCard({ property }: { property: PropertyWithAgent }) {
               const phone = (property as any).contactPhone || property.agent?.phone || "+919958343556";
               window.location.href = `tel:${phone}`;
             }}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-slate-800 transition hover:border-[#B4F06B] hover:bg-[#B4F06B]/40"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-slate-800 transition hover:border-[#2563EB] hover:bg-[#2563EB]/40"
           >
             <Phone className="h-3.5 w-3.5" /> Call
           </button>
@@ -95,7 +95,7 @@ export function PropertyCard({ property }: { property: PropertyWithAgent }) {
               const email = (property as any).contactEmail || property.agent?.email || "info@plotsnhomes.com";
               window.location.href = `mailto:${email}`;
             }}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-slate-800 transition hover:border-[#B4F06B] hover:bg-[#B4F06B]/40"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-slate-800 transition hover:border-[#2563EB] hover:bg-[#2563EB]/40"
           >
             <Mail className="h-3.5 w-3.5" /> Email
           </button>
@@ -108,7 +108,7 @@ export function PropertyCard({ property }: { property: PropertyWithAgent }) {
               const waMsg = buildPropertyWhatsAppMessage(property);
               window.open(whatsAppWebUrl(whatsapp, waMsg), "_blank");
             }}
-            className="flex w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-[#B4F06B] text-slate-950 transition hover:brightness-95"
+            className="flex w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-[#2563EB] text-white transition hover:brightness-95"
             title="Contact via WhatsApp with Property Info & Link"
           >
             <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

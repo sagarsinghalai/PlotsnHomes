@@ -44,13 +44,12 @@ export function Footer() {
 
   return (
     <footer className="bg-[#f7f6f2] font-sans text-slate-600">
-      <div className="h-1 bg-[#B4F06B]" />
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-[minmax(240px,320px)_1fr] lg:gap-16">
           <div>
             <BrandLogo
               brandName={footer.brandName || "PlotsnHomes"}
-              iconClassName="border-transparent bg-[#B4F06B] text-slate-950 shadow-none"
+              iconClassName="border-transparent bg-[#2563EB] text-white shadow-none"
               textClassName="text-slate-950"
             />
             {footer.boilerplateText && (
@@ -65,9 +64,9 @@ export function Footer() {
                   <Link
                     key={badge.id || idx}
                     href={badge.url || "#"}
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 transition hover:border-[#B4F06B]"
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 transition hover:border-[#2563EB]"
                   >
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#B4F06B] text-slate-950">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2563EB] text-white">
                       {idx === 0 ? <Shield className="h-3 w-3" /> : idx === 1 ? <TrendingUp className="h-3 w-3" /> : <Wallet className="h-3 w-3" />}
                     </span>
                     {badge.label}
@@ -86,7 +85,7 @@ export function Footer() {
                       href={s.url || "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-transparent hover:bg-[#B4F06B] hover:text-slate-950"
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-transparent hover:bg-[#2563EB] hover:text-white"
                       aria-label={s.platform}
                     >
                       {platformLower.includes("twitter") || platformLower === "x" || platformLower.includes("x.com") ? (

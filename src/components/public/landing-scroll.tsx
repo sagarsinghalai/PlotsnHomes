@@ -119,7 +119,7 @@ export function LandingScroll() {
       <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[3px]">
         <div
           data-scroll-bar
-          className="h-full w-full bg-[#B4F06B]"
+          className="h-full w-full bg-[#2563EB] text-white"
           style={{ transform: "scaleX(0)", transformOrigin: "left center" }}
         />
       </div>
@@ -129,7 +129,7 @@ export function LandingScroll() {
       >
         <div
           data-scroll-rail
-          className="h-full w-full rounded-full bg-[#B4F06B]"
+          className="h-full w-full rounded-full bg-[#2563EB] text-white"
           style={{ transform: "scaleY(0)", transformOrigin: "top center" }}
         />
       </div>

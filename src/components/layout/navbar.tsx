@@ -11,12 +11,19 @@ import { BrandLogo } from "@/components/ui/brand-logo";
 
 const links = [
   { href: "/properties", label: "Properties" },
-  { href: "/#how-it-works", label: "How it Works", scrollTarget: "how-it-works" },
+  { href: "/#how-it-works", label: "How it works", scrollTarget: "how-it-works" },
   { href: "/#trading", label: "Trading", scrollTarget: "trading" },
   { href: "/markets", label: "Markets" },
-  { href: "/calculators", label: "Calculators" },
+  { href: "/calculators", label: "Insights" },
   { href: "/calculators/area-value-calculator", label: "Area Calculator" },
   { href: "/dashboard", label: "Dashboard" },
+] as const;
+
+const homeNav = [
+  { href: "/properties", label: "Properties" },
+  { href: "/#how-it-works", label: "How it works", scrollTarget: "how-it-works" },
+  { href: "/markets", label: "Markets" },
+  { href: "/calculators", label: "Insights" },
 ] as const;
 
 function getRoleLabel(role?: string) {
@@ -63,7 +70,7 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
 
   const isHome = pathname === "/";
   const linkCls = isHome
-    ? "rounded-full px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-[#B4F06B]/40 hover:text-slate-950"
+    ? "px-3 py-2 text-sm font-medium text-slate-700 transition hover:text-[#2563EB]"
     : "text-pine-800 hover:text-pine-950";
 
   return (
@@ -79,21 +86,14 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
           href="/"
           brandName={brandName}
           logoUrl={logoUrl}
-          iconClassName={isHome ? "border-transparent bg-[#B4F06B] text-slate-950 shadow-none" : undefined}
-          textClassName={isHome ? "text-slate-950" : "text-pine-950"}
+          showIcon
+          iconClassName={isHome ? "border-transparent bg-[#2563EB] text-white shadow-none" : undefined}
+          textClassName={isHome ? "font-sans text-[1.35rem] font-extrabold tracking-tight text-slate-950" : "text-pine-950"}
         />
 
         {/* Center: Navigation Links */}
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex">
-          {(isHome
-            ? [
-                ...links.filter((l) =>
-                  ["Properties", "How it Works", "Markets", "Calculators"].includes(l.label)
-                ),
-                { href: "/#get-in-touch", label: "Contact", scrollTarget: "get-in-touch" },
-              ]
-            : [...links]
-          ).map((l) => (
+          {(isHome ? homeNav : links).map((l) => (
             <Link
               key={l.href}
               href={l.href}
@@ -112,7 +112,7 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
               }
               className={`text-xs xl:text-sm font-semibold whitespace-nowrap rounded-xl px-3 py-1.5 transition shadow-sm ${
                 isHome
-                  ? "border border-[#B4F06B] bg-[#B4F06B] text-slate-950 hover:brightness-95"
+                  ? "border border-[#2563EB] bg-[#2563EB] text-white hover:brightness-110"
                   : "text-gold-dark hover:text-gold border border-gold/40 bg-gold/10 hover:bg-gold/20"
               }`}
             >
@@ -144,20 +144,22 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
             <div className="flex items-center gap-1">
               <Link
                 href="/login"
-                className={isHome ? "rounded-full px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100" : "rounded-full px-3 py-2 text-sm font-medium text-pine-800"}
+                className={
+                  isHome
+                    ? "inline-flex items-center rounded-full border border-slate-300 bg-white px-5 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-400"
+                    : "rounded-full px-3 py-2 text-sm font-medium text-pine-800"
+                }
               >
-                Log in
+                {isHome ? "Sign in" : "Log in"}
               </Link>
+              {!isHome && (
               <Link
                 href="/register"
-                className={`inline-flex items-center rounded-full px-5 py-2.5 text-sm font-semibold transition ${
-                  isHome
-                    ? "bg-[#B4F06B] text-slate-950 shadow-sm hover:brightness-95"
-                    : "bg-brand text-white hover:bg-brand-hover"
-                }`}
+                className="inline-flex items-center rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-hover"
               >
                 Get started
               </Link>
+              )}
             </div>
           )}
         </div>
@@ -174,7 +176,7 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
 
       {open && (
         <div className="border-t border-pine-900/10 bg-cream-white px-4 py-4 md:hidden shadow-lg">
-          {links.map((l) => (
+          {(isHome ? homeNav : links).map((l) => (
             <Link
               key={l.href}
               href={l.href}
@@ -210,7 +212,7 @@ export function Navbar({ brandName, logoUrl }: { brandName?: string; logoUrl?: s
               <Link href="/register" onClick={() => setOpen(false)}>
                 <Button
                   variant="gold"
-                  className={`w-full rounded-full ${isHome ? "bg-[#B4F06B] text-slate-950 hover:bg-[#a6e25c] shadow-none" : ""}`}
+                  className={`w-full rounded-full ${isHome ? "bg-[#2563EB] text-white hover:bg-[#1d4ed8] shadow-none" : ""}`}
                 >
                   Register
                 </Button>

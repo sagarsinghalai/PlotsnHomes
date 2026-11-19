@@ -8,6 +8,7 @@ interface BrandLogoProps {
   iconClassName?: string;
   textClassName?: string;
   showText?: boolean;
+  showIcon?: boolean;
   /** White-label overrides — the visited tenant's brand (falls back to defaults). */
   brandName?: string;
   logoUrl?: string;
@@ -19,30 +20,32 @@ export function BrandLogo({
   iconClassName,
   textClassName,
   showText = true,
+  showIcon = true,
   brandName,
   logoUrl,
 }: BrandLogoProps) {
   const name = brandName?.trim() || "PlotsnHomes";
   const content = (
     <div className={cn("inline-flex shrink-0 items-center gap-2.5 select-none", className)}>
-      {logoUrl ? (
+      {showIcon && logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logoUrl}
           alt={name}
           className={cn("h-10 w-auto max-w-[160px] shrink-0 rounded-xl object-contain", iconClassName)}
         />
-      ) : (
+      ) : showIcon ? (
         <span className={cn(
           "flex h-10 w-10 min-w-[2.5rem] min-h-[2.5rem] shrink-0 items-center justify-center rounded-xl bg-pine-950 border border-pine-800 text-gold shadow-sm transition-transform hover:scale-105",
           iconClassName
         )}>
           <Building2 className="h-5 w-5 shrink-0 block text-current stroke-[2.2]" />
         </span>
-      )}
+      ) : null}
       {showText && !logoUrl && (
         <span className={cn(
-          "whitespace-nowrap font-display text-xl font-extrabold tracking-tight text-white shrink-0",
+          "whitespace-nowrap text-xl font-extrabold tracking-tight shrink-0",
+          textClassName?.includes("font-sans") ? "text-slate-950" : "font-display text-white",
           textClassName
         )}>
           {name}
