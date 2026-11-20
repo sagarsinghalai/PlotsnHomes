@@ -7,7 +7,7 @@ export function ConditionalNavbar({ brandName, logoUrl }: { brandName?: string; 
   const pathname = usePathname();
 
   // Hide public site navbar on admin routes to prevent double-header glitches
-  if (pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/admin") || pathname === "/login" || pathname === "/register") {
     return null;
   }
 

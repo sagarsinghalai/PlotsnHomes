@@ -18,7 +18,14 @@ export function ScrollJump() {
     return () => window.removeEventListener("scroll", sync);
   }, [pathname]);
 
-  if (pathname.startsWith("/admin") || pathname.startsWith("/dashboard")) return null;
+  if (
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/dashboard") ||
+    pathname === "/login" ||
+    pathname === "/register"
+  ) {
+    return null;
+  }
 
   function jump() {
     window.scrollTo({
