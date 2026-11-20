@@ -16,6 +16,7 @@ import { EditorialShowcase } from "@/components/public/editorial-showcase";
 import { LandingScroll } from "@/components/public/landing-scroll";
 import { FractionalLanding } from "@/components/public/fractional-landing";
 import { WpHeroSearch } from "@/components/property/wp-hero-search";
+import { PropertyCard } from "@/components/property/property-card";
 import { getBhkConfigurations } from "@/lib/system-settings";
 
 export default async function HomePage() {
@@ -41,6 +42,7 @@ export default async function HomePage() {
     areasRaw,
     suggestionsRaw,
     bhkOptions,
+    listedProperties,
   ] = await Promise.all([
     prisma.property.groupBy({
       by: ["area"],
@@ -78,6 +80,12 @@ export default async function HomePage() {
       take: 200,
     }),
     getBhkConfigurations(),
+    prisma.property.findMany({
+      where: { status: "ACTIVE", tenantId },
+      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+      take: 6,
+      include: { agent: { select: { name: true, email: true, phone: true } } },
+    }),
   ]);
 
   // Developer projects shown on the public home page (lead-gen showcase).
@@ -165,7 +173,7 @@ export default async function HomePage() {
     <>
       <BodyThemeSync theme="light" />
       <LandingScroll />
-      <FractionalLanding />
+      <FractionalLanding part="hero" />
 
       <section className="relative overflow-hidden bg-slate-950 py-14 sm:py-16">
         <Image
@@ -189,6 +197,29 @@ export default async function HomePage() {
           </Suspense>
         </div>
       </section>
+
+      {listedProperties.length > 0 && (
+        <section id="listings" className="scroll-mt-24 bg-white py-14 sm:py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2563EB]">Browse</p>
+                <h2 className="mt-2 font-display text-3xl font-bold text-slate-950 sm:text-4xl">Property lists</h2>
+              </div>
+              <Link href="/properties" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2563EB] hover:underline">
+                View all properties <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {listedProperties.map((property) => (
+                <PropertyCard key={property.id} property={property} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <FractionalLanding part="opportunities" />
 
       <PortfolioShowcase
         slides={(siteFeaturedAreas && siteFeaturedAreas.length > 0

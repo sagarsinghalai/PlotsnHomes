@@ -82,8 +82,10 @@ function YieldRing() {
   );
 }
 
-export function FractionalLanding() {
+export function FractionalLanding({ part = "all" }: { part?: "all" | "hero" | "opportunities" }) {
   const scroller = useRef<HTMLDivElement>(null);
+  const showHero = part === "all" || part === "hero";
+  const showOpportunities = part === "all" || part === "opportunities";
 
   function scrollByCard(direction: number) {
     const node = scroller.current;
@@ -95,6 +97,7 @@ export function FractionalLanding() {
 
   return (
     <div className="bg-white">
+      {showHero && (
       <section className="mx-auto grid max-w-7xl items-center gap-5 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-4 lg:px-8 lg:py-4">
         <div className="max-w-xl">
           <h1 className="text-[clamp(2.45rem,4.2vw,3.85rem)] font-extrabold leading-[0.96] tracking-[-0.035em] text-slate-950">
@@ -187,7 +190,9 @@ export function FractionalLanding() {
           </article>
         </div>
       </section>
+      )}
 
+      {showOpportunities && (
       <section id="opportunities" className="scroll-mt-24 bg-[#F5F7FB] py-12 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-6 flex items-end justify-between gap-4">
@@ -265,6 +270,7 @@ export function FractionalLanding() {
           </div>
         </div>
       </section>
+      )}
     </div>
   );
 }
