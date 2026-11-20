@@ -47,7 +47,7 @@ export function AuthShowcase({ intent = "sign-in" }: { intent?: "sign-in" | "joi
 
   return (
     <aside
-      className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[#1D4ED8] text-white"
+      className="relative flex h-[300px] shrink-0 flex-col overflow-hidden bg-[#1D4ED8] text-white sm:h-[340px] lg:h-full lg:min-h-0"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -58,7 +58,7 @@ export function AuthShowcase({ intent = "sign-in" }: { intent?: "sign-in" | "joi
             "linear-gradient(120deg, transparent 0%, transparent 42%, rgba(255,255,255,0.16) 42.2%, transparent 42.6%), linear-gradient(300deg, transparent 0%, transparent 58%, rgba(255,255,255,0.12) 58.2%, transparent 58.6%)",
         }}
       />
-      <div className="relative z-10 flex h-full min-h-0 flex-col px-5 py-4 sm:px-8 sm:py-6 lg:px-10">
+      <div className="relative z-10 flex h-full min-h-0 flex-col px-4 py-4 sm:px-8 sm:py-6 lg:px-10">
         <Link href="/" className="inline-flex w-fit items-center gap-2 text-white">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#1D4ED8]">
             <Building2 className="h-4 w-4" />
@@ -104,8 +104,8 @@ export function AuthShowcase({ intent = "sign-in" }: { intent?: "sign-in" | "joi
             ))}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 sm:p-4">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/70">{slide.place}</p>
-              <p className="mt-0.5 text-base font-bold sm:text-lg">{slide.title}</p>
-              <p className="mt-0.5 hidden text-xs text-white/80 sm:block">{slide.line}</p>
+              <p className="mt-0.5 text-base font-bold leading-tight sm:text-lg">{slide.title}</p>
+              <p className="mt-0.5 text-xs text-white/80">{slide.line}</p>
             </div>
           </div>
 
@@ -119,8 +119,8 @@ export function AuthShowcase({ intent = "sign-in" }: { intent?: "sign-in" | "joi
                   role="tab"
                   aria-selected={active}
                   onClick={() => setIndex(slideIndex)}
-                  className={`relative h-10 overflow-hidden rounded-lg ring-2 ring-offset-2 ring-offset-[#1D4ED8] transition sm:h-12 ${
-                    active ? "ring-white" : "ring-transparent opacity-70 hover:opacity-100"
+                  className={`relative h-11 overflow-hidden rounded-lg border-2 transition sm:h-12 ${
+                    active ? "border-white" : "border-transparent opacity-70 hover:opacity-100"
                   }`}
                 >
                   <Image src={item.image} alt="" fill className="object-cover" sizes="120px" />
@@ -145,20 +145,25 @@ export function AuthShell({
   useEffect(() => {
     const html = document.documentElement;
     const body = document.body;
-    const previousHtml = html.style.overflow;
-    const previousBody = body.style.overflow;
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    function apply() {
+      const lock = desktop.matches ? "hidden" : "";
+      html.style.overflow = lock;
+      body.style.overflow = lock;
+    }
+    apply();
+    desktop.addEventListener("change", apply);
     return () => {
-      html.style.overflow = previousHtml;
-      body.style.overflow = previousBody;
+      desktop.removeEventListener("change", apply);
+      html.style.overflow = "";
+      body.style.overflow = "";
     };
   }, []);
 
   return (
-    <div className="grid h-dvh max-h-dvh overflow-hidden bg-white grid-rows-[minmax(0,0.28fr)_minmax(0,0.72fr)] lg:grid-cols-2 lg:grid-rows-1">
+    <div className="min-h-dvh overflow-x-hidden bg-white lg:grid lg:h-dvh lg:max-h-dvh lg:grid-cols-2 lg:overflow-hidden">
       <AuthShowcase intent={intent} />
-      <div className="flex h-full min-h-0 items-center justify-center overflow-hidden px-5 py-2 sm:px-10 lg:py-4">
+      <div className="flex items-start justify-center px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8 sm:py-8 lg:h-full lg:min-h-0 lg:items-center lg:overflow-hidden lg:px-10 lg:py-4">
         <div className="w-full max-w-[440px]">{children}</div>
       </div>
     </div>

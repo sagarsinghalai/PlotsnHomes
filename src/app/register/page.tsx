@@ -92,7 +92,7 @@ export default function RegisterPage() {
   return (
     <AuthShell intent="join">
       <p className="hidden text-sm font-semibold text-slate-950 sm:block">PlotsnHomes</p>
-      <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-950 sm:mt-5 sm:text-3xl">Get started</h1>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:mt-5 sm:text-3xl">Get started</h1>
       <p className="mt-1 text-sm text-slate-500">
         Already have an account?{" "}
         <Link href="/login" className="font-semibold text-[#2563EB] hover:underline">
@@ -103,7 +103,7 @@ export default function RegisterPage() {
       <form onSubmit={onSubmit} className="mt-3 space-y-2.5 sm:mt-5 sm:space-y-3">
         <div>
           <Label>Account type</Label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 min-[420px]:gap-2.5">
             {ROLE_OPTIONS.map((opt) => {
               const Icon = opt.icon;
               const selected = selectedRole === opt.key;
@@ -112,7 +112,7 @@ export default function RegisterPage() {
                   key={opt.key}
                   type="button"
                   onClick={() => setSelectedRole(opt.key)}
-                  className={`flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-left transition ${
+                  className={`flex min-h-11 items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition ${
                     selected
                       ? "border-[#2563EB] bg-[#EFF6FF] text-[#1D4ED8]"
                       : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
@@ -127,7 +127,7 @@ export default function RegisterPage() {
               );
             })}
           </div>
-          <p className="mt-1.5 hidden text-xs leading-4 text-slate-500 sm:line-clamp-2 sm:block">{currentRoleInfo.description}</p>
+          <p className="mt-1.5 text-xs leading-4 text-slate-500">{currentRoleInfo.description}</p>
         </div>
 
         <div>
@@ -138,7 +138,7 @@ export default function RegisterPage() {
             placeholder="Your name"
             required
             autoComplete="name"
-            className="min-h-10 rounded-xl border-slate-200 py-2"
+            className="min-h-11 rounded-xl border-slate-200 py-2 text-base"
           />
         </div>
         <div>
@@ -150,7 +150,7 @@ export default function RegisterPage() {
             placeholder="you@example.com"
             required
             autoComplete="email"
-            className="min-h-10 rounded-xl border-slate-200 py-2"
+            className="min-h-11 rounded-xl border-slate-200 py-2 text-base"
           />
         </div>
         <div>
@@ -163,7 +163,7 @@ export default function RegisterPage() {
             required
             minLength={8}
             autoComplete="new-password"
-            className="min-h-10 rounded-xl border-slate-200 py-2"
+            className="min-h-11 rounded-xl border-slate-200 py-2 text-base"
           />
         </div>
 
@@ -171,7 +171,7 @@ export default function RegisterPage() {
 
         <Button
           type="submit"
-          className="h-11 w-full rounded-xl bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
+          className="h-11 w-full whitespace-normal rounded-xl bg-[#2563EB] px-3 text-center text-white hover:bg-[#1D4ED8]"
           loading={loading}
         >
           Create {currentRoleInfo.title.toLowerCase()} account

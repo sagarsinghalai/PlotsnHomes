@@ -75,7 +75,7 @@ export function LoginForm() {
   return (
     <AuthShell>
       <p className="hidden text-sm font-semibold text-slate-950 sm:block">PlotsnHomes</p>
-      <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-950 sm:mt-6 sm:text-3xl">Welcome back</h1>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:mt-6 sm:text-3xl">Welcome back</h1>
       <p className="mt-1 text-sm text-slate-500">
         Don&apos;t have an account?{" "}
         <Link href="/register" className="font-semibold text-[#2563EB] hover:underline">
@@ -101,7 +101,7 @@ export function LoginForm() {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-xl border-slate-200"
+            className="min-h-11 rounded-xl border-slate-200 text-base"
           />
         </div>
         <div>
@@ -115,7 +115,7 @@ export function LoginForm() {
             placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-xl border-slate-200"
+            className="min-h-11 rounded-xl border-slate-200 text-base"
           />
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
