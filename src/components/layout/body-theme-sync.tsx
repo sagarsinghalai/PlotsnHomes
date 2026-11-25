@@ -11,8 +11,8 @@ export function BodyThemeSync({ theme }: { theme: "light" | "dark" }) {
       root.style.backgroundColor = "#020617";
       body.style.backgroundColor = "#020617";
     } else {
-      root.style.backgroundColor = "#ffffff";
-      body.style.backgroundColor = "#ffffff";
+      root.style.backgroundColor = "#f8fafc";
+      body.style.backgroundColor = "#f8fafc";
     }
 
     return () => {

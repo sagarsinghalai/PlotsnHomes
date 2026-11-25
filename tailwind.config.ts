@@ -39,7 +39,6 @@ const config: Config = {
           950: "#15293d",  // footer / darkest
         },
         sage: "#7d7267",   // muted body text (taupe)
-        impact: "#B4F06B", // landing accent — exact brand lime
         // ── Admin brand token — navy, matching the public primary ──
         brand: {
           DEFAULT: "#1b365d",

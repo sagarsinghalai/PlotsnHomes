@@ -1,23 +1,20 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Suspense } from "react";
+import { PropertyCard } from "@/components/property/property-card";
 import { WpHeroSearch } from "@/components/property/wp-hero-search";
-import { PortfolioShowcase } from "@/components/public/portfolio-showcase";
+import { CityLandmarkSlider } from "@/components/property/city-landmark-slider";
 import { TestimonialsSection } from "@/components/property/testimonials-section";
 import { prisma } from "@/lib/prisma";
 import { getBhkConfigurations } from "@/lib/system-settings";
 import { getPublishedPageForRoute, getNavSettings, getFooterSettings } from "@/lib/webpage-editor-store";
 import { BuilderPageView } from "@/components/public/builder-page-view";
 import { getPublicTenantId } from "@/lib/public-tenant";
-import { getSiteSetting, SITE_SETTING_KEYS, HeroStat, FeaturedArea, HeroContent, HowItWorksStep, TestimonialsConfig, TeamMemberItem } from "@/lib/site-settings";
+import { getSiteSetting, SITE_SETTING_KEYS, HeroStat, HeroCard, FeaturedArea, HeroContent, HowItWorksStep, TestimonialsConfig, TeamMemberItem } from "@/lib/site-settings";
 import { formatCurrency, parseImages } from "@/lib/utils";
-import { ShieldCheck, CreditCard, Home, Coins, TrendingUp, ArrowRight, Check, ArrowDownLeft, ArrowUpRight, BarChart3, Search, Activity, Sparkles, CheckCircle, Wallet, BadgeCheck, Headphones } from "lucide-react";
+import { ShieldCheck, CreditCard, Home, Coins, TrendingUp, ArrowRight, Check, ArrowDownLeft, ArrowUpRight, BarChart3, Search, Activity, Landmark, Smartphone, Zap, Sparkles, CheckCircle, Wallet } from "lucide-react";
 import { BodyThemeSync } from "@/components/layout/body-theme-sync";
 import { LeadCaptureForm } from "@/components/public/lead-capture-form";
 import { ProjectsShowcase, type ShowcaseProject } from "@/components/public/projects-showcase";
-import { TeamSection } from "@/components/public/team-section";
-import { EditorialShowcase } from "@/components/public/editorial-showcase";
-import { LandingScroll } from "@/components/public/landing-scroll";
 
 export default async function HomePage() {
   // If an admin has published a builder page that takes over the homepage, render
@@ -32,12 +29,15 @@ export default async function HomePage() {
 
   const tenantId = await getPublicTenantId();
   const [
+    featured,
+    totalCount, 
     priceRange, 
     citiesRaw, 
     areasRaw, 
     areaCounts, 
     bhkOptions, 
     siteHeroStats, 
+    siteHeroCards, 
     siteFeaturedAreas, 
     siteHeroContent, 
     siteHowItWorks, 
@@ -45,6 +45,13 @@ export default async function HomePage() {
     siteTestimonials,
     siteTeamMembers
   ] = await Promise.all([
+    prisma.property.findMany({
+      where: { status: "ACTIVE", featured: true, tenantId },
+      take: 6,
+      include: { agent: { select: { name: true, email: true, phone: true } } },
+      orderBy: { volumeScore: "desc" },
+    }),
+    prisma.property.count({ where: { status: "ACTIVE", tenantId } }),
     prisma.property.aggregate({
       where: { status: "ACTIVE", tenantId },
       _min: { price: true },
@@ -72,6 +79,7 @@ export default async function HomePage() {
     }),
     getBhkConfigurations(),
     getSiteSetting<HeroStat[]>(SITE_SETTING_KEYS.HERO_STATS),
+    getSiteSetting<HeroCard[]>(SITE_SETTING_KEYS.HERO_CARDS),
     getSiteSetting<FeaturedArea[]>(SITE_SETTING_KEYS.FEATURED_AREAS),
     getSiteSetting<HeroContent>(SITE_SETTING_KEYS.HERO_CONTENT),
     getSiteSetting<HowItWorksStep[]>(SITE_SETTING_KEYS.HOW_IT_WORKS),
@@ -106,13 +114,27 @@ export default async function HomePage() {
     shortDescription: p.shortDescription, isSoldOut: p.isSoldOut,
   }));
 
+  const fallback =
+    featured.length >= 6
+      ? featured
+      : await prisma.property.findMany({
+          where: { status: "ACTIVE", tenantId },
+          take: 6,
+          include: { agent: { select: { name: true, email: true, phone: true } } },
+          orderBy: { changeYtd: "desc" },
+        });
+
   const areas = areasRaw.map((a) => a.area).filter(Boolean) as string[];
   const agents = await prisma.user.findMany({
     where: { role: "AGENT", active: true, tenantId },
-    take: 6,
+    take: 4,
     orderBy: { createdAt: "asc" },
-    select: { id: true, name: true, phone: true, countryCode: true, image: true },
   });
+
+  // Extract top 3 properties to populate dynamic floating cards
+  const card1Prop = siteHeroCards && siteHeroCards.length > 0 ? siteHeroCards[0] : (fallback[0] || null);
+  const card2Prop = siteHeroCards && siteHeroCards.length > 1 ? siteHeroCards[1] : (fallback[1] || fallback[0] || null);
+  const card3Prop = siteHeroCards && siteHeroCards.length > 2 ? siteHeroCards[2] : (fallback[2] || fallback[1] || fallback[0] || null);
 
   const heroStatsToUse = siteHeroStats && siteHeroStats.length > 0 ? siteHeroStats : [
     { label: "Assets Under Management", value: "₹12.4 Cr" },
@@ -122,41 +144,40 @@ export default async function HomePage() {
 
   return (
     <>
-      <BodyThemeSync theme="light" />
-      <LandingScroll />
-      <section className="bg-white px-4 pb-6 pt-5 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="relative min-h-[460px] overflow-hidden rounded-[2rem] md:min-h-[540px]">
-            <div data-parallax className="absolute inset-[-8%] will-change-transform">
-              <Image
-                src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=2000&q=80"
-                alt="Modern home with a pool and garden"
-                fill
-                priority
-                className="object-cover object-center"
-                sizes="(max-width: 1280px) 100vw, 1280px"
-              />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/88 to-white/15" />
-            <div data-reveal className="relative z-10 flex min-h-[460px] max-w-xl flex-col justify-center px-6 py-14 sm:px-12 md:min-h-[540px]">
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
-                Premium properties. Better living.
-              </p>
-              <h1 className="mt-4 font-display text-[clamp(2.6rem,5.4vw,4.4rem)] font-medium leading-[1.02] text-slate-950">
-                {siteHeroContent?.title1 || "Find Your Dream Home"}
-                <span className="mt-1 block italic">
-                  {[siteHeroContent?.highlightedText, siteHeroContent?.title2].filter(Boolean).join(" ") || "with PlotsnHomes"}
-                </span>
-              </h1>
-              <span className="mt-4 h-1.5 w-24 rounded-full bg-[#B4F06B]" />
-              <p className="mt-5 max-w-md text-base leading-relaxed text-slate-600 sm:text-lg">
-                {siteHeroContent?.subtitle || "Discover verified homes, plots and projects — clear titles, real photos, and honest pricing in one place."}
-              </p>
-            </div>
+      <BodyThemeSync theme="dark" />
+      <section className="relative flex min-h-[100svh] items-center overflow-hidden">
+        {/* Background video with a warm pine overlay */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        >
+          <source src={siteHeroContent?.videoUrl || "/hero-bg.mp4"} type="video/mp4" />
+        </video>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-pine-950/95 via-pine-950/55 to-pine-950/75" />
+
+        <div className="relative z-10 mx-auto w-full max-w-5xl px-5 pb-16 pt-28 text-center sm:px-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-pine-950/30 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-soft backdrop-blur">
+            <span className="tracking-normal text-gold">★★★★★</span>
+            Rated 4.9 by 1,200+ families
           </div>
 
-          <div data-reveal className="relative z-20 -mt-10 px-1 sm:-mt-14 sm:px-6">
-            <Suspense fallback={<div className="h-24 animate-pulse rounded-2xl bg-slate-100" />}>
+          <h1 className="mt-7 font-display text-[clamp(2.6rem,7vw,4.6rem)] font-medium leading-[1.05] text-cream-white">
+            {siteHeroContent?.title1 || "Find Your Dream Home"}{" "}
+            {siteHeroContent?.highlightedText && (
+              <span className="italic text-gold-light">{siteHeroContent.highlightedText} </span>
+            )}
+            {siteHeroContent?.title2 || "with People You Trust"}
+          </h1>
+
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-cream-100/90 sm:text-lg">
+            {siteHeroContent?.subtitle || "Verified homes, plots and projects — clear titles, real photos, honest pricing. Buy, sell or rent with a team that treats you like family."}
+          </p>
+
+          <div className="mt-10 text-left">
+            <Suspense fallback={<div className="h-24 animate-pulse rounded-2xl bg-cream-white/10" />}>
               <WpHeroSearch
                 priceMin={priceRange._min.price ?? 0}
                 priceMax={priceRange._max.price ?? 2000000}
@@ -170,78 +191,52 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white py-12 sm:py-16">
-        <div data-reveal-group className="mx-auto grid max-w-7xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-          {[
-            { icon: BadgeCheck, title: "Verified listings", text: "Every home is checked for a clear title, real photos, and an honest price." },
-            { icon: ShieldCheck, title: "Trusted and secure", text: "KYC, escrow-style payments, and a team that stays with you after the visit." },
-            { icon: Headphones, title: "Expert support", text: "A property advisor helps you shortlist, compare, and close without the runaround." },
-            { icon: Home, title: "Better living", text: "Homes, plots, and projects chosen for how you actually want to live." },
-          ].map((item) => (
-            <div key={item.title} data-reveal-item className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#B4F06B] text-slate-950">
-                <item.icon className="h-5 w-5" />
-              </span>
-              <h2 className="mt-4 text-base font-semibold text-slate-950">{item.title}</h2>
-              <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{item.text}</p>
+      {/* ── Stats band ── */}
+      <section className="relative bg-pine-900 py-14 md:py-16">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-10 px-5 sm:px-8 md:grid-cols-4">
+          {heroStatsToUse.slice(0, 4).map((s, i) => (
+            <div key={i} className="border-l-2 border-gold/30 pl-5">
+              <p className="font-display text-3xl font-medium text-gold-light sm:text-4xl">{s.value}</p>
+              <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-cream-100">{s.label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <PortfolioShowcase
-        slides={(siteFeaturedAreas && siteFeaturedAreas.length > 0
-          ? siteFeaturedAreas
-          : areaCounts.map((r) => ({ area: r.area ?? "", count: r._count._all, imageUrl: "" }))
-        ).map((row: { area?: string; count?: number; imageUrl?: string }) => ({
-          area: row.area ?? "",
-          count: row.count ?? 0,
-          imageUrl: row.imageUrl ?? "",
-        }))}
-      />
+      <div className="w-full relative overflow-hidden">
+        <CityLandmarkSlider
+          slides={(siteFeaturedAreas && siteFeaturedAreas.length > 0
+            ? siteFeaturedAreas
+            : areaCounts.map((r) => ({ area: r.area ?? "", count: r._count._all, imageUrl: "" }))
+          ).map((row: any) => ({ area: row.area ?? "", count: row.count ?? 0, imageUrl: row.imageUrl ?? "" }))}
+        />
+      </div>
 
-      <EditorialShowcase />
-
-      <section className="bg-white py-16 md:py-20">
-        <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8">
-          <div data-reveal className="relative min-h-[380px] overflow-hidden rounded-[2rem]">
-            <div data-parallax className="absolute inset-[-8%] will-change-transform">
-              <Image
-                src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1400&q=80"
-                alt="Bright living room in a modern home"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 640px"
-              />
-            </div>
-            <div className="absolute inset-x-5 bottom-5 rounded-2xl bg-white/95 p-5 shadow-sm backdrop-blur">
-              <p className="font-display text-3xl italic leading-tight text-slate-950">More than just a home</p>
-              <p className="mt-1 text-sm text-slate-600">A place that fits the way you want to live.</p>
-            </div>
-          </div>
-          <div data-reveal>
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Why choose PlotsnHomes</p>
-            <h2 className="mt-3 font-display text-4xl font-medium leading-tight text-slate-950 sm:text-5xl">
-              More than properties. We build futures.
+      <section id="featured-listings" className="bg-cream-100 py-20 md:py-28">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/5 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-gold-dark">
+              <span className="h-1.5 w-1.5 rounded-full bg-gold" /> Featured Listings
+            </span>
+            <h2 className="mt-6 font-display text-4xl font-medium leading-tight text-pine-950 sm:text-5xl">
+              Handpicked Homes <span className="italic text-gold">for You</span>
             </h2>
-            <p className="mt-4 max-w-lg leading-relaxed text-slate-600">
-              Whether you are buying, renting, or investing, the shortlist stays clear: verified homes, transparent pricing, and someone who picks up the phone.
+            <p className="mt-4 leading-relaxed text-sage">
+              Every property is verified by our team — clear titles, real photos, honest pricing.
             </p>
-            <div data-reveal-group className="mt-8 grid grid-cols-2 gap-x-6 gap-y-7">
-              {(heroStatsToUse.length >= 4
-                ? heroStatsToUse.slice(0, 4)
-                : [
-                    ...heroStatsToUse,
-                    { label: "Cities covered", value: "25+" },
-                    { label: "Families guided", value: "1,200+" },
-                  ]
-              ).slice(0, 4).map((s) => (
-                <div key={s.label} data-reveal-item className="border-t-2 border-[#B4F06B] pt-3">
-                  <p className="font-display text-3xl text-slate-950 sm:text-4xl">{s.value}</p>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{s.label}</p>
-                </div>
-              ))}
-            </div>
+          </div>
+          <div className="mt-14 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+            {fallback.map((p) => (
+              <PropertyCard key={p.id} property={p} />
+            ))}
+          </div>
+          <div className="mt-12 text-center">
+            <Link
+              href="/properties"
+              className="inline-flex items-center gap-2 rounded-full bg-pine-900 px-7 py-3 text-sm font-semibold text-cream-white transition hover:bg-pine-950"
+            >
+              View all properties <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </section>
@@ -252,14 +247,14 @@ export default async function HomePage() {
       <TestimonialsSection testimonialsConfig={siteTestimonials} />
 
       {/* How PlotsnHomes Works Section */}
-      <section id="how-it-works" className="relative bg-white py-20 border-t border-slate-100">
+      <section id="how-it-works" className="relative bg-cream-50 py-20 border-t border-slate-100 overflow-hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <div data-reveal className="mb-2">
-            <p className="mb-2 inline-flex rounded-full bg-[#B4F06B] px-3 py-1 text-xs font-bold uppercase tracking-widest text-slate-950">Getting started</p>
-            <h2 className="mt-2 font-display text-3xl sm:text-4xl font-extrabold text-slate-950">How PlotsnHomes Works</h2>
+          <div className="mb-2">
+            <p className="text-xs font-bold text-gold-dark tracking-widest uppercase mb-2">GETTING STARTED</p>
+            <h2 className="mt-2 font-display text-3xl sm:text-4xl font-extrabold text-pine-950">How PlotsnHomes Works</h2>
           </div>
 
-          <div className="mt-8 grid items-start gap-10 lg:grid-cols-12 lg:gap-x-12">
+          <div className="mt-12 grid lg:gap-x-16 gap-y-10 lg:grid-cols-12 items-start">
             {/* Left Column: Steps list */}
             <div className="lg:col-span-7">
               <div className="space-y-0">
@@ -287,12 +282,12 @@ export default async function HomePage() {
                 ])
                   .filter((step) => step.title.toLowerCase().trim() !== "test" && step.desc.toLowerCase().trim() !== "test")
                   .map((step, idx) => (
-                    <div key={idx} className="group relative flex gap-5 border-b border-slate-200/60 pt-8 pb-8 first:pt-0 last:pb-0 last:border-b-0 hover:bg-slate-50 px-4 -mx-4 rounded-2xl transition-all duration-300">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#B4F06B] font-display text-sm font-bold text-slate-950 shrink-0 mt-0.5 shadow-sm group-hover:scale-110 transition-all duration-300">
+                    <div key={idx} className="group relative flex gap-5 border-b border-slate-200/60 pt-8 pb-8 first:pt-0 last:pb-0 last:border-b-0 hover:bg-cream-100/50 px-4 -mx-4 rounded-2xl transition-all duration-300">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-pine-950 font-display text-sm font-bold text-gold border border-gold/20 shrink-0 mt-0.5 shadow-md shadow-gold/5 group-hover:scale-110 group-hover:border-gold/60 group-hover:bg-pine-900 transition-all duration-300">
                         {idx + 1}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-slate-950 text-lg leading-tight">{step.title}</h3>
+                        <h3 className="font-semibold text-pine-900 text-lg leading-tight group-hover:text-gold-dark transition-colors duration-300">{step.title}</h3>
                         <p className="mt-2.5 text-sm text-slate-600 leading-relaxed">{step.desc}</p>
                       </div>
                     </div>
@@ -301,52 +296,52 @@ export default async function HomePage() {
             </div>
 
             {/* Right Column: Visual Flow Diagram in Navbar Color */}
-            <div data-reveal className="lg:col-span-5 self-start">
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm text-slate-950">
-                  <p className="mb-6 inline-flex rounded-full bg-[#B4F06B] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-950">
+            <div className="lg:col-span-5 self-start">
+              <div className="rounded-3xl border border-pine-800 bg-gradient-to-br from-pine-950 via-pine-900 to-pine-950 p-6 sm:p-8 shadow-2xl text-white hover:border-gold/20 transition-all duration-500">
+                  <p className="text-[10px] font-bold text-gold tracking-widest uppercase mb-6">
                     Your Investment Flow
                   </p>
 
                   <div className="space-y-4">
                     {[
                       {
-                        icon: <ShieldCheck className="h-5 w-5 text-slate-950" />,
+                        icon: <ShieldCheck className="h-5 w-5 text-gold" />,
                         title: "KYC Verification",
                         sub: "Identity verified in ~5 minutes",
                         end: <ArrowRight className="h-4 w-4 text-slate-500 shrink-0 group-hover/row:translate-x-1 transition-transform duration-300" />
                       },
                       {
-                        icon: <CreditCard className="h-5 w-5 text-slate-950" />,
+                        icon: <CreditCard className="h-5 w-5 text-gold" />,
                         title: "Deposit Funds",
                         sub: "UPI, bank transfer, Net banking",
                         end: <ArrowRight className="h-4 w-4 text-slate-500 shrink-0 group-hover/row:translate-x-1 transition-transform duration-300" />
                       },
                       {
-                        icon: <Home className="h-5 w-5 text-slate-950" />,
+                        icon: <Home className="h-5 w-5 text-gold" />,
                         title: "Buy Property Shares",
                         sub: "From ₹40,000 · Legal ownership",
                         end: <ArrowRight className="h-4 w-4 text-slate-500 shrink-0 group-hover/row:translate-x-1 transition-transform duration-300" />
                       },
                       {
-                        icon: <Coins className="h-5 w-5 text-slate-950" />,
+                        icon: <Coins className="h-5 w-5 text-gold" />,
                         title: "Earn Monthly Dividends",
                         sub: "Auto-paid to your wallet",
                         end: <ArrowRight className="h-4 w-4 text-slate-500 shrink-0 group-hover/row:translate-x-1 transition-transform duration-300" />
                       },
                       {
-                        icon: <TrendingUp className="h-5 w-5 text-slate-950" />,
+                        icon: <TrendingUp className="h-5 w-5 text-gold" />,
                         title: "Sell Shares & Realise Profit",
                         sub: "Trade anytime · Instant settlement",
                         end: <Check className="h-4 w-4 text-emerald-500 shrink-0" />
                       }
                     ].map((flow, i) => (
-                      <div key={i} className="flex items-center gap-4 py-1.5 border-b border-slate-100 pb-3.5 last:border-0 last:pb-0 group/row hover:bg-slate-50 px-3 -mx-3 rounded-xl transition-all duration-200 cursor-pointer">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#B4F06B] text-slate-950 shrink-0 transition-transform duration-300 group-hover/row:scale-105">
+                      <div key={i} className="flex items-center gap-4 py-1.5 border-b border-pine-900/60 pb-3.5 last:border-0 last:pb-0 group/row hover:bg-white/5 px-3 -mx-3 rounded-xl transition-all duration-200 cursor-pointer">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-pine-900 border border-pine-800/80 text-gold shrink-0 transition-transform duration-300 group-hover/row:scale-105 group-hover/row:border-gold/40">
                           {flow.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-950 truncate">{flow.title}</p>
-                          <p className="text-[11px] text-slate-500 mt-0.5 truncate">{flow.sub}</p>
+                          <p className="text-sm font-semibold text-white truncate group-hover/row:text-gold transition-colors duration-200">{flow.title}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5 truncate">{flow.sub}</p>
                         </div>
                         {flow.end}
                       </div>
@@ -354,26 +349,26 @@ export default async function HomePage() {
                   </div>
 
                   {/* Localized P&L example box */}
-                  <div className="mt-6 rounded-2xl border border-[#B4F06B] bg-[#B4F06B]/25 p-5 text-xs">
-                    <p className="mb-3 inline-flex rounded-full bg-[#B4F06B] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-950">
+                  <div className="mt-6 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/5 via-gold/[0.02] to-transparent p-5 text-xs shadow-inner">
+                    <p className="font-bold text-gold tracking-wide uppercase text-[10px] mb-3">
                       Example: ₹5,00,000 Investment
                     </p>
                     <div className="space-y-2">
-                      <div className="flex justify-between text-slate-600">
+                      <div className="flex justify-between text-slate-300">
                         <span>Delhi Heights · 50 shares</span>
-                        <span className="font-semibold text-slate-950">₹5,00,000</span>
+                        <span className="font-semibold text-white">₹5,00,000</span>
                       </div>
-                      <div className="flex justify-between text-slate-600">
+                      <div className="flex justify-between text-slate-300">
                         <span>Annual yield (8.4%)</span>
-                        <span className="font-semibold text-slate-950">+₹42,000/yr</span>
+                        <span className="font-semibold text-emerald-400">+₹42,000/yr</span>
                       </div>
-                      <div className="flex justify-between text-slate-600">
+                      <div className="flex justify-between text-slate-300">
                         <span>Capital gain (12 months)</span>
-                        <span className="font-semibold text-slate-950">+₹60,000</span>
+                        <span className="font-semibold text-emerald-400">+₹60,000</span>
                       </div>
-                      <div className="border-t border-[#B4F06B] pt-3.5 mt-3.5 flex justify-between font-bold text-slate-950 text-sm">
+                      <div className="border-t border-gold/30 pt-3.5 mt-3.5 flex justify-between font-bold text-white text-sm">
                         <span>Total Return</span>
-                        <span className="rounded-md bg-[#B4F06B] px-2">+₹1,02,000 (20.4%)</span>
+                        <span className="text-gold">+₹1,02,000 (20.4%)</span>
                       </div>
                     </div>
                   </div>
@@ -383,12 +378,215 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section id="trading" data-reveal className="bg-white text-slate-950 py-20 border-t border-slate-100">
+      {/* Payments Section */}
+      <section id="payments" className="relative bg-white py-20 border-t border-slate-100 overflow-hidden">
+        {/* Background Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a04_1px,transparent_1px),linear-gradient(to_bottom,#0f172a04_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+        <div className="absolute -top-32 -left-32 w-80 h-80 bg-gold/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="mb-2">
+            <p className="text-xs font-bold text-gold-dark tracking-widest uppercase mb-2">PAYMENT OPTIONS</p>
+            <h2 className="mt-2 font-display text-3xl sm:text-4xl font-extrabold text-pine-950">Global Payment Gateways</h2>
+            <p className="mt-4 text-slate-600 max-w-3xl leading-relaxed">
+              Deposit and withdraw in your local currency using the payment method you trust most. We support 8+ gateways across 140+ countries.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-12 lg:grid-cols-12 items-start">
+            {/* Left Side: Gateways Grid & Security Badges */}
+            <div className="lg:col-span-7 space-y-8 min-w-0">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Supported Payment Gateways
+              </p>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {[
+                  {
+                    name: "Stripe",
+                    desc: "Cards · Wallets · Global",
+                    logo: <CreditCard className="h-6 w-auto text-[#635BFF]" />
+                  },
+                  {
+                    name: "PayPal",
+                    desc: "200+ countries",
+                    logo: (
+                      <svg viewBox="0 0 24 28" className="h-6 w-auto" fill="currentColor">
+                        <path d="M20.083 8.3c-.63 3.64-3.11 5.96-6.85 5.96h-3.41l-2.03 11.72H3.3l4.2-24.26h8.04c3.55 0 5.8 1.76 5.8 5.16 0 .42-.03.88-.1 1.42z" fill="#003087"/>
+                        <path d="M16.883 14.3c-.63 3.64-3.11 5.96-6.85 5.96H6.62l-2.03 11.72h4.49l2.03-11.72h3.41c3.74 0 6.22-2.32 6.85-5.96.07-.54.1-.96.1-1.42 0-3.4-2.25-5.16-5.8-5.16h-4.49l-2.03 11.72h3.41z" fill="#0079C1"/>
+                      </svg>
+                    )
+                  },
+                  {
+                    name: "Razorpay",
+                    desc: "UPI · Net Banking · India",
+                    logo: (
+                      <svg viewBox="0 0 24 24" className="h-6 w-auto" fill="currentColor">
+                        <path d="M22 2L10 14l-4-8L2 22h20z" fill="#3395FF" />
+                      </svg>
+                    )
+                  },
+                  {
+                    name: "Paytm",
+                    desc: "UPI · Wallets",
+                    logo: (
+                      <div className="flex items-baseline font-sans font-black text-sm">
+                        <span className="text-[#00B9F5]">pay</span>
+                        <span className="text-[#002E6E]">tm</span>
+                      </div>
+                    )
+                  },
+                  {
+                    name: "Wise",
+                    desc: "Multi-currency · Low fee",
+                    logo: (
+                      <svg viewBox="0 0 32 32" className="h-6 w-auto text-[#9FE870]" fill="currentColor">
+                        <path d="M17.1 2L8 16.5h9.1L8 30l16-16.5h-9.1z" />
+                      </svg>
+                    )
+                  },
+                  {
+                    name: "Bank Wire",
+                    desc: "SWIFT · SEPA · ACH",
+                    logo: (
+                      <svg viewBox="0 0 24 24" className="h-6 w-auto text-slate-700" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="22" x2="21" y2="22"></line>
+                        <line x1="6" y1="18" x2="6" y2="11"></line>
+                        <line x1="10" y1="18" x2="10" y2="11"></line>
+                        <line x1="14" y1="18" x2="14" y2="11"></line>
+                        <line x1="18" y1="18" x2="18" y2="11"></line>
+                        <polygon points="12 2 2 7 22 7"></polygon>
+                      </svg>
+                    )
+                  },
+                  {
+                    name: "Crypto",
+                    desc: "BTC · ETH · USDT",
+                    logo: (
+                      <svg viewBox="0 0 32 32" className="h-6 w-auto text-[#F7931A]" fill="currentColor">
+                        <path d="M16 0C7.16 0 0 7.16 0 16s7.16 16 16 16 16-7.16 16-16S24.84 0 16 0zm4.5 19.5c0 3.3-2.7 4.5-6 4.5h-4v-12h4c3.3 0 5.5 1.2 5.5 4v3.5z" />
+                        <text x="10.5" y="21" fontFamily="Georgia, serif" fontWeight="bold" fontSize="15" fill="#FFF">₿</text>
+                      </svg>
+                    )
+                  },
+                  {
+                    name: "Affirm",
+                    desc: "Buy now · Pay later",
+                    logo: (
+                      <div className="font-sans font-bold italic text-sm text-[#4A4AFF] tracking-tight">
+                        affirm
+                      </div>
+                    )
+                  },
+                  {
+                    name: "Apple Pay",
+                    desc: "1-tap · Secure",
+                    logo: (
+                      <div className="flex items-center gap-1">
+                        <svg viewBox="0 0 16 16" className="h-5 w-5 text-pine-800" fill="currentColor">
+                          <path d="M11.182.008C11.148-.03 9.923.023 8.857 1.18c-1.066 1.156-.902 2.482-.878 2.516s1.52.087 2.475-1.258.762-2.391.728-2.43m3.314 11.733c-.048-.096-2.325-1.234-2.113-3.422s1.675-2.789 1.698-2.854-.597-.79-1.254-1.157a3.7 3.7 0 0 0-1.563-.434c-.108-.003-.483-.095-1.254.116-.508.139-1.653.589-1.968.607-.316.018-1.256-.522-2.267-.665-.647-.125-1.333.131-1.824.328-.49.196-1.422.754-2.074 2.237-.652 1.482-.311 3.83-.067 4.56s.625 1.924 1.273 2.796c.576.984 1.34 1.667 1.659 1.899s1.219.386 1.843.067c.502-.308 1.408-.485 1.766-.472.357.013 1.061.154 1.782.539.571.197 1.111.115 1.652-.105.541-.221 1.324-1.059 2.238-2.758q.52-1.185.473-1.282" />
+                        </svg>
+                        <span className="font-sans font-bold text-sm text-pine-800 tracking-tight">Pay</span>
+                      </div>
+                    )
+                  }
+                ].map((gw) => (
+                  <div key={gw.name} className="min-w-0 rounded-xl border border-slate-200 bg-cream-100/50 p-4 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 transition-all duration-200 min-h-[110px] cursor-pointer">
+                    <div className="flex items-center h-8 mb-2">
+                      {gw.logo}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-pine-800 text-xs">{gw.name}</h4>
+                      <p className="text-[9px] text-slate-500 mt-0.5 leading-normal">{gw.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Security badges */}
+              <div className="flex flex-wrap gap-3 pt-2">
+                {[
+                  "🔒 256-bit SSL",
+                  "🛡️ PCI DSS Level 1",
+                  "🏛️ FCA Regulated",
+                  "🔐 2FA Protected",
+                  "✅ Insured Deposits"
+                ].map((badge) => (
+                  <span key={badge} className="rounded-full bg-slate-100 px-3.5 py-1 text-xs font-medium text-slate-600 border border-slate-200/60 shadow-sm">
+                    {badge}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Side: Deposits & Withdrawals Flow (Navbar styled dark box) */}
+            <div className="lg:col-span-5 min-w-0">
+              <div className="rounded-2xl border border-pine-800 bg-pine-950 p-6 sm:p-8 shadow-2xl text-white">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">
+                  How Deposits & Withdrawals Work
+                </p>
+
+                <div className="space-y-4">
+                  {[
+                    {
+                      icon: <CreditCard className="h-5 w-5 text-gold" />,
+                      title: "Debit / Credit Card",
+                      desc: "Visa, Mastercard, Amex accepted. Instant deposit. 0.5% processing fee. Max ₹40L/day.",
+                      badge: <span className="rounded bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 whitespace-nowrap">Instant</span>
+                    },
+                    {
+                      icon: <Landmark className="h-5 w-5 text-gold" />,
+                      title: "Bank Transfer (SWIFT / SEPA / NEFT)",
+                      desc: "Zero fee for transfers above ₹4L. Ideal for large deposits. Arrives within 1-3 business days.",
+                      badge: <span className="rounded bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[10px] font-semibold text-amber-400 whitespace-nowrap">1-3 days</span>
+                    },
+                    {
+                      icon: <Smartphone className="h-5 w-5 text-gold" />,
+                      title: "UPI / Razorpay (India)",
+                      desc: "Instant UPI payments for Indian investors. Zero fee. Supports GPay, PhonePe, Paytm, BHIM.",
+                      badge: <span className="rounded bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 whitespace-nowrap">Instant</span>
+                    },
+                    {
+                      icon: <Coins className="h-5 w-5 text-gold" />,
+                      title: "Cryptocurrency",
+                      desc: "BTC, ETH, USDT, USDC accepted. Auto-converted to INR at live market rate. 0.3% fee.",
+                      badge: <span className="rounded bg-sky-500/10 border border-sky-500/30 px-2 py-0.5 text-[10px] font-semibold text-sky-400 whitespace-nowrap">~15 min</span>
+                    },
+                    {
+                      icon: <Zap className="h-5 w-5 text-gold" />,
+                      title: "Withdrawals",
+                      desc: "Withdraw profits to your bank account anytime. Processed within 24 hours. 0.2% fee. Min ₹8,000.",
+                      badge: <span className="rounded bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 text-[10px] font-semibold text-amber-400 whitespace-nowrap">&lt;24 hrs</span>
+                    }
+                  ].map((item, i) => (
+                    <div key={i} className="flex gap-4 py-1 border-b border-pine-900/60 pb-3 last:border-0 last:pb-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-pine-900 border border-pine-800/80 text-gold shrink-0 mt-0.5">
+                        {item.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-white truncate">{item.title}</p>
+                          {item.badge}
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trading Guide Section (Dark background matching navbar) */}
+      <section id="trading" className="bg-pine-950 text-white py-20 border-t border-pine-900">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-2 text-center max-w-3xl mx-auto">
-            <p className="inline-flex rounded-full bg-[#B4F06B] px-3 py-1 text-xs font-semibold uppercase tracking-widest text-slate-950">Trade like a pro</p>
-            <h2 className="mt-4 font-display text-3xl sm:text-4xl font-bold text-slate-950">How to Trade Properties</h2>
-            <p className="mt-4 text-slate-600 text-sm sm:text-base leading-relaxed">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gold">TRADE LIKE A PRO</p>
+            <h2 className="mt-2 font-display text-3xl sm:text-4xl font-bold text-white">How to Trade Properties</h2>
+            <p className="mt-4 text-slate-400 text-sm sm:text-base leading-relaxed">
               PlotsnHomes' marketplace lets you buy and sell property shares like stocks — with real-time pricing, instant execution, and transparent P&L tracking.
             </p>
           </div>
@@ -397,7 +595,7 @@ export default async function HomePage() {
           <div className="grid gap-8 md:grid-cols-3 mt-16">
             {[
               {
-                icon: <ArrowDownLeft className="h-6 w-6 text-slate-950" />,
+                icon: <ArrowDownLeft className="h-6 w-6 text-gold" />,
                 title: "Buying Shares",
                 desc: "Purchase fractional ownership in any listed property. Set how many shares you want, review the cost, and confirm with one tap.",
                 steps: [
@@ -409,7 +607,7 @@ export default async function HomePage() {
                 ]
               },
               {
-                icon: <ArrowUpRight className="h-6 w-6 text-slate-950" />,
+                icon: <ArrowUpRight className="h-6 w-6 text-gold" />,
                 title: "Selling Shares",
                 desc: "Exit any position partially or fully at any time. Our live marketplace matches your sell order with buyers within seconds.",
                 steps: [
@@ -421,7 +619,7 @@ export default async function HomePage() {
                 ]
               },
               {
-                icon: <BarChart3 className="h-6 w-6 text-slate-950" />,
+                icon: <BarChart3 className="h-6 w-6 text-gold" />,
                 title: "Portfolio Management",
                 desc: "Track your entire property portfolio in real-time. Monitor price movements, dividend income, and overall returns from one dashboard.",
                 steps: [
@@ -433,20 +631,20 @@ export default async function HomePage() {
                 ]
               }
             ].map((col) => (
-              <div key={col.title} className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 hover:border-[#B4F06B] hover:-translate-y-1.5 hover:shadow-lg transition-all duration-300 shadow-sm flex flex-col">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#B4F06B] text-slate-950 mb-6 shrink-0">
+              <div key={col.title} className="rounded-2xl border border-pine-800 bg-pine-900/40 p-6 sm:p-8 hover:border-gold/40 hover:-translate-y-1.5 hover:shadow-2xl transition-all duration-300 shadow-xl flex flex-col cursor-pointer">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-pine-900 border border-pine-800 text-gold mb-6 shrink-0 shadow-inner">
                   {col.icon}
                 </div>
-                <h3 className="text-lg font-semibold text-slate-950">{col.title}</h3>
-                <p className="mt-2 text-xs text-slate-600 leading-relaxed min-h-[50px]">{col.desc}</p>
+                <h3 className="text-lg font-semibold text-white">{col.title}</h3>
+                <p className="mt-2 text-xs text-slate-400 leading-relaxed min-h-[50px]">{col.desc}</p>
                 
-                <div className="mt-6 pt-6 border-t border-slate-100 space-y-4 flex-1">
+                <div className="mt-6 pt-6 border-t border-pine-800/80 space-y-4 flex-1">
                   {col.steps.map((step, idx) => (
                     <div key={idx} className="flex gap-3 text-xs leading-normal">
-                      <span className="flex h-5 w-5 items-center justify-center rounded bg-[#B4F06B] text-[10px] font-mono font-bold text-slate-950 shrink-0">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-pine-900 border border-pine-800 text-[10px] font-mono font-bold text-gold shrink-0">
                         {idx + 1}
                       </span>
-                      <span className="text-slate-700">{step}</span>
+                      <span className="text-slate-300">{step}</span>
                     </div>
                   ))}
                 </div>
@@ -455,11 +653,9 @@ export default async function HomePage() {
           </div>
 
           {/* Trade Timeline */}
-          <div className="mt-16 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
-            <p className="mb-8 text-center">
-              <span className="inline-flex rounded-full bg-[#B4F06B] px-3 py-1 text-sm font-bold uppercase tracking-widest text-slate-950">
-                A Typical Trade in Under 60 Seconds
-              </span>
+          <div className="mt-16 rounded-2xl border border-pine-800 bg-pine-900/20 p-6 sm:p-8">
+            <p className="text-center text-sm font-bold text-gold tracking-widest uppercase mb-8">
+              A Typical Trade in Under 60 Seconds
             </p>
 
             <div className="mx-auto flex max-w-xs flex-col lg:max-w-none lg:flex-row lg:items-center lg:justify-between gap-0 lg:gap-2">
@@ -477,21 +673,21 @@ export default async function HomePage() {
                   {/* Node: circle + label. On mobile the circle carries a vertical connector to the next step. */}
                   <div className="flex items-start gap-4 lg:block">
                     <div className="flex flex-col items-center">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#B4F06B] text-slate-950 shadow-sm">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-pine-900 border border-gold/40 text-gold shadow-md">
                         {step.icon}
                       </div>
                       {idx < arr.length - 1 && (
-                        <div className="my-1 h-10 w-[1.5px] bg-[#B4F06B] lg:hidden" />
+                        <div className="my-1 h-10 w-[1.5px] bg-gradient-to-b from-gold/50 to-pine-800 lg:hidden" />
                       )}
                     </div>
                     <div className="pt-1 text-left lg:mt-2.5 lg:pt-0 lg:text-center">
-                      <p className="text-xs font-semibold text-slate-950">{step.label}</p>
+                      <p className="text-xs font-semibold text-white">{step.label}</p>
                       <p className="text-[10px] text-slate-500 mt-0.5">{step.sub}</p>
                     </div>
                   </div>
                   {/* Desktop horizontal connector */}
                   {idx < arr.length - 1 && (
-                    <div className="hidden lg:block h-[1px] w-12 sm:w-16 bg-[#B4F06B] mx-4 shrink-0" />
+                    <div className="hidden lg:block h-[1px] w-12 sm:w-16 bg-gradient-to-r from-gold/50 to-pine-800 mx-4 shrink-0" />
                   )}
                 </div>
               ))}
@@ -513,63 +709,54 @@ export default async function HomePage() {
             <Link
               key={item.href}
               href={item.href}
-              className="group rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 hover:border-[#B4F06B] hover:shadow-xl hover:-translate-y-1"
+              className="group rounded-2xl border border-slate-200/80 bg-white p-8 shadow-sm transition-all duration-300 hover:border-gold/50 hover:shadow-xl hover:-translate-y-1"
             >
-              <h3 className="text-lg font-semibold text-slate-950">{item.title}</h3>
+              <h3 className="text-lg font-semibold text-pine-900 group-hover:text-gold-dark transition-colors">{item.title}</h3>
               <p className="mt-2 text-slate-600 text-sm leading-relaxed">{item.desc}</p>
-              <span className="mt-4 inline-flex rounded-full bg-[#B4F06B] px-3 py-1 text-sm font-semibold text-slate-950">Get started →</span>
+              <span className="mt-4 inline-block text-sm font-medium text-gold-dark group-hover:underline">Get started →</span>
             </Link>
           ))}
         </div>
       </section>
 
-      <TeamSection
-        members={
-          siteTeamMembers && siteTeamMembers.length > 0
-            ? siteTeamMembers
-            : agents.map((a) => ({
-                id: a.id,
-                name: a.name || "Agent",
-                designation: "Real estate agent",
-                countryCode: a.countryCode || "+91",
-                phone: a.phone || "",
-                image: a.image || undefined,
-              }))
-        }
-      />
-
-      <section className="bg-white px-4 pb-4 sm:px-6 lg:px-8">
-        <div className="relative mx-auto min-h-[300px] max-w-7xl overflow-hidden rounded-[2rem]">
-          <Image
-            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1800&q=80"
-            alt="City residences at dusk"
-            fill
-            className="object-cover"
-            sizes="(max-width: 1280px) 100vw, 1280px"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/55 to-slate-950/20" />
-          <div data-reveal className="relative z-10 flex min-h-[300px] max-w-lg flex-col justify-center px-8 py-12 sm:px-12">
-            <h2 className="font-display text-4xl font-medium text-white sm:text-5xl">Let&apos;s make it happen</h2>
-            <p className="mt-3 text-sm leading-relaxed text-white/85 sm:text-base">
-              Tell us what you are looking for. We&apos;ll line up homes that fit and walk you through the next step.
-            </p>
-            <Link
-              href="#get-in-touch"
-              className="mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-[#B4F06B] px-6 py-3 text-sm font-semibold text-slate-950 transition hover:brightness-95"
-            >
-              Get started <ArrowRight className="h-4 w-4" />
-            </Link>
+      {((siteTeamMembers && siteTeamMembers.length > 0) || agents.length > 0) && (
+        <section className="bg-pine-900 py-16 text-white border-t border-pine-800">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <p className="text-sm font-semibold uppercase tracking-widest text-gold">OUR AGENTS</p>
+            <h2 className="mt-2 font-display text-3xl font-bold">Meet our team</h2>
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {(siteTeamMembers && siteTeamMembers.length > 0
+                ? siteTeamMembers
+                : agents.map((a) => ({
+                    id: a.id,
+                    name: a.name || "Agent",
+                    designation: "Real estate agent",
+                    countryCode: "+91",
+                    phone: a.phone || "9820134567",
+                  }))
+              ).map((m) => (
+                <div key={m.id} className="rounded-2xl border border-pine-800/60 bg-pine-800/50 p-6 hover:border-gold/30 hover:bg-pine-800 transition-all">
+                  <p className="font-bold text-lg text-white">{m.name}</p>
+                  <p className="mt-1 text-sm text-slate-400">{m.designation || "Real estate agent"}</p>
+                  {m.phone && (
+                    <p className="mt-3 text-sm font-semibold text-gold tracking-wide">
+                      {m.countryCode ? `${m.countryCode} ` : ""}{m.phone}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Lead-gen CTA — captures Name + Phone straight into the CRM */}
-      <section id="get-in-touch" data-reveal className="relative bg-white py-20 border-t border-slate-200 overflow-hidden">
+      <section id="get-in-touch" className="relative bg-cream-100 py-20 border-t border-slate-200/60 overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a03_1px,transparent_1px),linear-gradient(to_bottom,#0f172a03_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none opacity-60" />
         <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>
-            <p className="inline-flex rounded-full bg-[#B4F06B] px-3 py-1 text-sm font-semibold uppercase tracking-widest text-slate-950">Talk to an expert</p>
-            <h2 className="mt-4 font-display text-3xl font-bold text-slate-950 sm:text-4xl">
+            <p className="text-sm font-semibold uppercase tracking-widest text-gold-dark">Talk to an expert</p>
+            <h2 className="mt-2 font-display text-3xl font-bold text-pine-900 sm:text-4xl">
               Ready to find your next property?
             </h2>
             <p className="mt-4 text-slate-600 leading-relaxed">
@@ -577,9 +764,9 @@ export default async function HomePage() {
               understand your requirements — whether you&apos;re buying, renting, or investing.
             </p>
             <ul className="mt-6 space-y-2 text-sm text-slate-600">
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 rounded-full bg-[#B4F06B] p-0.5 text-slate-950" /> No spam — one quick, friendly call</li>
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 rounded-full bg-[#B4F06B] p-0.5 text-slate-950" /> Personalised property recommendations</li>
-              <li className="flex items-center gap-2"><Check className="h-4 w-4 rounded-full bg-[#B4F06B] p-0.5 text-slate-950" /> Guidance on payments, loans &amp; KYC</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold-dark" /> No spam — one quick, friendly call</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold-dark" /> Personalised property recommendations</li>
+              <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold-dark" /> Guidance on payments, loans &amp; KYC</li>
             </ul>
           </div>
           <div className="mx-auto w-full max-w-md">
