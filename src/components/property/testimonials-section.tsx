@@ -71,7 +71,7 @@ export function TestimonialsSection({
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="max-w-2xl">
-            <p className="mb-2 inline-flex rounded-full bg-[#B4F06B] px-3 py-1 text-xs font-bold uppercase tracking-widest text-slate-950">Investor voices</p>
+            <p className="text-xs font-bold text-gold-dark tracking-widest uppercase mb-2">INVESTOR VOICES</p>
             <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-slate-950 leading-tight">
               Trusted by 5,00,000+ Smart Investors
             </h2>
@@ -107,7 +107,7 @@ export function TestimonialsSection({
               <button
                 type="button"
                 onClick={prevSlide}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-[#B4F06B] hover:bg-[#B4F06B] hover:text-slate-950 transition-all cursor-pointer active:scale-95"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-gold hover:bg-pine-900 hover:text-white transition-all cursor-pointer active:scale-95"
                 title="Previous Reviews"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -115,7 +115,7 @@ export function TestimonialsSection({
               <button
                 type="button"
                 onClick={nextSlide}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-[#B4F06B] hover:bg-[#B4F06B] hover:text-slate-950 transition-all cursor-pointer active:scale-95"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-gold hover:bg-pine-900 hover:text-white transition-all cursor-pointer active:scale-95"
                 title="Next Reviews"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -141,7 +141,7 @@ export function TestimonialsSection({
                   {/* Star rating */}
                   <div className="flex gap-1 mb-4">
                     {[...Array(t.rating || 5)].map((_, i) => (
-                      <Star key={i} className="h-4.5 w-4.5 fill-[#B4F06B] text-[#B4F06B]" />
+                      <Star key={i} className="h-4.5 w-4.5 fill-gold text-gold" />
                     ))}
                   </div>
 
@@ -194,7 +194,7 @@ export function TestimonialsSection({
                 type="button"
                 onClick={() => setCurrentIndex(dotIdx)}
                 className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                  currentIndex === dotIdx ? "w-8 bg-[#B4F06B]" : "w-2.5 bg-slate-200 hover:bg-slate-300"
+                  currentIndex === dotIdx ? "w-8 bg-pine-900" : "w-2.5 bg-slate-200 hover:bg-slate-300"
                 }`}
                 aria-label={`Go to slide ${dotIdx + 1}`}
               />

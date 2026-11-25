@@ -269,15 +269,15 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               onClick={() => handleTabChange(tab.id)}
               className={`px-5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
                 listingType === tab.id
-                  ? "bg-[#B4F06B] text-slate-950 shadow-md font-bold"
-                  : "text-slate-600 hover:text-slate-950 hover:bg-white"
+                  ? "bg-pine-900 text-cream-white shadow-md font-bold"
+                  : "text-sage hover:text-pine-900 hover:bg-pine-900/5"
               }`}
             >
               {tab.label}
             </button>
           ))}
         </div>
-        <div className="hidden sm:block rounded-full bg-[#B4F06B] px-3 py-1 text-[10px] font-bold tracking-widest uppercase text-slate-950">
+        <div className="hidden sm:block text-[10px] font-bold text-gold-dark tracking-widest uppercase">
           PlotsnHomes Portal
         </div>
       </div>
@@ -293,8 +293,8 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               onClick={() => setFurnishing(furnishing === opt.value ? "" : opt.value)}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-semibold transition-all duration-150 ${
                 furnishing === opt.value
-                  ? "border-[#B4F06B] bg-[#B4F06B] text-slate-950 shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-[#B4F06B] hover:bg-[#B4F06B]/30 hover:text-slate-950"
+                  ? "border-pine-900 bg-pine-900 text-cream-white shadow-sm"
+                  : "border-pine-900/15 bg-white text-sage hover:border-gold/50 hover:bg-gold/10 hover:text-gold-dark"
               }`}
             >
               {furnishing === opt.value && <X className="h-3 w-3" />}
@@ -487,9 +487,9 @@ export function WpHeroSearch({ priceMin, priceMax, cities, areas, suggestions = 
               <button
                 type="submit"
                 disabled={pending}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#B4F06B] hover:brightness-95 active:scale-[0.98] px-4 py-2.5 text-sm font-bold text-slate-950 shadow-sm transition-all duration-200 disabled:opacity-50 h-[44px]"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gold hover:bg-gold-dark active:scale-[0.98] px-4 py-2.5 text-sm font-bold text-pine-950 shadow-md shadow-gold/20 hover:shadow-lg hover:shadow-gold/30 transition-all duration-200 disabled:opacity-50 h-[44px]"
               >
-                <Search className="h-4 w-4 text-slate-950 stroke-[2.5px]" />
+                <Search className="h-4 w-4 text-pine-950 stroke-[2.5px]" />
                 {pending ? "Searching…" : "Search"}
               </button>
               <button
