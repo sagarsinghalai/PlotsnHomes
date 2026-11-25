@@ -5,7 +5,39 @@ import Link from "next/link";
 import { Building2, Shield, TrendingUp, Wallet, Globe } from "lucide-react";
 import { DEFAULT_FOOTER_SETTINGS, FooterSettings } from "@/lib/webpage-editor-store";
 
-export function Footer() {
+const FOOTER_TONES = {
+  default: {
+    footer: "bg-pine-950 text-pine-100/70 border-t border-pine-800/40 font-sans",
+    brand: "text-cream-white",
+    icon: "text-gold",
+    body: "text-pine-100/70",
+    badge: "border border-pine-800/50 bg-pine-900 text-pine-100 hover:border-gold/40 hover:bg-pine-800/70 hover:text-gold",
+    badgeIcon: "text-gold",
+    social: "border border-pine-800/50 bg-pine-900/60 text-pine-100/70 hover:border-gold hover:text-gold",
+    heading: "text-gold",
+    link: "hover:text-cream-white",
+    bar: "border-pine-800/40",
+    copy: "text-pine-200/60",
+    note: "text-pine-200/50",
+  },
+  portal: {
+    footer: "bg-[#0E1C33] text-white/70 border-t border-[#1E3A5F] font-sans",
+    brand: "text-white",
+    icon: "text-[#60A5FA]",
+    body: "text-white/70",
+    badge: "border border-[#1E3A5F] bg-[#16324F] text-white/90 hover:border-[#60A5FA] hover:bg-[#1E3A5F] hover:text-[#BFDBFE]",
+    badgeIcon: "text-[#60A5FA]",
+    social: "border border-[#1E3A5F] bg-[#16324F] text-white/70 hover:border-[#60A5FA] hover:text-[#BFDBFE]",
+    heading: "text-[#60A5FA]",
+    link: "hover:text-white",
+    bar: "border-[#1E3A5F]",
+    copy: "text-white/55",
+    note: "text-white/45",
+  },
+} as const;
+
+export function Footer({ variant = "default" }: { variant?: keyof typeof FOOTER_TONES }) {
+  const tone = FOOTER_TONES[variant];
   const [footer, setFooter] = useState<FooterSettings>(DEFAULT_FOOTER_SETTINGS);
 
   useEffect(() => {
@@ -18,19 +50,19 @@ export function Footer() {
   }, []);
 
   return (
-    <footer className="bg-pine-950 text-pine-100/70 border-t border-pine-800/40 font-sans">
+    <footer className={tone.footer}>
       {/* Main footer grid */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-12 justify-between">
           {/* Brand column — Left side */}
           <div className="w-full lg:w-[36%] space-y-4 shrink-0">
-            <Link href="/" className="flex items-center gap-2.5 font-display text-xl font-bold text-cream-white">
-              <Building2 className="h-6 w-6 text-gold" />
+            <Link href="/" className={`flex items-center gap-2.5 font-display text-xl font-bold ${tone.brand}`}>
+              <Building2 className={`h-6 w-6 ${tone.icon}`} />
               {footer.brandName || "PlotsnHomes"}
             </Link>
             
             {footer.boilerplateText && (
-              <p className="text-sm leading-relaxed text-pine-100/70 max-w-sm">
+              <p className={`text-sm leading-relaxed ${tone.body} max-w-sm`}>
                 {footer.boilerplateText}
               </p>
             )}
@@ -42,9 +74,9 @@ export function Footer() {
                   <Link
                     key={b.id || idx}
                     href={b.url || "#"}
-                    className="flex items-center gap-1.5 rounded-full border border-pine-800/50 bg-pine-900 px-3.5 py-1.5 text-xs font-medium text-pine-100 transition-all duration-300 hover:border-gold/40 hover:bg-pine-800/70 hover:text-gold"
+                    className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-300 ${tone.badge}`}
                   >
-                    <span className="text-gold">
+                    <span className={tone.badgeIcon}>
                       {idx === 0 ? <Shield className="h-3.5 w-3.5" /> : idx === 1 ? <TrendingUp className="h-3.5 w-3.5" /> : <Wallet className="h-3.5 w-3.5" />}
                     </span>
                     {b.label}
@@ -64,7 +96,7 @@ export function Footer() {
                       href={s.url || "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-pine-800/50 bg-pine-900/60 text-pine-100/70 transition-all duration-300 hover:border-gold hover:text-gold hover:scale-110"
+                      className={`flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 hover:scale-110 ${tone.social}`}
                       aria-label={s.platform}
                     >
                       {platformLower.includes("twitter") || platformLower.includes("x") ? (
@@ -105,11 +137,11 @@ export function Footer() {
             >
               {footer.columns.map((col) => (
                 <div key={col.id} className="min-w-0 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-gold mb-4 truncate">{col.columnTitle}</h4>
+                  <h4 className={`text-xs font-bold uppercase tracking-widest ${tone.heading} mb-4 truncate`}>{col.columnTitle}</h4>
                   <ul className="space-y-2.5 text-sm">
                     {col.links && col.links.map((link) => (
                       <li key={link.id} className="truncate">
-                        <Link href={link.url || "#"} className="transition hover:text-cream-white">
+                        <Link href={link.url || "#"} className={`transition ${tone.link}`}>
                           {link.label}
                         </Link>
                       </li>
@@ -123,12 +155,12 @@ export function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-pine-800/40">
+      <div className={`border-t ${tone.bar}`}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-pine-200/60">
+          <p className={`text-xs ${tone.copy}`}>
             {footer.copyrightText || "© 2026 PlotsnHomes Pvt. Ltd. · CIN: U70200DL2024PTC000001"}
           </p>
-          <p className="text-xs text-pine-200/50">
+          <p className={`text-xs ${tone.note}`}>
             {footer.disclaimerText || footer.poweredByText || "Investment in real estate is subject to market risks. Read all documents carefully."}
           </p>
         </div>
